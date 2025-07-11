@@ -1,0 +1,41 @@
+[
+    {
+	"id": "googlephotos",
+	"dispay_name": "Google Photos",
+	"description": "A plugin to backup and restore your Google Photos.",
+	"documentation": "<content of a README.md file>",
+	"icon": "https://example.com/icon.svg",
+	"logo": "https://example.com/logo.svg",
+	"tags": [
+            "photos",
+            "google"
+	],
+	"latest_version": "0.2.3",
+	"types": {
+            "source": true,
+            "destination": true,
+            "storage": false
+	}
+    },
+    {
+	"id": "imap",
+	"dispay_name": "IMAP",
+	"description": "The IMAP integration allows you to backup and restore your emails from any IMAP server.\nIt supports Gmail, Outlook, Yahoo, and more.\nBecause we like to have fun, you can also use it to store your backups in your email account.",
+	"documentation": "<content of a README.md file>",
+	"icon": "https://example.com/icon.svg",
+	"logo": "https://example.com/logo.svg",
+	"tags": [
+            "imap",
+            "email",
+            "gmail",
+            "outlook",
+            "yahoo"
+	],
+	"latest_versions": "2.1.0",
+	"types": {
+            "source": true,
+            "destination": true,
+            "storage": true
+	}
+    }
+]

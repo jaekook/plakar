@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/PlakarKorp/plakar/plugins"
 	"github.com/PlakarKorp/plakar/services"
 )
 
@@ -146,4 +147,58 @@ func servicesSetAlertingServiceConfiguration(w http.ResponseWriter, r *http.Requ
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	return json.NewEncoder(w).Encode(alertConfig)
+}
+
+func servicesGetIntegration(w http.ResponseWriter, r *http.Request) error {
+	filterType, _, err := QueryParamToString(r, "type")
+	if err != nil {
+		return err
+	}
+
+	filterTag, _, err := QueryParamToString(r, "tag")
+	if err != nil {
+		return err
+	}
+
+	filterStatus, _, err := QueryParamToString(r, "status")
+	if err != nil {
+		return err
+	}
+
+	var res []plugins.IntegrationInfo
+
+	for itg, err := range plugins.IterIntegrations(lctx, filterType, filterTag) {
+		if err != nil {
+			return err
+		}
+		if filterStatus == "installed" && !itg.Status.Installed {
+			continue
+		}
+		if filterStatus == "uninstalled" && itg.Status.Installed {
+			continue
+		}
+		r := *itg
+		res = append(res, r)
+	}
+
+	return json.NewEncoder(w).Encode(res)
+}
+
+func servicesGetIntegrationId(w http.ResponseWriter, r *http.Request) error {
+	id := r.PathValue("id")
+
+	for itg, err := range plugins.IterIntegrations(lctx, "", "") {
+		if err != nil {
+			return err
+		}
+		if itg.Id == id {
+			return json.NewEncoder(w).Encode(itg)
+		}
+	}
+
+	return fmt.Errorf("Not found")
+}
+
+func servicesGetIntegrationPath(w http.ResponseWriter, r *http.Request) error {
+	return fmt.Errorf("Not implemented")
 }
