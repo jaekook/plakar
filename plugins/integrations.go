@@ -16,8 +16,8 @@ type IntegrationTypes struct {
 }
 
 type IntegrationStatus struct {
-	Installed bool   `json:"installed"`
-	Version   string `json:"version,omitempty"`
+	Status  string `json:"status"`
+	Version string `json:"version,omitempty"`
 }
 
 type IntegrationInfo struct {

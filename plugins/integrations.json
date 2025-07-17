@@ -1,5 +1,26 @@
 [
     {
+	"id": "fs",
+	"dispay_name": "Filesystem",
+	"description": "A plugin to backup and restore your filesystem.",
+	"documentation": "<content of a README.md file>",
+	"icon": "https://example.com/icon.svg",
+	"logo": "https://example.com/logo.svg",
+	"tags": [
+            "fs",
+	],
+	"latest_version": "1.0.0",
+	"types": {
+            "source": true,
+            "destination": true,
+            "storage": true
+	},
+	"status": {
+	    "status": "built-in",
+	    "version": "1.0.0",
+	}
+    },
+    {
 	"id": "googlephotos",
 	"dispay_name": "Google Photos",
 	"description": "A plugin to backup and restore your Google Photos.",
@@ -15,6 +36,9 @@
             "source": true,
             "destination": true,
             "storage": false
+	},
+	"status": {
+	    "status": "not-installed",
 	}
     },
     {
@@ -36,6 +60,10 @@
             "source": true,
             "destination": true,
             "storage": true
+	},
+	"status": {
+	    "status": "installed",
+	    "version": "2.1.0"
 	}
     }
 ]

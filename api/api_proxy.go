@@ -150,6 +150,16 @@ func (ui *uiserver) servicesSetAlertingServiceConfiguration(w http.ResponseWrite
 }
 
 func servicesGetIntegration(w http.ResponseWriter, r *http.Request) error {
+	offset, err := QueryParamToInt64(r, "offset", 0, 0)
+	if err != nil {
+		return err
+	}
+
+	limit, err := QueryParamToInt64(r, "limit", 1, 50)
+	if err != nil {
+		return err
+	}
+
 	filterType, _, err := QueryParamToString(r, "type")
 	if err != nil {
 		return err
@@ -165,20 +175,26 @@ func servicesGetIntegration(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	var res []plugins.IntegrationInfo
+	var res Items[plugins.IntegrationInfo]
+
+	var i int64
 
 	for itg, err := range plugins.IterIntegrations(lctx, filterType, filterTag) {
 		if err != nil {
 			return err
 		}
-		if filterStatus == "installed" && !itg.Status.Installed {
+		if filterStatus != "" && itg.Status.Status != filterStatus {
 			continue
 		}
-		if filterStatus == "uninstalled" && itg.Status.Installed {
+		res.Total += 1
+		if i < offset {
 			continue
 		}
-		r := *itg
-		res = append(res, r)
+		if i < limit {
+			r := *itg
+			res.Items = append(res.Items, r)
+		}
+		i += 1
 	}
 
 	return json.NewEncoder(w).Encode(res)
