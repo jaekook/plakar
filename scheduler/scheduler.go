@@ -32,8 +32,7 @@ func NewScheduler(ctx *appcontext.AppContext, config *Configuration) *Scheduler 
 }
 
 func (s *Scheduler) Run() {
-	doReport := reporting.ReportingEnabled(s.ctx)
-	s.reporter = reporting.NewReporter(s.ctx, doReport, s.ctx.GetLogger())
+	s.reporter = reporting.NewReporter(s.ctx, true)
 
 	for _, cleanupCfg := range s.config.Agent.Maintenance {
 		go s.maintenanceTask(cleanupCfg)

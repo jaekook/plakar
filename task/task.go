@@ -1,8 +1,6 @@
 package task
 
 import (
-	"fmt"
-
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/plakar/appcontext"
@@ -34,16 +32,7 @@ func RunCommand(ctx *appcontext.AppContext, cmd subcommands.Subcommand, repo *re
 		taskKind = "maintenance"
 	}
 
-	var doReport bool
-	if taskKind != "" {
-		doReport = reporting.ReportingEnabled(ctx)
-	}
-
-	if taskKind == "" {
-		taskKind = fmt.Sprintf(".%T", cmd)
-	}
-
-	reporter := reporting.NewReporter(ctx, doReport, ctx.GetLogger())
+	reporter := reporting.NewReporter(ctx, taskKind != "")
 	report := reporter.NewReport()
 	report.TaskStart(taskKind, taskName)
 	if repo != nil {

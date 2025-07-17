@@ -42,12 +42,13 @@ func ReportingEnabled(ctx *appcontext.AppContext) bool {
 	return true
 }
 
-func NewReporter(ctx *appcontext.AppContext, reporting bool, logger *logging.Logger) *Reporter {
-	if logger == nil {
-		logger = logging.NewLogger(os.Stdout, os.Stderr)
-	}
-
+func NewReporter(ctx *appcontext.AppContext, reporting bool) *Reporter {
+	logger := ctx.GetLogger()
 	var emitter Emitter
+
+	if reporting {
+		reporting = ReportingEnabled(ctx)
+	}
 
 	if !reporting {
 		emitter = &NullEmitter{}
