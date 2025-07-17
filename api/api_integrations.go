@@ -43,13 +43,13 @@ type IntegrationsInstallRequest struct {
 	Version string `json:"version"`
 }
 
-func integrationsInstall(w http.ResponseWriter, r *http.Request) error {
+func (ui *uiserver) integrationsInstall(w http.ResponseWriter, r *http.Request) error {
 	resp := NewIntegrationsResponse("pkg_install")
 	pkgName := r.PathValue("pkg")
 
-	var cmd pkg.PkgInstall
+	var cmd pkg.PkgAdd
 	cmd.Args = append(cmd.Args, pkgName)
-	_, err := cmd.Execute(lctx, lrepository)
+	_, err := cmd.Execute(ui.ctx, ui.repository)
 	if err != nil {
 		resp.Status = "failed"
 		resp.AddMessage(fmt.Sprintf("unistall command failed: %v", err))
@@ -60,13 +60,13 @@ func integrationsInstall(w http.ResponseWriter, r *http.Request) error {
 	return json.NewEncoder(w).Encode(resp)
 }
 
-func integrationsUninstall(w http.ResponseWriter, r *http.Request) error {
+func (ui *uiserver) integrationsUninstall(w http.ResponseWriter, r *http.Request) error {
 	resp := NewIntegrationsResponse("pkg_uninstall")
 	pkgName := r.PathValue("pkg")
 
-	var cmd pkg.PkgUninstall
+	var cmd pkg.PkgRm
 	cmd.Args = append(cmd.Args, pkgName)
-	_, err := cmd.Execute(lctx, lrepository)
+	_, err := cmd.Execute(ui.ctx, ui.repository)
 	if err != nil {
 		resp.Status = "failed"
 		resp.AddMessage(fmt.Sprintf("unistall command failed: %v", err))

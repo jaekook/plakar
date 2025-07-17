@@ -149,7 +149,7 @@ func (ui *uiserver) servicesSetAlertingServiceConfiguration(w http.ResponseWrite
 	return json.NewEncoder(w).Encode(alertConfig)
 }
 
-func servicesGetIntegration(w http.ResponseWriter, r *http.Request) error {
+func (ui *uiserver) servicesGetIntegration(w http.ResponseWriter, r *http.Request) error {
 	offset, err := QueryParamToInt64(r, "offset", 0, 0)
 	if err != nil {
 		return err
@@ -179,7 +179,7 @@ func servicesGetIntegration(w http.ResponseWriter, r *http.Request) error {
 
 	var i int64
 
-	for itg, err := range plugins.IterIntegrations(lctx, filterType, filterTag) {
+	for itg, err := range plugins.IterIntegrations(ui.ctx, filterType, filterTag) {
 		if err != nil {
 			return err
 		}
@@ -187,23 +187,22 @@ func servicesGetIntegration(w http.ResponseWriter, r *http.Request) error {
 			continue
 		}
 		res.Total += 1
-		if i < offset {
-			continue
-		}
-		if i < limit {
-			r := *itg
-			res.Items = append(res.Items, r)
-		}
 		i += 1
+		if i > offset {
+			if i <= offset+limit {
+				r := *itg
+				res.Items = append(res.Items, r)
+			}
+		}
 	}
 
 	return json.NewEncoder(w).Encode(res)
 }
 
-func servicesGetIntegrationId(w http.ResponseWriter, r *http.Request) error {
+func (ui *uiserver) servicesGetIntegrationId(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 
-	for itg, err := range plugins.IterIntegrations(lctx, "", "") {
+	for itg, err := range plugins.IterIntegrations(ui.ctx, "", "") {
 		if err != nil {
 			return err
 		}
@@ -215,6 +214,6 @@ func servicesGetIntegrationId(w http.ResponseWriter, r *http.Request) error {
 	return fmt.Errorf("Not found")
 }
 
-func servicesGetIntegrationPath(w http.ResponseWriter, r *http.Request) error {
+func (ui *uiserver) servicesGetIntegrationPath(w http.ResponseWriter, r *http.Request) error {
 	return fmt.Errorf("Not implemented")
 }

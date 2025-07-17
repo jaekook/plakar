@@ -1,69 +1,90 @@
 [
-    {
-	"id": "fs",
-	"dispay_name": "Filesystem",
-	"description": "A plugin to backup and restore your filesystem.",
-	"documentation": "<content of a README.md file>",
-	"icon": "https://example.com/icon.svg",
-	"logo": "https://example.com/logo.svg",
-	"tags": [
-            "fs",
-	],
-	"latest_version": "1.0.0",
-	"types": {
-            "source": true,
-            "destination": true,
-            "storage": true
-	},
-	"status": {
-	    "status": "built-in",
-	    "version": "1.0.0",
-	}
+  {
+    "id": "fs",
+    "dispay_name": "Filesystem",
+    "description": "A plugin to backup and restore your filesystem.",
+    "documentation": "<content of a README.md file>",
+    "icon": "https://example.com/icon.svg",
+    "logo": "https://example.com/logo.svg",
+    "tags": [
+      "fs"
+    ],
+    "latest_version": "1.0.0",
+    "types": {
+      "source": true,
+      "destination": true,
+      "storage": true
     },
-    {
-	"id": "googlephotos",
-	"dispay_name": "Google Photos",
-	"description": "A plugin to backup and restore your Google Photos.",
-	"documentation": "<content of a README.md file>",
-	"icon": "https://example.com/icon.svg",
-	"logo": "https://example.com/logo.svg",
-	"tags": [
-            "photos",
-            "google"
-	],
-	"latest_version": "0.2.3",
-	"types": {
-            "source": true,
-            "destination": true,
-            "storage": false
-	},
-	"status": {
-	    "status": "not-installed",
-	}
-    },
-    {
-	"id": "imap",
-	"dispay_name": "IMAP",
-	"description": "The IMAP integration allows you to backup and restore your emails from any IMAP server.\nIt supports Gmail, Outlook, Yahoo, and more.\nBecause we like to have fun, you can also use it to store your backups in your email account.",
-	"documentation": "<content of a README.md file>",
-	"icon": "https://example.com/icon.svg",
-	"logo": "https://example.com/logo.svg",
-	"tags": [
-            "imap",
-            "email",
-            "gmail",
-            "outlook",
-            "yahoo"
-	],
-	"latest_versions": "2.1.0",
-	"types": {
-            "source": true,
-            "destination": true,
-            "storage": true
-	},
-	"status": {
-	    "status": "installed",
-	    "version": "2.1.0"
-	}
+    "status": {
+      "status": "built-in",
+      "version": "1.0.0"
     }
+  },
+  {
+    "id": "googlephotos",
+    "dispay_name": "Google Photos",
+    "description": "A plugin to backup and restore your Google Photos.",
+    "documentation": "<content of a README.md file>",
+    "icon": "https://example.com/icon.svg",
+    "logo": "https://example.com/logo.svg",
+    "tags": [
+      "photos",
+      "google"
+    ],
+    "latest_version": "0.2.3",
+    "types": {
+      "source": true,
+      "destination": true,
+      "storage": false
+    },
+    "status": {
+      "status": "not-installed"
+    }
+  },
+  {
+    "id": "imap",
+    "dispay_name": "IMAP",
+    "description": "The IMAP integration allows you to backup and restore your emails from any IMAP server.\nIt supports Gmail, Outlook, Yahoo, and more.\nBecause we like to have fun, you can also use it to store your backups in your email account.",
+    "documentation": "<content of a README.md file>",
+    "icon": "https://example.com/icon.svg",
+    "logo": "https://example.com/logo.svg",
+    "tags": [
+      "imap",
+      "email",
+      "gmail",
+      "outlook",
+      "yahoo"
+    ],
+    "latest_version": "2.1.0",
+    "types": {
+      "source": true,
+      "destination": true,
+      "storage": false
+    },
+    "status": {
+      "status": "installed",
+      "version": "2.1.0"
+    }
+  },
+  {
+    "id": "notion",
+    "dispay_name": "Notion",
+    "description": "A plugin to backup and restore your notion documents.",
+    "documentation": "<content of a README.md file>",
+    "icon": "https://example.com/icon.svg",
+    "logo": "https://example.com/logo.svg",
+    "tags": [
+      "photos",
+      "google"
+    ],
+    "latest_version": "0.0.3",
+    "types": {
+      "source": true,
+      "destination": true,
+      "storage": false
+    },
+    "status": {
+      "status": "not-installed"
+    }
+  }
 ]
