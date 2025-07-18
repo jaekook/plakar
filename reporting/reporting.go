@@ -16,7 +16,7 @@ import (
 const PLAKAR_API_URL = "https://api.plakar.io/v1/reporting/reports"
 
 type Emitter interface {
-	Emit(report *Report, logger *logging.Logger)
+	Emit(report *Report) error
 }
 
 type Reporter struct {
@@ -64,7 +64,18 @@ func (reporter *Reporter) Process(report *Report) {
 	if report.ignore {
 		return
 	}
-	reporter.getEmitter().Emit(report, reporter.ctx.GetLogger())
+
+	attempts := 3
+	backoffUnit := time.Minute
+	for i := range attempts {
+		err := reporter.getEmitter().Emit(report)
+		if err == nil {
+			return
+		}
+		reporter.ctx.GetLogger().Warn("failed to emit report: %s", err)
+		time.Sleep(backoffUnit << i)
+	}
+	reporter.ctx.GetLogger().Error("failed to emit report after %d attempts", attempts)
 }
 
 func (reporter *Reporter) StopAndWait() {
@@ -112,7 +123,6 @@ func (reporter *Reporter) getEmitter() Emitter {
 	reporter.emitter = &HttpEmitter{
 		url:   url,
 		token: token,
-		retry: 3,
 	}
 	return reporter.emitter
 }
