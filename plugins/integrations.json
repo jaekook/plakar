@@ -15,7 +15,7 @@
       "destination": true,
       "storage": true
     },
-    "status": {
+    "installation": {
       "status": "built-in",
       "version": "1.0.0"
     }
@@ -37,7 +37,7 @@
       "destination": true,
       "storage": false
     },
-    "status": {
+    "installation": {
       "status": "not-installed"
     }
   },
@@ -61,7 +61,7 @@
       "destination": true,
       "storage": false
     },
-    "status": {
+    "installation": {
       "status": "installed",
       "version": "2.1.0"
     }
@@ -83,7 +83,7 @@
       "destination": true,
       "storage": false
     },
-    "status": {
+    "installation": {
       "status": "not-installed"
     }
   }

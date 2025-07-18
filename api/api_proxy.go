@@ -176,6 +176,7 @@ func (ui *uiserver) servicesGetIntegration(w http.ResponseWriter, r *http.Reques
 	}
 
 	var res Items[plugins.IntegrationInfo]
+	res.Items = make([]plugins.IntegrationInfo, 0)
 
 	var i int64
 
@@ -183,7 +184,7 @@ func (ui *uiserver) servicesGetIntegration(w http.ResponseWriter, r *http.Reques
 		if err != nil {
 			return err
 		}
-		if filterStatus != "" && itg.Status.Status != filterStatus {
+		if filterStatus != "" && itg.Installation.Status != filterStatus {
 			continue
 		}
 		res.Total += 1

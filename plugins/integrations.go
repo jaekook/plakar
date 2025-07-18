@@ -15,22 +15,22 @@ type IntegrationTypes struct {
 	Destination bool `json:"destination"`
 }
 
-type IntegrationStatus struct {
+type IntegrationInstallation struct {
 	Status  string `json:"status"`
 	Version string `json:"version,omitempty"`
 }
 
 type IntegrationInfo struct {
-	Id            string            `json:"id"`
-	DispayName    string            `json:"dispay_name"`
-	Description   string            `json:"description"`
-	Documentation string            `json:"documentation"`
-	Icon          string            `json:"icon"`
-	Logo          string            `json:"logo"`
-	Tags          []string          `json:"tags"`
-	LatestVersion string            `json:"latest_version"`
-	Types         IntegrationTypes  `json:"types"`
-	Status        IntegrationStatus `json:"status"`
+	Id            string                  `json:"id"`
+	DispayName    string                  `json:"dispay_name"`
+	Description   string                  `json:"description"`
+	Documentation string                  `json:"documentation"`
+	Icon          string                  `json:"icon"`
+	Logo          string                  `json:"logo"`
+	Tags          []string                `json:"tags"`
+	LatestVersion string                  `json:"latest_version"`
+	Types         IntegrationTypes        `json:"types"`
+	Installation  IntegrationInstallation `json:"installation"`
 }
 
 //go:embed integrations.json
