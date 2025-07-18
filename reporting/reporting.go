@@ -20,58 +20,17 @@ type Emitter interface {
 }
 
 type Reporter struct {
-	logger  *logging.Logger
-	emitter Emitter
-	reports chan *Report
-	stop    chan any
-	done    chan any
-}
-
-func ReportingEnabled(ctx *appcontext.AppContext) bool {
-	authToken, err := ctx.GetCookies().GetAuthToken()
-	if err != nil || authToken == "" {
-		return false
-	}
-
-	sc := services.NewServiceConnector(ctx, authToken)
-	enabled, err := sc.GetServiceStatus("alerting")
-	if err != nil || !enabled {
-		return false
-	}
-
-	return true
+	ctx             *appcontext.AppContext
+	reports         chan *Report
+	stop            chan any
+	done            chan any
+	emitter         Emitter
+	emitter_timeout time.Time
 }
 
 func NewReporter(ctx *appcontext.AppContext) *Reporter {
-	logger := ctx.GetLogger()
-	var emitter Emitter
-
-	if ReportingEnabled(ctx) {
-		emitter = &NullEmitter{}
-	} else {
-
-		url := os.Getenv("PLAKAR_API_URL")
-		if url == "" {
-			url = PLAKAR_API_URL
-		}
-
-		var token string
-
-		token, err := ctx.GetCookies().GetAuthToken()
-		if err != nil {
-			logger.Warn("cannot get auth token")
-		}
-
-		emitter = &HttpEmitter{
-			url:   url,
-			token: token,
-			retry: 3,
-		}
-	}
-
 	r := &Reporter{
-		logger:  logger,
-		emitter: emitter,
+		ctx:     ctx,
 		reports: make(chan *Report, 100),
 		stop:    make(chan any),
 		done:    make(chan any),
@@ -105,7 +64,7 @@ func (reporter *Reporter) Process(report *Report) {
 	if report.ignore {
 		return
 	}
-	reporter.emitter.Emit(report, reporter.logger)
+	reporter.getEmitter().Emit(report, reporter.ctx.GetLogger())
 }
 
 func (reporter *Reporter) StopAndWait() {
@@ -114,8 +73,52 @@ func (reporter *Reporter) StopAndWait() {
 	}
 }
 
+func (reporter *Reporter) getEmitter() Emitter {
+	// Check if emitter should be reloaded
+	if reporter.emitter != nil && reporter.emitter_timeout.After(time.Now()) {
+		return reporter.emitter
+	}
+
+	// By default do nothing
+	reporter.emitter = &NullEmitter{}
+	reporter.emitter_timeout = time.Now().Add(time.Minute)
+
+	// Check if user is logged
+	token, err := reporter.ctx.GetCookies().GetAuthToken()
+	if err != nil {
+		reporter.ctx.GetLogger().Warn("cannot get auth token: %v", err)
+		return reporter.emitter
+	}
+	if token == "" {
+		return reporter.emitter
+	}
+
+	sc := services.NewServiceConnector(reporter.ctx, token)
+	enabled, err := sc.GetServiceStatus("alerting")
+	if err != nil {
+		reporter.ctx.GetLogger().Warn("failed to check alerting service: %v", err)
+		return reporter.emitter
+	}
+	if !enabled {
+		return reporter.emitter
+	}
+
+	// User is logged and alerting service is enabled
+	url := os.Getenv("PLAKAR_API_URL")
+	if url == "" {
+		url = PLAKAR_API_URL
+	}
+
+	reporter.emitter = &HttpEmitter{
+		url:   url,
+		token: token,
+		retry: 3,
+	}
+	return reporter.emitter
+}
+
 func (reporter *Reporter) NewReport() *Report {
-	return NewReport(reporter.logger, reporter.reports)
+	return NewReport(reporter.ctx.GetLogger(), reporter.reports)
 }
 
 func NewReport(logger *logging.Logger, reporter chan *Report) *Report {
