@@ -46,4 +46,5 @@ type Report struct {
 	repo     *repository.Repository `json:"-"`
 	logger   *logging.Logger        `json:"-"`
 	reporter chan *Report           `json:"-"`
+	ignore   bool                   `json:"-"`
 }

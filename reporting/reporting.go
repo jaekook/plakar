@@ -42,15 +42,11 @@ func ReportingEnabled(ctx *appcontext.AppContext) bool {
 	return true
 }
 
-func NewReporter(ctx *appcontext.AppContext, reporting bool) *Reporter {
+func NewReporter(ctx *appcontext.AppContext) *Reporter {
 	logger := ctx.GetLogger()
 	var emitter Emitter
 
-	if reporting {
-		reporting = ReportingEnabled(ctx)
-	}
-
-	if !reporting {
+	if ReportingEnabled(ctx) {
 		emitter = &NullEmitter{}
 	} else {
 
@@ -85,22 +81,31 @@ func NewReporter(ctx *appcontext.AppContext, reporting bool) *Reporter {
 		var rp *Report
 		for {
 			select {
+			case <-ctx.Done():
+				goto done
 			case <-r.stop:
 				goto done
 			case rp = <-r.reports:
-				emitter.Emit(rp, r.logger)
+				r.Process(rp)
 			}
 		}
 	done:
 		close(r.reports)
 		// drain remaining reports
 		for rp = range r.reports {
-			emitter.Emit(rp, r.logger)
+			r.Process(rp)
 		}
 		close(r.done)
 	}()
 
 	return r
+}
+
+func (reporter *Reporter) Process(report *Report) {
+	if report.ignore {
+		return
+	}
+	reporter.emitter.Emit(report, reporter.logger)
 }
 
 func (reporter *Reporter) StopAndWait() {
@@ -119,6 +124,10 @@ func NewReport(logger *logging.Logger, reporter chan *Report) *Report {
 		reporter: reporter,
 	}
 	return report
+}
+
+func (report *Report) SetIgnore() {
+	report.ignore = true
 }
 
 func (report *Report) TaskStart(kind string, name string) {

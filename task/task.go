@@ -16,6 +16,9 @@ import (
 
 func RunCommand(ctx *appcontext.AppContext, cmd subcommands.Subcommand, repo *repository.Repository, taskName string) (int, error) {
 
+	reporter := reporting.NewReporter(ctx)
+	report := reporter.NewReport()
+
 	var taskKind string
 	switch cmd.(type) {
 	case *backup.Backup:
@@ -30,10 +33,10 @@ func RunCommand(ctx *appcontext.AppContext, cmd subcommands.Subcommand, repo *re
 		taskKind = "rm"
 	case *maintenance.Maintenance:
 		taskKind = "maintenance"
+	default:
+		report.SetIgnore()
 	}
 
-	reporter := reporting.NewReporter(ctx, taskKind != "")
-	report := reporter.NewReport()
 	report.TaskStart(taskKind, taskName)
 	if repo != nil {
 		report.WithRepositoryName(repo.Location())
