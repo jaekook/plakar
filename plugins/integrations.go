@@ -70,6 +70,8 @@ func IterIntegrations(ctx *appcontext.AppContext, filterType string, filterTag s
 				continue
 			}
 			// XXX Check if installed
+			info.Installation.Status = "not-installed"
+
 			if !yield(&info, nil) {
 				return
 			}
