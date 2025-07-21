@@ -33,7 +33,7 @@ require (
 	go.omarpolo.com/ttlmap v0.0.0-20231012080932-0154c95c7516
 	golang.org/x/crypto v0.38.0
 	golang.org/x/mod v0.24.0
-	golang.org/x/sync v0.15.0
+	golang.org/x/sync v0.16.0
 	golang.org/x/term v0.32.0
 	golang.org/x/tools v0.31.0
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822
