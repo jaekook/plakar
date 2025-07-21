@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"html"
 	"io"
 	"net/http"
 	"path"
@@ -83,7 +84,7 @@ func (ui *uiserver) snapshotReader(w http.ResponseWriter, r *http.Request) error
 
 	render := r.URL.Query().Get("render")
 	switch render {
-	case "code", "text", "auto":
+	case "code", "text", "text_styled", "auto":
 		// valid values
 	case "":
 		render = "auto"
@@ -121,6 +122,48 @@ func (ui *uiserver) snapshotReader(w http.ResponseWriter, r *http.Request) error
 	case "text":
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.ServeContent(w, r, filepath.Base(path), entry.Stat().ModTime(), file.(io.ReadSeeker))
+		return nil
+	case "text_styled":
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		if _, err := w.Write([]byte(`<!DOCTYPE html>
+		<html>
+			<head>
+			<meta charset="utf-8">
+			<style>
+				body {
+					background-color: #282a36;
+					color: #fff;
+					font-family: monospace;
+				}
+			</style>
+		</head>
+		<body>
+			<pre>`)); err != nil {
+			return err
+		}
+
+		reader := bufio.NewReader(file)
+		buf := make([]byte, 4096)
+		for {
+			n, err := reader.Read(buf)
+			if n > 0 {
+				escaped := html.EscapeString(string(buf[:n])) // Prevent HTML injection
+				if _, err := w.Write([]byte(escaped)); err != nil {
+					return err
+				}
+			}
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				return err
+			}
+		}
+
+		if _, err := w.Write([]byte("</pre></body></html>")); err != nil {
+			return err
+		}
 		return nil
 	case "auto":
 		http.ServeContent(w, r, filepath.Base(path), entry.Stat().ModTime(), file.(io.ReadSeeker))
