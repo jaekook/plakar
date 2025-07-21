@@ -117,57 +117,59 @@ func (ui *uiserver) snapshotReader(w http.ResponseWriter, r *http.Request) error
 		w.Header().Set("Content-Disposition", "attachment; filename="+strconv.Quote(filepath.Base(path)))
 	}
 
-	if render != "code" {
-		if render == "text" {
-			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		}
+	switch render {
+	case "text":
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		http.ServeContent(w, r, filepath.Base(path), entry.Stat().ModTime(), file.(io.ReadSeeker))
 		return nil
-	}
+	case "auto":
+		http.ServeContent(w, r, filepath.Base(path), entry.Stat().ModTime(), file.(io.ReadSeeker))
+		return nil
+	default: // "code"
+		lexer := lexers.Match(path)
+		if lexer == nil {
+			lexer = lexers.Get(entry.ResolvedObject.ContentType)
+		}
+		if lexer == nil {
+			lexer = lexers.Fallback // Fallback if no lexer is found
+		}
+		formatter := formatters.Get("html")
+		style := styles.Get("dracula")
 
-	lexer := lexers.Match(path)
-	if lexer == nil {
-		lexer = lexers.Get(entry.ResolvedObject.ContentType)
-	}
-	if lexer == nil {
-		lexer = lexers.Fallback // Fallback if no lexer is found
-	}
-	formatter := formatters.Get("html")
-	style := styles.Get("dracula")
+		w.Header().Set("Content-Type", "text/html")
+		if _, err := w.Write([]byte("<!DOCTYPE html>")); err != nil {
+			return err
+		}
 
-	w.Header().Set("Content-Type", "text/html")
-	if _, err := w.Write([]byte("<!DOCTYPE html>")); err != nil {
-		return err
-	}
+		reader := bufio.NewReader(file)
+		buffer := make([]byte, 4096) // Fixed-size buffer for chunked reading
+		for {
+			n, err := reader.Read(buffer) // Read up to the size of the buffer
+			if n > 0 {
+				chunk := string(buffer[:n])
 
-	reader := bufio.NewReader(file)
-	buffer := make([]byte, 4096) // Fixed-size buffer for chunked reading
-	for {
-		n, err := reader.Read(buffer) // Read up to the size of the buffer
-		if n > 0 {
-			chunk := string(buffer[:n])
+				// Tokenize the chunk and apply syntax highlighting
+				iterator, errTokenize := lexer.Tokenise(nil, chunk)
+				if errTokenize != nil {
+					break
+				}
 
-			// Tokenize the chunk and apply syntax highlighting
-			iterator, errTokenize := lexer.Tokenise(nil, chunk)
-			if errTokenize != nil {
-				break
+				errFormat := formatter.Format(w, style, iterator)
+				if errFormat != nil {
+					break
+				}
 			}
 
-			errFormat := formatter.Format(w, style, iterator)
-			if errFormat != nil {
+			// Check for end of file (EOF)
+			if err == io.EOF {
+				break
+			} else if err != nil {
 				break
 			}
 		}
 
-		// Check for end of file (EOF)
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			break
-		}
+		return nil
 	}
-
-	return nil
 }
 
 type SnapshotReaderURLSigner struct {
