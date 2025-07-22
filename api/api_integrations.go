@@ -95,9 +95,7 @@ func (ui *uiserver) integrationsUninstall(w http.ResponseWriter, r *http.Request
 		goto done
 	}
 
-	pkgName = fmt.Sprintf("%s_%s_%s_%s.ptar", plugin.Name, plugin.Version, runtime.GOOS, runtime.GOARCH)
-
-	cmd.Args = append(cmd.Args, pkgName)
+	cmd.Args = append(cmd.Args, plugin.PkgName())
 	_, err = cmd.Execute(ui.ctx, ui.repository)
 	if err != nil {
 		resp.AddMessage(fmt.Sprintf("uninstall command failed: %v", err))

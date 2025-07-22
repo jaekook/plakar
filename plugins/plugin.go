@@ -43,17 +43,23 @@ func ListInstalledPlugins(ctx *appcontext.AppContext) (InstalledPlugins, error) 
 			continue
 		}
 		name := entry.Name()
+
+		if !strings.HasSuffix(name, ".ptar") {
+			ctx.GetLogger().Warn("plugin name %q does not end with .ptar", name)
+			continue
+		}
+		name = strings.TrimSuffix(name, ".ptar")
 		atoms := strings.Split(name, "_")
 		if len(atoms) != 4 {
 			ctx.GetLogger().Warn("invalid plugin name %q", name)
 			continue
 		}
 		if atoms[2] != runtime.GOOS {
-			ctx.GetLogger().Warn("incorrect OS for plugin %q", name)
+			ctx.GetLogger().Warn("incorrect OS for plugin %q (expect %q)", name, runtime.GOOS)
 			continue
 		}
 		if atoms[3] != runtime.GOARCH {
-			ctx.GetLogger().Warn("incorrect architecture for plugin %q", name)
+			ctx.GetLogger().Warn("incorrect architecture for plugin %q (expect %q)", name, runtime.GOARCH)
 			continue
 		}
 
@@ -80,12 +86,20 @@ func (plugins InstalledPlugins) GetPlugin(name string) *InstalledPlugin {
 	return nil
 }
 
+func (p InstalledPlugin) FullName() string {
+	return fmt.Sprintf("%s_%s_%s_%s", p.Name, p.Version, runtime.GOOS, runtime.GOARCH)
+}
+
+func (p InstalledPlugin) PkgName() string {
+	return fmt.Sprintf("%s.ptar", p.FullName())
+}
+
 func (p InstalledPlugin) Open(path string) (*os.File, error) {
 	cachedir, err := utils.GetCacheDir("plakar")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get cache directory: %w", err)
 	}
-	path = filepath.Join(cachedir, "plugins", p.Name, path)
+	path = filepath.Join(cachedir, "plugins", p.FullName(), path)
 	return os.Open(path)
 }
 
