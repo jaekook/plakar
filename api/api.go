@@ -178,8 +178,8 @@ func SetupRoutes(server *http.ServeMux, repo *repository.Repository, ctx *appcon
 	server.Handle("GET /api/proxy/v1/integration/{id}", authToken(JSONAPIView(ui.servicesGetIntegrationId)))
 	server.Handle("GET /api/proxy/v1/integration/{id}/{path...}", authToken(JSONAPIView(ui.servicesGetIntegrationPath)))
 
-	server.Handle("POST /api/integrations", authToken(JSONAPIView(ui.integrationsInstall)))
-	server.Handle("DELETE /api/integration/{id}", authToken(JSONAPIView(ui.integrationsUninstall)))
+	server.Handle("POST /api/integrations/install", authToken(JSONAPIView(ui.integrationsInstall)))
+	server.Handle("DELETE /api/integrations/{id}", authToken(JSONAPIView(ui.integrationsUninstall)))
 
 	server.Handle("GET /api/repository/info", authToken(JSONAPIView(ui.repositoryInfo)))
 	server.Handle("GET /api/repository/snapshots", authToken(JSONAPIView(ui.repositorySnapshots)))

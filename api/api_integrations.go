@@ -76,7 +76,6 @@ done:
 
 func (ui *uiserver) integrationsUninstall(w http.ResponseWriter, r *http.Request) error {
 	var cmd pkg.PkgRm
-	var pkgName string
 	var plugin *plugins.InstalledPlugin
 
 	resp := NewIntegrationsResponse("pkg_uninstall")
@@ -103,7 +102,7 @@ func (ui *uiserver) integrationsUninstall(w http.ResponseWriter, r *http.Request
 	}
 
 	resp.Status = "ok"
-	resp.AddMessage(fmt.Sprintf("plugin %q uninstalled successfully", pkgName))
+	resp.AddMessage(fmt.Sprintf("plugin %q uninstalled successfully", id))
 
 done:
 	return json.NewEncoder(w).Encode(resp)
