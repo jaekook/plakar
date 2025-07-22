@@ -157,6 +157,34 @@ func source_config(ctx *appcontext.AppContext, args []string) error {
 		}
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 
+	case "import":
+		usage := "usage: plakar sourceimport --format <name> <path_to_location>"
+		if len(args) < 3 {
+			return fmt.Errorf(usage)
+		}
+		names := args[2:]
+		format := args[0]
+		switch format {
+		case "-ini":
+			iniMap, err := utils.LoadIni(args[1])
+			if err != nil {
+				return fmt.Errorf("failed to load ini config: %w", err)
+			}
+			for _, name := range names {
+				if ctx.Config.HasSource(name) {
+					fmt.Printf("source %q already exists, skipping\n", name)
+					continue
+				}
+				err := utils.ImportConfigFromIni(ctx, name, iniMap, "source")
+				if err != nil {
+					fmt.Printf("failed to import sourcefrom ini: %w", err)
+					continue
+				}
+			}
+		default:
+			return fmt.Errorf("unknown format %q. Known formats are: -ini", format)
+		}
+		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 	default:
 		return fmt.Errorf(usage)
 	}

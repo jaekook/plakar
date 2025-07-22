@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"bufio"
 
 	"github.com/PlakarKorp/kloset/config"
+	"github.com/PlakarKorp/plakar/appcontext"
 	"gopkg.in/yaml.v3"
 )
 
@@ -153,4 +156,70 @@ func LoadConfig(configDir string) (*config.Config, error) {
 
 func SaveConfig(configDir string, cfg *config.Config) error {
 	return newConfigHandler(configDir).Save(cfg)
+}
+
+
+func LoadIni(path string) (map[string]map[string]string, error) {
+	result := make(map[string]map[string]string)
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var section string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if line == "" || strings.HasPrefix(line, ";") || strings.HasPrefix(line, "#") {
+			continue
+		}
+		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
+			section = strings.TrimSpace(line[1 : len(line)-1])
+			result[section] = make(map[string]string)
+		} else if eq := strings.Index(line, "="); eq != -1 {
+			if section == "" {
+				return nil, fmt.Errorf("key-value pair outside of section")
+			}
+			key := strings.TrimSpace(line[:eq])
+			value := strings.TrimSpace(line[eq+1:])
+			result[section][key] = value
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func ImportConfigFromIni(ctx *appcontext.AppContext, name string, iniMap map[string]map[string]string, mode string) error {
+	if iniMap[name] == nil {
+		return fmt.Errorf("no section found for destination %q in ini file", name)
+	}
+	
+	mapConf := make(map[string]string)
+	for k, v := range iniMap[name] {
+		mapConf[k] = v
+	}
+	mapConf["location"] = mapConf["type"] + "://"
+	providerSpecialCases := map[string]string{
+		"drive": "googledrive",
+		"google photos": "googlephotos",
+	}
+	for t, s := range providerSpecialCases {
+		if mapConf["type"] == t {
+			mapConf["location"] = s + "://"
+			break
+		}
+	}
+	if mode == "destination" {
+		ctx.Config.Destinations[name] = mapConf
+	} else if mode == "source" {
+		ctx.Config.Sources[name] = mapConf
+	} else {
+		ctx.Config.Repositories[name] = mapConf
+	}
+	return SaveConfig(ctx.ConfigDir, ctx.Config)
 }

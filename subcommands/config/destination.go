@@ -156,7 +156,34 @@ func destination_config(ctx *appcontext.AppContext, args []string) error {
 			delete(ctx.Config.Destinations[name], key)
 		}
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
-
+	case "import":
+		usage := "usage: plakar destination import --format <name> <path_to_location>"
+		if len(args) < 3 {
+			return fmt.Errorf(usage)
+		}
+		names := args[2:]
+		format := args[0]
+		switch format {
+		case "-ini":
+			iniMap, err := utils.LoadIni(args[1])
+			if err != nil {
+				return fmt.Errorf("failed to load ini config: %w", err)
+			}
+			for _, name := range names {
+				if ctx.Config.HasDestination(name) {
+					fmt.Printf("destination %q already exists, skipping\n", name)
+					continue
+				}
+				err := utils.ImportConfigFromIni(ctx, name, iniMap, "destination")
+				if err != nil {
+					fmt.Printf("failed to import destination from ini: %w", err)
+					continue
+				}
+			}
+		default:
+			return fmt.Errorf("unknown format %q. Known formats are: -ini", format)
+		}
+		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 	default:
 		return fmt.Errorf(usage)
 	}
