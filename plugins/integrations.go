@@ -48,12 +48,18 @@ type IntegrationIndex struct {
 var integrationsData []byte
 
 func IterIntegrations(ctx *appcontext.AppContext, filterType string, filterTag string) iter.Seq2[*IntegrationInfo, error] {
+
 	return func(yield func(*IntegrationInfo, error) bool) {
 		var index IntegrationIndex
 		err := json.Unmarshal(integrationsData, &index)
 		if err != nil {
 			yield(nil, err)
 			return
+		}
+
+		installed, err := ListInstalledPlugins(ctx)
+		if err != nil {
+			ctx.GetLogger().Warn("failed to list installed plugins %v", err)
 		}
 
 		for _, info := range index.Integrations {
@@ -69,8 +75,18 @@ func IterIntegrations(ctx *appcontext.AppContext, filterType string, filterTag s
 			if filterTag != "" && !slices.Contains(info.Tags, filterTag) {
 				continue
 			}
-			// XXX Check if installed
 			info.Installation.Status = "not-installed"
+
+			plugin := installed.GetPlugin(info.Name)
+			if plugin != nil {
+				manifest, err := plugin.Manifest()
+				if err != nil {
+					ctx.GetLogger().Warn("failed to read manifest file: %v", err)
+				} else {
+					info.Installation.Status = "installed"
+					info.Installation.Version = manifest.Version
+				}
+			}
 
 			if !yield(&info, nil) {
 				return

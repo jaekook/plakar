@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime"
 	"time"
 
+	"github.com/PlakarKorp/plakar/plugins"
 	"github.com/PlakarKorp/plakar/subcommands/pkg"
 )
 
@@ -44,35 +46,67 @@ type IntegrationsInstallRequest struct {
 }
 
 func (ui *uiserver) integrationsInstall(w http.ResponseWriter, r *http.Request) error {
-	resp := NewIntegrationsResponse("pkg_install")
-	pkgName := r.PathValue("pkg")
-
 	var cmd pkg.PkgAdd
-	cmd.Args = append(cmd.Args, pkgName)
-	_, err := cmd.Execute(ui.ctx, ui.repository)
+	var pkgName string
+	var req IntegrationsInstallRequest
+
+	resp := NewIntegrationsResponse("pkg_uninstall")
+	resp.Status = "failed"
+
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
-		resp.Status = "failed"
-		resp.AddMessage(fmt.Sprintf("unistall command failed: %v", err))
-	} else {
-		resp.AddMessage(fmt.Sprintf("plugin %s installed successfully", pkgName))
+		resp.AddMessage(fmt.Sprintf("failed to decode request body: %v", err))
+		goto done
 	}
 
+	pkgName = fmt.Sprintf("%s_%s_%s_%s.ptar", req.Id, req.Version, runtime.GOOS, runtime.GOARCH)
+	cmd.Args = append(cmd.Args, pkgName)
+	_, err = cmd.Execute(ui.ctx, ui.repository)
+	if err != nil {
+		resp.AddMessage(fmt.Sprintf("install command failed: %v", err))
+		goto done
+	}
+
+	resp.Status = "ok"
+	resp.AddMessage(fmt.Sprintf("plugin %q installed successfully", pkgName))
+
+done:
 	return json.NewEncoder(w).Encode(resp)
 }
 
 func (ui *uiserver) integrationsUninstall(w http.ResponseWriter, r *http.Request) error {
-	resp := NewIntegrationsResponse("pkg_uninstall")
-	pkgName := r.PathValue("pkg")
-
 	var cmd pkg.PkgRm
-	cmd.Args = append(cmd.Args, pkgName)
-	_, err := cmd.Execute(ui.ctx, ui.repository)
+	var pkgName string
+	var plugin *plugins.InstalledPlugin
+
+	resp := NewIntegrationsResponse("pkg_uninstall")
+	resp.Status = "failed"
+
+	id := r.PathValue("id")
+
+	p, err := plugins.ListInstalledPlugins(ui.ctx)
 	if err != nil {
-		resp.Status = "failed"
-		resp.AddMessage(fmt.Sprintf("unistall command failed: %v", err))
-	} else {
-		resp.AddMessage(fmt.Sprintf("plugin %s uninstalled successfully", pkgName))
+		resp.AddMessage(fmt.Sprintf("%v", err))
+		goto done
+	}
+	plugin = p.GetPlugin(id)
+	if plugin == nil {
+		resp.AddMessage("plugin not installed")
+		goto done
 	}
 
+	pkgName = fmt.Sprintf("%s_%s_%s_%s.ptar", plugin.Name, plugin.Version, runtime.GOOS, runtime.GOARCH)
+
+	cmd.Args = append(cmd.Args, pkgName)
+	_, err = cmd.Execute(ui.ctx, ui.repository)
+	if err != nil {
+		resp.AddMessage(fmt.Sprintf("uninstall command failed: %v", err))
+		goto done
+	}
+
+	resp.Status = "ok"
+	resp.AddMessage(fmt.Sprintf("plugin %q uninstalled successfully", pkgName))
+
+done:
 	return json.NewEncoder(w).Encode(resp)
 }
