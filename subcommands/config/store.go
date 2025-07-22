@@ -170,22 +170,32 @@ func cmd_store_config(ctx *appcontext.AppContext, args []string) error {
 			return fmt.Errorf(usage)
 		}
 		names := args[2:]
+		var filteredNames []string
+		for _, name := range names {
+			if ctx.Config.HasRepository(name) {
+				fmt.Printf("Store %q already exists, skipping\n", name)
+				continue
+			}
+			filteredNames = append(filteredNames, name)
+		}
+		if len(filteredNames) == 0 {
+			return fmt.Errorf("no new store to import")
+		}
+		names = filteredNames
 		format := args[0]
 		switch format {
 		case "-ini":
-			iniMap, err := utils.LoadIni(args[1])
+			NewConfMap, err := utils.GetIniConf(args[1], names)
 			if err != nil {
 				return fmt.Errorf("failed to load ini config: %w", err)
 			}
-			for _, name := range names {
-				if ctx.Config.HasRepository(name) {
-					fmt.Printf("store %q already exists, skipping\n", name)
-					continue
-				}
-				err := utils.ImportConfigFromIni(ctx, name, iniMap, "store")
-				if err != nil {
-					fmt.Printf("failed to import store from ini: %w", err)
-					continue
+			if len(NewConfMap) == 0 {
+				return fmt.Errorf("no valid destinations found in ini file")
+			}
+			for name, section := range NewConfMap {
+				ctx.Config.Repositories[name] = make(map[string]string)
+				for key, value := range section {
+					ctx.Config.Repositories[name][key] = value
 				}
 			}
 		default:

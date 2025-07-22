@@ -163,22 +163,32 @@ func source_config(ctx *appcontext.AppContext, args []string) error {
 			return fmt.Errorf(usage)
 		}
 		names := args[2:]
+		var filteredNames []string
+		for _, name := range names {
+			if ctx.Config.HasSource(name) {
+				fmt.Printf("Source %q already exists, skipping\n", name)
+				continue
+			}
+			filteredNames = append(filteredNames, name)
+		}
+		if len(filteredNames) == 0 {
+			return fmt.Errorf("no new sources to import")
+		}
+		names = filteredNames
 		format := args[0]
 		switch format {
 		case "-ini":
-			iniMap, err := utils.LoadIni(args[1])
+			iniMap, err := utils.GetIniConf(args[1], names)
 			if err != nil {
 				return fmt.Errorf("failed to load ini config: %w", err)
 			}
-			for _, name := range names {
-				if ctx.Config.HasSource(name) {
-					fmt.Printf("source %q already exists, skipping\n", name)
-					continue
-				}
-				err := utils.ImportConfigFromIni(ctx, name, iniMap, "source")
-				if err != nil {
-					fmt.Printf("failed to import sourcefrom ini: %w", err)
-					continue
+			if len(iniMap) == 0 {
+				return fmt.Errorf("no valid destinations found in ini file")
+			}
+			for name, section := range iniMap {
+				ctx.Config.Sources[name] = make(map[string]string)
+				for key, value := range section {
+					ctx.Config.Sources[name][key] = value
 				}
 			}
 		default:

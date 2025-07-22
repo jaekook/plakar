@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
-	"bufio"
+	"gopkg.in/ini.v1"
 
 	"github.com/PlakarKorp/kloset/config"
-	"github.com/PlakarKorp/plakar/appcontext"
 	"gopkg.in/yaml.v3"
 )
 
@@ -158,68 +156,52 @@ func SaveConfig(configDir string, cfg *config.Config) error {
 	return newConfigHandler(configDir).Save(cfg)
 }
 
-
-func LoadIni(path string) (map[string]map[string]string, error) {
-	result := make(map[string]map[string]string)
-	file, err := os.Open(path)
+func LoadIni(path string, keys []string) (map[string]map[string]string, error) {
+	cfg, err := ini.Load(path)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-
-	var section string
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
-		if line == "" || strings.HasPrefix(line, ";") || strings.HasPrefix(line, "#") {
-			continue
-		}
-		if strings.HasPrefix(line, "[") && strings.HasSuffix(line, "]") {
-			section = strings.TrimSpace(line[1 : len(line)-1])
-			result[section] = make(map[string]string)
-		} else if eq := strings.Index(line, "="); eq != -1 {
-			if section == "" {
-				return nil, fmt.Errorf("key-value pair outside of section")
-			}
-			key := strings.TrimSpace(line[:eq])
-			value := strings.TrimSpace(line[eq+1:])
-			result[section][key] = value
-		}
+	keysMap := make(map[string]struct{})
+	for _, k := range keys {
+		keysMap[k] = struct{}{}
 	}
 
-	if err := scanner.Err(); err != nil {
-		return nil, err
+	result := make(map[string]map[string]string)
+	for _, section := range cfg.Sections() {
+		name := section.Name()
+		if name == ini.DefaultSection {
+			continue
+		}
+		if _, ok := keysMap[name]; !ok {
+			continue
+		}
+		result[name] = make(map[string]string)
+		for _, key := range section.Keys() {
+			result[name][key.Name()] = key.Value()
+		}
 	}
 
 	return result, nil
 }
 
-func ImportConfigFromIni(ctx *appcontext.AppContext, name string, iniMap map[string]map[string]string, mode string) error {
-	if iniMap[name] == nil {
-		return fmt.Errorf("no section found for destination %q in ini file", name)
+func GetIniConf(path string, names []string) (map[string]map[string]string, error) {
+	iniMap, err := LoadIni(path, names)
+	if err != nil {
+		return nil, err
 	}
 	
-	mapConf := make(map[string]string)
-	for k, v := range iniMap[name] {
-		mapConf[k] = v
-	}
-	mapConf["location"] = mapConf["type"] + "://"
 	providerSpecialCases := map[string]string{
-		"drive": "googledrive",
-		"google photos": "googlephotos",
+		"drive": "googledrive://",
+		"google photos": "googlephotos://",
 	}
-	for t, s := range providerSpecialCases {
-		if mapConf["type"] == t {
-			mapConf["location"] = s + "://"
-			break
+	for _, section := range iniMap {
+		if section["type"] != "" {
+			if specialCase, ok := providerSpecialCases[section["type"]]; ok {
+				section["location"] = specialCase
+			} else {
+				section["location"] += section["type"] + "://"
+			}
 		}
 	}
-	if mode == "destination" {
-		ctx.Config.Destinations[name] = mapConf
-	} else if mode == "source" {
-		ctx.Config.Sources[name] = mapConf
-	} else {
-		ctx.Config.Repositories[name] = mapConf
-	}
-	return SaveConfig(ctx.ConfigDir, ctx.Config)
+	return iniMap, nil
 }
