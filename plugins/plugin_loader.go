@@ -22,27 +22,7 @@ import (
 	grpc_importer "github.com/PlakarKorp/plakar/connectors/grpc/importer"
 	grpc_storage "github.com/PlakarKorp/plakar/connectors/grpc/storage"
 	"github.com/PlakarKorp/plakar/utils"
-	"gopkg.in/yaml.v3"
 )
-
-type Manifest struct {
-	Name        string   `yaml:"name"`
-	DisplayName string   `yaml:"display_name"`
-	Description string   `yaml:"description"`
-	Homepage    string   `yaml:"homepage"`
-	License     string   `yaml:"license"`
-	Tags        []string `yaml:"tags"`
-	APIVersion  string   `yaml:"api_version"`
-	Version     string   `yaml:"version"`
-
-	Connectors []struct {
-		Type          string   `yaml:"type"`
-		Protocols     []string `yaml:"protocols"`
-		LocationFlags []string `yaml:"location_flags"`
-		Executable    string   `yaml:"executable"`
-		ExtraFiles    []string `yaml:"extra_files"`
-	} `yaml:"connectors"`
-}
 
 func ParseName(name string) (string, string, string, string, error) {
 	if !strings.HasSuffix(name, ".ptar") {
@@ -127,14 +107,9 @@ func Load(ctx *appcontext.AppContext, pluginsDir, cacheDir, name string) error {
 		}
 	}
 
-	fp, err := os.Open(filepath.Join(plugin, "manifest.yaml"))
-	if err != nil {
-		return fmt.Errorf("can't open the manifest: %w", err)
-	}
-	defer fp.Close()
-
+	manifestFile := filepath.Join(plugin, "manifest.yaml")
 	manifest := Manifest{}
-	if err := yaml.NewDecoder(fp).Decode(&manifest); err != nil {
+	if err := ParseManifestFile(manifestFile, &manifest); err != nil {
 		return fmt.Errorf("failed to decode the manifest: %w", err)
 	}
 
