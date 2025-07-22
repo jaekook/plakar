@@ -157,7 +157,7 @@ func destination_config(ctx *appcontext.AppContext, args []string) error {
 		}
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 	case "import":
-		usage := "usage: plakar destination import --format <name> <path_to_location>"
+		usage := "usage: plakar destination import -format <path_to_location> [<name1>, ...]"
 		if len(args) < 3 {
 			return fmt.Errorf(usage)
 		}
