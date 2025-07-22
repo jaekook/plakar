@@ -1,6 +1,7 @@
 package reporting
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"time"
@@ -16,7 +17,7 @@ import (
 const PLAKAR_API_URL = "https://api.plakar.io/v1/reporting/reports"
 
 type Emitter interface {
-	Emit(report *Report) error
+	Emit(ctx context.Context, report *Report) error
 }
 
 type Reporter struct {
@@ -68,7 +69,7 @@ func (reporter *Reporter) Process(report *Report) {
 	attempts := 3
 	backoffUnit := time.Minute
 	for i := range attempts {
-		err := reporter.getEmitter().Emit(report)
+		err := reporter.getEmitter().Emit(reporter.ctx, report)
 		if err == nil {
 			return
 		}

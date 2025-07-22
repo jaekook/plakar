@@ -2,6 +2,7 @@ package reporting
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -11,11 +12,12 @@ import (
 )
 
 type HttpEmitter struct {
-	url   string
-	token string
+	url    string
+	token  string
+	client http.Client
 }
 
-func (emitter *HttpEmitter) Emit(report *Report) error {
+func (emitter *HttpEmitter) Emit(ctx context.Context, report *Report) error {
 	data, err := json.Marshal(report)
 	if err != nil {
 		return fmt.Errorf("failed to encode report: %s", err)
@@ -31,8 +33,7 @@ func (emitter *HttpEmitter) Emit(report *Report) error {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	client := http.Client{}
-	res, err := client.Do(req)
+	res, err := emitter.client.Do(req)
 	if err != nil {
 		return err
 	}
