@@ -48,7 +48,7 @@ func normalizeLocation(location string) string {
 }
 
 func configure(ctx *appcontext.AppContext, cmd string, args []string) error {
-	subcmd := "ls"
+	subcmd := "show"
 	if len(args) > 0 {
 		subcmd = args[0]
 		args = args[1:]
@@ -173,12 +173,6 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 			maps.Copy(cfgMap[name], section)
 		}
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
-
-	case "ls":
-		if len(args) != 0 {
-			return fmt.Errorf("usage: plakar %s ls", cmd)
-		}
-		return yaml.NewEncoder(ctx.Stdout).Encode(cfgMap)
 
 	case "ping":
 		return fmt.Errorf("not implemented")
