@@ -8,8 +8,9 @@ import (
 
 func TestEmit(t *testing.T) {
 	ctx := appcontext.NewAppContext()
-	reporter := NewReporter(ctx, false)
+	reporter := NewReporter(ctx)
 	report := reporter.NewReport()
+	report.SetIgnore()
 	report.TaskStart("blah", "baz")
 	report.TaskDone()
 	reporter.StopAndWait()
