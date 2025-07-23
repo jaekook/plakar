@@ -204,6 +204,10 @@ func (report *Report) taskEnd(status TaskStatus, errorCode TaskErrorCode, errorM
 		report.Task.ErrorMessage = fmt.Sprintf(errorMessage, args...)
 	}
 	report.Task.Duration = time.Since(report.Task.StartTime)
+	report.Publish()
+}
+
+func (report *Report) Publish() {
 	report.Timestamp = time.Now()
 	report.reporter <- report
 }
