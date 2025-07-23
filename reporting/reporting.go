@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/PlakarKorp/kloset/logging"
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/snapshot"
@@ -129,15 +128,10 @@ func (reporter *Reporter) getEmitter() Emitter {
 }
 
 func (reporter *Reporter) NewReport() *Report {
-	return NewReport(reporter.ctx.GetLogger(), reporter.reports)
-}
-
-func NewReport(logger *logging.Logger, reporter chan *Report) *Report {
-	report := &Report{
-		logger:   logger,
-		reporter: reporter,
+	return &Report{
+		logger:   reporter.ctx.GetLogger(),
+		reporter: reporter.reports,
 	}
-	return report
 }
 
 func (report *Report) SetIgnore() {
