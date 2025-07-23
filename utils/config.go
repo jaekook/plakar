@@ -11,7 +11,7 @@ import (
 	"gopkg.in/ini.v1"
 
 	"github.com/PlakarKorp/kloset/config"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 type configHandler struct {
