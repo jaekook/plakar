@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"io"
 	"maps"
-	"os"
 	"strings"
 
 	"github.com/PlakarKorp/kloset/snapshot/exporter"
@@ -57,7 +56,7 @@ func configure(ctx *appcontext.AppContext, cmd string, args []string) error {
 
 	err := dispatchSubcommand(ctx, cmd, subcmd, args)
 	if err != nil {
-		return fmt.Errorf("failed to execute %s subcommand %q: %w", cmd, subcmd, err)
+		return err
 	}
 	return nil
 }
@@ -158,7 +157,7 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 			return fmt.Errorf("usage: plakar %s import", cmd)
 		}
 
-		newConfMap, err := utils.GetConf(os.Stdin)
+		newConfMap, err := utils.GetConf(ctx.Stdin)
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
@@ -167,7 +166,7 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		}
 		for name, section := range newConfMap {
 			if hasFunc(name) {
-				fmt.Fprintf(os.Stderr, "%s %q already exists, skipping\n", cmd, name)
+				fmt.Fprintf(ctx.Stderr, "%s %q already exists, skipping\n", cmd, name)
 				continue
 			}
 			cfgMap[name] = make(map[string]string)
@@ -179,7 +178,7 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		if len(args) != 0 {
 			return fmt.Errorf("usage: plakar %s ls", cmd)
 		}
-		return yaml.NewEncoder(os.Stdout).Encode(cfgMap)
+		return yaml.NewEncoder(ctx.Stdout).Encode(cfgMap)
 
 	case "ping":
 		return fmt.Errorf("not implemented")
@@ -232,17 +231,17 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		}
 		for _, name := range names {
 			if !hasFunc(name) {
-				fmt.Fprintf(os.Stderr, "%s %q does not exist\n", cmd, name)
+				fmt.Fprintf(ctx.Stderr, "%s %q does not exist\n", cmd, name)
 				continue
 			}
 
 			var err error
 			if opt_json {
-				err = json.NewEncoder(os.Stdout).Encode(map[string]map[string]string{name: cfgMap[name]})
+				err = json.NewEncoder(ctx.Stdout).Encode(map[string]map[string]string{name: cfgMap[name]})
 			} else if opt_ini {
-				err = MarshalINISections(name, cfgMap[name], os.Stdout)
+				err = MarshalINISections(name, cfgMap[name], ctx.Stdout)
 			} else {
-				err = yaml.NewEncoder(os.Stdout).Encode(map[string]map[string]string{name: cfgMap[name]})
+				err = yaml.NewEncoder(ctx.Stdout).Encode(map[string]map[string]string{name: cfgMap[name]})
 			}
 			if err != nil {
 				return fmt.Errorf("failed to encode store %q: %w", name, err)
@@ -267,6 +266,6 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 
 	default:
-		return fmt.Errorf("usage: plakar %s [add|check|ls|ping|rm|set|show|unset]", cmd)
+		return fmt.Errorf("usage: plakar %s [add|check|import|ls|ping|rm|set|show|unset]", cmd)
 	}
 }

@@ -24,6 +24,7 @@ func TestConfigEmpty(t *testing.T) {
 
 	configPath := filepath.Join(tmpDir, "config.yaml")
 	cfg, err := utils.LoadOldConfigIfExists(configPath)
+
 	require.NoError(t, err)
 	ctx := appcontext.NewAppContext()
 	ctx.ConfigDir = tmpDir
@@ -99,7 +100,7 @@ func TestCmdRemote(t *testing.T) {
 
 	args = []string{"unknown"}
 	err = configure(ctx, "source", args)
-	require.EqualError(t, err, "usage: plakar source [add|check|ls|ping|rm|set|unset]")
+	require.EqualError(t, err, "usage: plakar source [add|check|import|ls|ping|rm|set|show|unset]")
 
 	args = []string{"add", "my-remote", "invalid://my-remote"}
 	err = configure(ctx, "source", args)
@@ -147,17 +148,13 @@ func TestCmdRepository(t *testing.T) {
 
 	args := []string{"unknown"}
 	err = configure(ctx, "store", args)
-	require.EqualError(t, err, "usage: plakar store [add|check|ls|ping|rm|set|unset]")
+	require.EqualError(t, err, "usage: plakar store [add|check|import|ls|ping|rm|set|show|unset]")
 
 	args = []string{"add", "my-repo", "fs:/tmp/my-repo"}
 	err = configure(ctx, "store", args)
 	require.NoError(t, err)
 
 	args = []string{"set", "my-repo", "location=invalid://place"}
-	err = configure(ctx, "store", args)
-	require.NoError(t, err)
-
-	args = []string{"default", "my-repo"}
 	err = configure(ctx, "store", args)
 	require.NoError(t, err)
 

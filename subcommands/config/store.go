@@ -29,7 +29,6 @@ func (cmd *ConfigStoreCmd) Parse(ctx *appcontext.AppContext, args []string) erro
 }
 
 func (cmd *ConfigStoreCmd) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
-
 	err := configure(ctx, "store", cmd.args)
 	if err != nil {
 		return 1, err
