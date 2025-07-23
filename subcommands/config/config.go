@@ -25,6 +25,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/PlakarKorp/kloset/snapshot/exporter"
+	"github.com/PlakarKorp/kloset/snapshot/importer"
 	"github.com/PlakarKorp/kloset/storage"
 	"github.com/PlakarKorp/plakar/appcontext"
 	"github.com/PlakarKorp/plakar/subcommands"
@@ -117,11 +119,38 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		if !hasFunc(name) {
 			return fmt.Errorf("%s %q does not exists", cmd, name)
 		}
-		store, err := storage.New(ctx.GetInner(), cfgMap[name])
-		if err != nil {
-			return err
+
+		switch cmd {
+		case "store":
+			store, err := storage.New(ctx.GetInner(), cfgMap[name])
+			if err != nil {
+				return err
+			}
+			_ = store.Close()
+
+		case "source":
+			cfg, ok := ctx.Config.GetSource(name)
+			if !ok {
+				return fmt.Errorf("failed to retreive configuration for source %q", name)
+			}
+			imp, err := importer.NewImporter(ctx.GetInner(), ctx.ImporterOpts(), cfg)
+			if err != nil {
+				return err
+			}
+			_ = imp.Close()
+
+		case "destination":
+			cfg, ok := ctx.Config.GetDestination(name)
+			if !ok {
+				return fmt.Errorf("failed to retreive configuration for destination %q", name)
+			}
+			exp, err := exporter.NewExporter(ctx.GetInner(), cfg)
+			if err != nil {
+				return err
+			}
+			_ = exp.Close()
 		}
-		_ = store.Close()
+
 		return nil
 
 	case "import":
