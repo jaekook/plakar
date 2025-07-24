@@ -50,7 +50,7 @@ func (ui *uiserver) integrationsInstall(w http.ResponseWriter, r *http.Request) 
 	var pkgName string
 	var req IntegrationsInstallRequest
 
-	resp := NewIntegrationsResponse("pkg_uninstall")
+	resp := NewIntegrationsResponse("pkg_install")
 	resp.Status = "failed"
 
 	err := json.NewDecoder(r.Body).Decode(&req)
