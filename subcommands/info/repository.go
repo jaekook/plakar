@@ -4,9 +4,9 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/PlakarKorp/plakar/appcontext"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/snapshot"
+	"github.com/PlakarKorp/plakar/appcontext"
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/dustin/go-humanize"
 )
@@ -22,14 +22,6 @@ func (cmd *InfoRepository) Parse(ctx *appcontext.AppContext, args []string) erro
 		fmt.Fprintf(flags.Output(), "Usage: %s\n", flags.Name())
 		fmt.Fprintf(flags.Output(), "       %s snapshot SNAPSHOT\n", flags.Name())
 		fmt.Fprintf(flags.Output(), "       %s errors SNAPSHOT\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "       %s state [STATE]...\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "       %s search snapshot[:path] mime\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "       %s packfile [PACKFILE]...\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "       %s object [OBJECT]\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "       %s vfs SNAPSHOT[:PATH]\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "       %s xattr SNAPSHOT[:PATH]\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "       %s contenttype SNAPSHOT[:PATH]\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "       %s locks\n", flags.Name())
 	}
 	flags.Parse(args)
 

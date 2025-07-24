@@ -22,6 +22,6 @@ import (
 
 func init() {
 	subcommands.Register(func() subcommands.Subcommand { return &InfoSnapshot{} }, subcommands.AgentSupport, "info", "snapshot")
-	subcommands.Register(func() subcommands.Subcommand { return &InfoVFS{} }, subcommands.AgentSupport, "info", "vfs")
+	subcommands.Register(func() subcommands.Subcommand { return &InfoErrors{} }, subcommands.AgentSupport, "info", "errors")
 	subcommands.Register(func() subcommands.Subcommand { return &InfoRepository{} }, subcommands.AgentSupport, "info")
 }
