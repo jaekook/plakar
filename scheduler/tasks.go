@@ -19,7 +19,7 @@ import (
 )
 
 func loadRepository(newCtx *appcontext.AppContext, name string) (*repository.Repository, storage.Store, error) {
-	if err := utils.ReloadConfig(newCtx); err != nil {
+	if err := newCtx.ReloadConfig(); err != nil {
 		return nil, nil, fmt.Errorf("could not load configuration: %w", err)
 	}
 
