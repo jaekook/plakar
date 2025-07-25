@@ -19,6 +19,12 @@ snapshots and filesystem entries.
 The type of information displayed depends on the specified argument.
 Without any arguments, display information about the repository.
 
+The options are as follows:
+
+**-errors**
+
+> Show errors within the specified snapshot.
+
 # EXAMPLES
 
 Show repository information:
