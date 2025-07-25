@@ -31,6 +31,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	github.com/wagslane/go-password-validator v0.3.0
 	go.omarpolo.com/ttlmap v0.0.0-20231012080932-0154c95c7516
+	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/crypto v0.40.0
 	golang.org/x/mod v0.26.0
 	golang.org/x/sync v0.16.0
@@ -40,7 +41,6 @@ require (
 	google.golang.org/grpc v1.74.0
 	google.golang.org/protobuf v1.36.6
 	gopkg.in/ini.v1 v1.67.0
-	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.36.3
 )
 
@@ -131,6 +131,7 @@ require (
 	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	modernc.org/libc v1.62.0 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.9.1 // indirect

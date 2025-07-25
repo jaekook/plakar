@@ -30,8 +30,8 @@ import (
 	"github.com/PlakarKorp/plakar/appcontext"
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/PlakarKorp/plakar/utils"
+	"go.yaml.in/yaml/v3"
 	"gopkg.in/ini.v1"
-	"gopkg.in/yaml.v3"
 )
 
 func init() {
