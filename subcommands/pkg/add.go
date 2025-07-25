@@ -60,13 +60,16 @@ func (cmd *PkgAdd) Parse(ctx *appcontext.AppContext, args []string) error {
 
 	cmd.Args = flags.Args()
 	for i, name := range cmd.Args {
-		if !plugins.ValidateName(filepath.Base(name)) {
-			return fmt.Errorf("bad plugin file name: %s", name)
-		}
-
+		//if !plugins.ValidateName(filepath.Base(name)) {
+		//	return fmt.Errorf("bad plugin file name: %s", name)
+		//}
 		if !filepath.IsAbs(name) && !strings.HasPrefix(name, "./") {
+			var recipe plugins.Recipe
+			if err := plugins.GetRecipe(ctx, name, &recipe); err != nil {
+				return fmt.Errorf("failed to parse the recipe %s: %w", flags.Arg(0), err)
+			}
 			u := *baseURL
-			u.Path = path.Join(u.Path, name)
+			u.Path = path.Join(u.Path, recipe.PkgName())
 			name = u.String()
 		} else if !filepath.IsAbs(name) {
 			name = filepath.Join(ctx.CWD, name)
