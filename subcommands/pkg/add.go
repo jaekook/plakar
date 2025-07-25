@@ -25,6 +25,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/PlakarKorp/kloset/repository"
@@ -34,7 +35,7 @@ import (
 	"github.com/PlakarKorp/plakar/utils"
 )
 
-var baseURL, _ = url.Parse("https://plugins.plakar.io/pkg/plakar/")
+var baseURL, _ = url.Parse("https://plugins.plakar.io/kloset/pkg/" + plugins.PLUGIN_API_VERSION + "/")
 
 type PkgAdd struct {
 	subcommands.SubcommandBase
@@ -177,6 +178,16 @@ func fetch(ctx *appcontext.AppContext, plugdir, plugin string) (string, error) {
 		return "", fmt.Errorf("failed to fetch %s: %w", plugin, err)
 	}
 	defer req.Body.Close()
+
+	if req.StatusCode/100 != 2 {
+		defer os.Remove(fp.Name())
+
+		if req.StatusCode == http.StatusNotFound {
+			return "", fmt.Errorf("no package for %s/%s", runtime.GOOS, runtime.GOARCH)
+		}
+
+		return "", fmt.Errorf("failed to fetch %s: HTTP %d %s", plugin, req.StatusCode, req.Status)
+	}
 
 	if _, err := io.Copy(fp, req.Body); err != nil {
 		defer os.Remove(fp.Name())
