@@ -19,7 +19,6 @@ package pkg
 import (
 	"flag"
 	"fmt"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -31,8 +30,6 @@ import (
 	"github.com/PlakarKorp/plakar/subcommands"
 	"golang.org/x/mod/semver"
 )
-
-var recipeURL, _ = url.Parse("https://plugins.plakar.io/recipe/")
 
 var namere = regexp.MustCompile("^[_a-zA-Z0-9]+$")
 

@@ -15,7 +15,7 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-var recipeURL, _ = url.Parse("https://plugins.plakar.io/recipe/")
+var recipeURL, _ = url.Parse("https://plugins.plakar.io/kloset/recipe/" + PLUGIN_API_VERSION + "/")
 
 type Recipe struct {
 	Name       string `yaml:"name"`
