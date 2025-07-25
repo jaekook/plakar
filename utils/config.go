@@ -11,7 +11,8 @@ import (
 	"gopkg.in/ini.v1"
 
 	"github.com/PlakarKorp/kloset/config"
-	"gopkg.in/yaml.v3"
+	"github.com/PlakarKorp/plakar/appcontext"
+	"go.yaml.in/yaml/v3"
 )
 
 type configHandler struct {
@@ -154,6 +155,16 @@ func LoadConfig(configDir string) (*config.Config, error) {
 		return nil, err
 	}
 	return cfg, nil
+}
+
+func ReloadConfig(ctx *appcontext.AppContext) error {
+	cl := newConfigHandler(ctx.ConfigDir)
+	cfg, err := cl.Load()
+	if err != nil {
+		return err
+	}
+	ctx.Config = cfg
+	return nil
 }
 
 func SaveConfig(configDir string, cfg *config.Config) error {
