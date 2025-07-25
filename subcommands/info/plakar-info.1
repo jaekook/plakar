@@ -6,6 +6,7 @@
 .Nd Display detailed information about internal structures
 .Sh SYNOPSIS
 .Nm plakar info
+.Op Fl errors
 .Op Ar snapshot Ns Oo : Ns Ar /path/to/file Oc
 .Sh DESCRIPTION
 The
@@ -25,10 +26,15 @@ Show detailed information for a snapshot:
 $ plakar info abc123
 .Ed
 .Pp
-Show detailed information for a file within a snapshot:
+Show errors within a snapshot:
 .Bd -literal -offset indent
-$ plakar info abcd123:/etc/passwd
+$ plakar info -errors abc123
 .Ed
+.\".Pp
+.\"Show detailed information for a file within a snapshot:
+.\".Bd -literal -offset indent
+.\"$ plakar info abcd123:/etc/passwd
+.\".Ed
 .Sh DIAGNOSTICS
 .Ex -std
 .Bl -tag -width Ds
