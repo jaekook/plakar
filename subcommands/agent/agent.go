@@ -298,6 +298,11 @@ func (cmd *Agent) ListenAndServe(ctx *appcontext.AppContext) error {
 			return err
 		}
 
+		if err := utils.ReloadConfig(ctx); err != nil {
+			ctx.GetLogger().Warn("could not load configuration: %v", err)
+			return err
+		}
+
 		wg.Add(1)
 		go handleClient(ctx, &wg, conn)
 	}
