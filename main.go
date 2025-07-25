@@ -281,10 +281,10 @@ func entryPoint() int {
 
 	ctx.SetLogger(logger)
 
-	pluginDir := filepath.Join(dataDir, "plugins")
+	pluginDir := filepath.Join(dataDir, "plugins", plugins.PLUGIN_API_VERSION)
 
 	// use cookiesDir as base since it's the same wrt agentless
-	pluginCache := filepath.Join(cookiesDir, "plugins")
+	pluginCache := filepath.Join(cookiesDir, "plugins", plugins.PLUGIN_API_VERSION)
 	if err := plugins.LoadDir(ctx, pluginDir, pluginCache); err != nil {
 		logger.Warn("failed to load the plugins: %s", err)
 	}
