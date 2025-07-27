@@ -179,6 +179,11 @@ func (cmd *Diff) diff_pathnames(ctx *appcontext.AppContext, id1 string, vfs1 fs.
 }
 
 func (cmd *Diff) diff_directories_flat(_ *appcontext.AppContext, pathname1 string, fsobj1 fs.File, pathname2 string, fsobj2 fs.File) (string, error) {
+	// non VFS have their / stripped, reintroduce it
+	if !strings.HasPrefix(pathname2, "/") {
+		pathname2 = "/" + pathname2 // Ensure pathname starts with a slash
+	}
+
 	dir1, ok1 := fsobj1.(fs.ReadDirFile)
 	dir2, ok2 := fsobj2.(fs.ReadDirFile)
 	if !ok1 || !ok2 {
@@ -267,6 +272,11 @@ func (cmd *Diff) diff_directories_recursive(ctx *appcontext.AppContext, fs1 fs.F
 
 		full1 := path.Join(path1, name)
 		full2 := path.Join(path2, name)
+
+		// non VFS have their / stripped, reintroduce it
+		if !strings.HasPrefix(path2, "/") {
+			path2 = "/" + path2 // Ensure pathname starts with a slash
+		}
 
 		switch {
 		case ok1 && !ok2:
