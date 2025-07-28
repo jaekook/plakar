@@ -30,6 +30,7 @@ import (
 	"github.com/PlakarKorp/kloset/snapshot"
 	"github.com/PlakarKorp/kloset/snapshot/vfs"
 	"github.com/PlakarKorp/plakar/appcontext"
+	"github.com/PlakarKorp/plakar/locate"
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/PlakarKorp/plakar/utils"
 	"github.com/alecthomas/chroma/quick"
@@ -99,7 +100,7 @@ func (cmd *Diff) Execute(ctx *appcontext.AppContext, repo *repository.Repository
 		id2 = "local"
 	} else {
 		var snap2 *snapshot.Snapshot
-		snap2, pathname2, err = utils.OpenSnapshotByPath(repo, cmd.Path2)
+		snap2, pathname2, err = locate.OpenSnapshotByPath(repo, cmd.Path2)
 		if err != nil {
 			return 1, fmt.Errorf("diff: could not open snapshot: %s", cmd.Path2)
 		}
