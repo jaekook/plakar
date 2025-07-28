@@ -53,6 +53,20 @@ func ParseTimeFlag(input string) (time.Time, error) {
 		return time.Time{}, nil
 	}
 
+	layouts := []string{
+		time.RFC3339,
+		"2006-01-02 15:04",
+		"2006-01-02 15:04:05",
+		"2006-01-02",
+		"2006/01/02",
+	}
+
+	for _, layout := range layouts {
+		if t, err := time.Parse(layout, input); err == nil {
+			return t, nil
+		}
+	}
+
 	// If none of the date layouts match, try to parse it as a duration.
 	d, err := human2duration.ParseDuration(input)
 	if err == nil {
