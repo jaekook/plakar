@@ -80,6 +80,10 @@ type ReleaseUpdateSummary struct {
 }
 
 func shouldCheckUpdate(cachedir string) bool {
+	if strings.Contains(VERSION, "devel") {
+		return false
+	}
+
 	cookie := path.Join(cachedir, "last-update-check")
 	cutoff := time.Now().Add(-24 * time.Hour)
 
