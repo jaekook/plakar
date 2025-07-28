@@ -104,7 +104,6 @@ func (cmd *PkgBuild) Execute(ctx *appcontext.AppContext, repo *repository.Reposi
 func clone(destdir string, recipe *plugins.Recipe) error {
 	git := exec.Command("git", "clone", "--depth=1", "--branch", recipe.Version,
 		recipe.Repository, destdir)
-	git.Env = os.Environ()
 	if err := git.Run(); err != nil {
 		return fmt.Errorf("git clone failed: %w", err)
 	}
