@@ -58,7 +58,7 @@ func (cmd *Diff) Parse(ctx *appcontext.AppContext, args []string) error {
 		cmd.Path1 = flags.Arg(0)
 		cmd.Path2 = flags.Arg(1)
 	} else {
-		return fmt.Errorf("1needs two snapshot ID and/or snapshot files to diff")
+		return fmt.Errorf("needs at least a snapshot ID and/or snapshot file to diff")
 	}
 	cmd.RepositorySecret = ctx.GetSecret()
 
@@ -146,6 +146,7 @@ func (cmd *Diff) diff_pathnames(ctx *appcontext.AppContext, id1 string, vfs1 fs.
 	if err != nil {
 		return "", fmt.Errorf("could not open path %s in snapshot %s: %w", pathname1, id1, err)
 	}
+	defer fsobj1.Close()
 
 	if _, ok := vfs2.(*vfs.Filesystem); !ok {
 		// on non vfs.Filesystem, strip root !
@@ -156,6 +157,7 @@ func (cmd *Diff) diff_pathnames(ctx *appcontext.AppContext, id1 string, vfs1 fs.
 	if err != nil {
 		return "", fmt.Errorf("could not open path %s in snapshot %s: %w", pathname2, id2, err)
 	}
+	defer fsobj2.Close()
 
 	st1, err := fsobj1.Stat()
 	if err != nil {
