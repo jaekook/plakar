@@ -11,7 +11,6 @@ import (
 	"gopkg.in/ini.v1"
 
 	"github.com/PlakarKorp/kloset/config"
-	"github.com/PlakarKorp/plakar/appcontext"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -157,16 +156,6 @@ func LoadConfig(configDir string) (*config.Config, error) {
 	return cfg, nil
 }
 
-func ReloadConfig(ctx *appcontext.AppContext) error {
-	cl := newConfigHandler(ctx.ConfigDir)
-	cfg, err := cl.Load()
-	if err != nil {
-		return err
-	}
-	ctx.Config = cfg
-	return nil
-}
-
 func SaveConfig(configDir string, cfg *config.Config) error {
 	return newConfigHandler(configDir).Save(cfg)
 }
@@ -263,6 +252,13 @@ func GetConf(rd io.Reader) (map[string]map[string]string, error) {
 				section["location"] = specialCase
 			} else {
 				section["location"] += section["type"] + "://"
+			}
+		}
+	}
+	for _, section := range configMap {
+		for key, value := range section {
+			if value == "" {
+				delete(section, key)
 			}
 		}
 	}
