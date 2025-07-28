@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
+
+const PLUGIN_API_VERSION = "v1.0.0"
 
 type Manifest struct {
 	Name        string   `yaml:"name"`

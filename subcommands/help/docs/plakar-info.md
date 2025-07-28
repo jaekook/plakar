@@ -7,6 +7,7 @@ PLAKAR-INFO(1) - General Commands Manual
 # SYNOPSIS
 
 **plakar&nbsp;info**
+\[**-errors**]
 \[*snapshot*\[:*/path/to/file*]]
 
 # DESCRIPTION
@@ -18,6 +19,12 @@ snapshots and filesystem entries.
 The type of information displayed depends on the specified argument.
 Without any arguments, display information about the repository.
 
+The options are as follows:
+
+**-errors**
+
+> Show errors within the specified snapshot.
+
 # EXAMPLES
 
 Show repository information:
@@ -28,9 +35,9 @@ Show detailed information for a snapshot:
 
 	$ plakar info abc123
 
-Show detailed information for a file within a snapshot:
+Show errors within a snapshot:
 
-	$ plakar info abcd123:/etc/passwd
+	$ plakar info -errors abc123
 
 # DIAGNOSTICS
 
@@ -50,4 +57,4 @@ The **plakar-info** utility exits&#160;0 on success, and&#160;&gt;0 if an error 
 plakar(1),
 plakar-backup(1)
 
-Plakar - July 3, 2025
+Plakar - July 3, 2025 - PLAKAR-INFO(1)

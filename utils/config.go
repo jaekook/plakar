@@ -11,7 +11,7 @@ import (
 	"gopkg.in/ini.v1"
 
 	"github.com/PlakarKorp/kloset/config"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 type configHandler struct {
@@ -252,6 +252,13 @@ func GetConf(rd io.Reader) (map[string]map[string]string, error) {
 				section["location"] = specialCase
 			} else {
 				section["location"] += section["type"] + "://"
+			}
+		}
+	}
+	for _, section := range configMap {
+		for key, value := range section {
+			if value == "" {
+				delete(section, key)
 			}
 		}
 	}
