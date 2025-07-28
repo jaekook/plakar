@@ -3,10 +3,14 @@ package plugins
 import (
 	_ "embed"
 	"encoding/json"
+	"fmt"
 	"iter"
+	"net/http"
+	"runtime"
 	"slices"
 
 	"github.com/PlakarKorp/plakar/appcontext"
+	"github.com/PlakarKorp/plakar/utils"
 )
 
 type IntegrationInstallation struct {
@@ -44,17 +48,36 @@ type IntegrationIndex struct {
 	Integrations []IntegrationInfo `json:"integrations"`
 }
 
-//go:embed integrations.json
-var integrationsData []byte
+func fetchList() (*IntegrationIndex, error) {
+	var index IntegrationIndex
+
+	req, err := http.NewRequest("GET", "https://api.plakar.io/v1/integrations/list.json", nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", fmt.Sprintf("plakar/%s (%s/%s)", utils.VERSION, runtime.GOOS, runtime.GOARCH))
+	client := http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	err = json.NewDecoder(res.Body).Decode(&index)
+	if err != nil {
+		return nil, err
+	}
+
+	return &index, nil
+}
 
 func IterIntegrations(ctx *appcontext.AppContext, filterType string, filterTag string) iter.Seq2[*IntegrationInfo, error] {
 
 	return func(yield func(*IntegrationInfo, error) bool) {
-		var index IntegrationIndex
-		err := json.Unmarshal(integrationsData, &index)
+
+		index, err := fetchList()
 		if err != nil {
-			yield(nil, err)
-			return
+			ctx.GetLogger().Warn("failed to retrieve integrations list %v", err)
 		}
 
 		installed, err := ListInstalledPlugins(ctx)
