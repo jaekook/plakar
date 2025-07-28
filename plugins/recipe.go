@@ -68,5 +68,14 @@ func GetRecipe(ctx *appcontext.AppContext, name string, recipe *Recipe) error {
 }
 
 func (recipe *Recipe) PkgName() string {
-	return fmt.Sprintf("%s_%s_%s_%s.ptar", recipe.Name, recipe.Version, runtime.GOOS, runtime.GOARCH)
+	GOOS := runtime.GOOS
+	GOARCH := runtime.GOARCH
+	if goosEnv := os.Getenv("GOOS"); goosEnv != "" {
+		GOOS = goosEnv
+	}
+	if goarchEnv := os.Getenv("GOARCH"); goarchEnv != "" {
+		GOARCH = goarchEnv
+	}
+
+	return fmt.Sprintf("%s_%s_%s_%s.ptar", recipe.Name, recipe.Version, GOOS, GOARCH)
 }
