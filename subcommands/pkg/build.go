@@ -84,7 +84,6 @@ func (cmd *PkgBuild) Execute(ctx *appcontext.AppContext, repo *repository.Reposi
 	}
 
 	make := exec.Command("make", "-C", datadir)
-	make.Env = os.Environ()
 	fmt.Fprintln(ctx.Stderr, make.String())
 	if err := make.Run(); err != nil {
 		return 1, fmt.Errorf("make failed: %w", err)
