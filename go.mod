@@ -22,7 +22,7 @@ require (
 	github.com/minio/minio-go/v7 v7.0.94
 	github.com/muesli/termenv v0.16.0
 	github.com/pkg/sftp v1.13.9
-	github.com/pkg/xattr v0.4.10
+	github.com/pkg/xattr v0.4.12
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/prometheus/client_golang v1.21.1
 	github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
