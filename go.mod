@@ -24,7 +24,7 @@ require (
 	github.com/pkg/sftp v1.13.9
 	github.com/pkg/xattr v0.4.12
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
-	github.com/prometheus/client_golang v1.21.1
+	github.com/prometheus/client_golang v1.22.0
 	github.com/secsy/goftp v0.0.0-20200609142545-aa2de14babf4
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
