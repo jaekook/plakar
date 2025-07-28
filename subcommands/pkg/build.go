@@ -84,6 +84,7 @@ func (cmd *PkgBuild) Execute(ctx *appcontext.AppContext, repo *repository.Reposi
 	}
 
 	make := exec.Command("make", "-C", datadir)
+	make.Env = os.Environ()
 	fmt.Fprintln(ctx.Stderr, make.String())
 	if err := make.Run(); err != nil {
 		return 1, fmt.Errorf("make failed: %w", err)
@@ -104,6 +105,7 @@ func (cmd *PkgBuild) Execute(ctx *appcontext.AppContext, repo *repository.Reposi
 func clone(destdir string, recipe *plugins.Recipe) error {
 	git := exec.Command("git", "clone", "--depth=1", "--branch", recipe.Version,
 		recipe.Repository, destdir)
+	git.Env = os.Environ()
 	if err := git.Run(); err != nil {
 		return fmt.Errorf("git clone failed: %w", err)
 	}
