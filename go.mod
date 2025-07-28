@@ -3,7 +3,7 @@ module github.com/PlakarKorp/plakar
 go 1.23.4
 
 require (
-	github.com/PlakarKorp/go-human2duration v0.1.3
+	github.com/PlakarKorp/go-human2duration v0.1.5
 	github.com/PlakarKorp/kloset v1.0.1-beta.2.0.20250723140527-e66d7cc4467b
 	github.com/alecthomas/chroma v0.10.0
 	github.com/anacrolix/fuse v0.3.1
