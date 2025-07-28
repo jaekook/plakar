@@ -79,7 +79,7 @@ func (cmd *Diff) Name() string {
 }
 
 func (cmd *Diff) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
-	snap1, pathname1, err := utils.OpenSnapshotByPath(repo, cmd.Path1)
+	snap1, pathname1, err := locate.OpenSnapshotByPath(repo, cmd.Path1)
 	if err != nil {
 		return 1, fmt.Errorf("diff: could not open snapshot: %s", cmd.Path1)
 	}
