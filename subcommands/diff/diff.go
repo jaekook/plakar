@@ -68,9 +68,6 @@ func (cmd *Diff) Parse(ctx *appcontext.AppContext, args []string) error {
 type Diff struct {
 	subcommands.SubcommandBase
 
-	RepositoryLocation string
-	RepositorySecret   []byte
-
 	Highlight bool
 	Recursive bool
 	Path1     string
