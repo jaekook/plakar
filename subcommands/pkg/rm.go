@@ -64,7 +64,7 @@ func (cmd *PkgRm) Execute(ctx *appcontext.AppContext, _ *repository.Repository) 
 	}
 
 	pluginsDir := filepath.Join(dataDir, "plugins", plugins.PLUGIN_API_VERSION)
-	names, err := plugins.ListDir(ctx, pluginsDir)
+	names, err := plugins.ListDir(ctx.GetInner(), pluginsDir)
 	if err != nil {
 		return 1, err
 	}

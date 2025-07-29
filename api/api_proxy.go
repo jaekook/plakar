@@ -175,24 +175,26 @@ func (ui *uiserver) servicesGetIntegration(w http.ResponseWriter, r *http.Reques
 		return err
 	}
 
-	var res Items[plugins.IntegrationInfo]
-	res.Items = make([]plugins.IntegrationInfo, 0)
+	var res Items[plugins.Integration]
+	res.Items = make([]plugins.Integration, 0)
 
 	var i int64
+	filter := plugins.IntegrationFilter{
+		Type:   filterType,
+		Tag:    filterTag,
+		Status: filterStatus,
+	}
 
-	for itg, err := range plugins.IterIntegrations(ui.ctx, filterType, filterTag) {
-		if err != nil {
-			return err
-		}
-		if filterStatus != "" && itg.Installation.Status != filterStatus {
-			continue
-		}
+	ints, err := ui.ctx.GetPlugins().ListIntegrations(filter)
+	if err != nil {
+		return err
+	}
+	for _, int := range ints {
 		res.Total += 1
 		i += 1
 		if i > offset {
 			if i <= offset+limit {
-				r := *itg
-				res.Items = append(res.Items, r)
+				res.Items = append(res.Items, int)
 			}
 		}
 	}
@@ -203,12 +205,17 @@ func (ui *uiserver) servicesGetIntegration(w http.ResponseWriter, r *http.Reques
 func (ui *uiserver) servicesGetIntegrationId(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 
-	for itg, err := range plugins.IterIntegrations(ui.ctx, "", "") {
+	var filter plugins.IntegrationFilter
+	ints, err := ui.ctx.GetPlugins().ListIntegrations(filter)
+	if err != nil {
+		return err
+	}
+	for _, int := range ints {
 		if err != nil {
 			return err
 		}
-		if itg.Id == id {
-			return json.NewEncoder(w).Encode(itg)
+		if int.Id == id {
+			return json.NewEncoder(w).Encode(int)
 		}
 	}
 

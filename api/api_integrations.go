@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"runtime"
 	"time"
 
 	"github.com/PlakarKorp/plakar/plugins"
@@ -48,6 +47,7 @@ type IntegrationsInstallRequest struct {
 func (ui *uiserver) integrationsInstall(w http.ResponseWriter, r *http.Request) error {
 	var cmd pkg.PkgAdd
 	var pkgName string
+	var pkg plugins.Package
 	var req IntegrationsInstallRequest
 
 	resp := NewIntegrationsResponse("pkg_install")
@@ -59,8 +59,12 @@ func (ui *uiserver) integrationsInstall(w http.ResponseWriter, r *http.Request) 
 		goto done
 	}
 
-	pkgName = fmt.Sprintf("%s_%s_%s_%s.ptar", req.Id, req.Version, runtime.GOOS, runtime.GOARCH)
-	cmd.Args = append(cmd.Args, pkgName)
+	pkg.Name = req.Id
+	pkg.Version = req.Version
+	pkg.Os = ui.ctx.GetPlugins().Os
+	pkg.Arch = ui.ctx.GetPlugins().Arch
+
+	cmd.Args = append(cmd.Args, ui.ctx.GetPlugins().PackageUrl(pkg))
 	_, err = cmd.Execute(ui.ctx, ui.repository)
 	if err != nil {
 		resp.AddMessage(fmt.Sprintf("install command failed: %v", err))
@@ -76,25 +80,19 @@ done:
 
 func (ui *uiserver) integrationsUninstall(w http.ResponseWriter, r *http.Request) error {
 	var cmd pkg.PkgRm
-	var plugin *plugins.InstalledPlugin
 
 	resp := NewIntegrationsResponse("pkg_uninstall")
 	resp.Status = "failed"
 
 	id := r.PathValue("id")
 
-	p, err := plugins.ListInstalledPlugins(ui.ctx)
+	pkg, err := ui.ctx.GetPlugins().FindInstalledPackage(id)
 	if err != nil {
 		resp.AddMessage(fmt.Sprintf("%v", err))
 		goto done
 	}
-	plugin = p.GetPlugin(id)
-	if plugin == nil {
-		resp.AddMessage("plugin not installed")
-		goto done
-	}
 
-	cmd.Args = append(cmd.Args, plugin.PkgName())
+	cmd.Args = append(cmd.Args, pkg.PkgName())
 	_, err = cmd.Execute(ui.ctx, ui.repository)
 	if err != nil {
 		resp.AddMessage(fmt.Sprintf("uninstall command failed: %v", err))

@@ -4,18 +4,16 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
-	"iter"
 	"net/http"
 	"runtime"
-	"slices"
 
-	"github.com/PlakarKorp/plakar/appcontext"
 	"github.com/PlakarKorp/plakar/utils"
 )
 
 type IntegrationInstallation struct {
-	Status  string `json:"status"`
-	Version string `json:"version,omitempty"`
+	Status    string `json:"status"`
+	Version   string `json:"version,omitempty"`
+	Available bool   `json:"available"`
 }
 
 type IntegrationTypes struct {
@@ -24,7 +22,7 @@ type IntegrationTypes struct {
 	Destination bool `json:"destination"`
 }
 
-type IntegrationInfo struct {
+type Integration struct {
 	Id            string           `json:"id"`
 	Name          string           `json:"name"`
 	DisplayName   string           `json:"display_name"`
@@ -44,11 +42,17 @@ type IntegrationInfo struct {
 	Installation IntegrationInstallation `json:"installation"`
 }
 
-type IntegrationIndex struct {
-	Integrations []IntegrationInfo `json:"integrations"`
+type IntegrationFilter struct {
+	Type   string
+	Tag    string
+	Status string
 }
 
-func fetchList() (*IntegrationIndex, error) {
+type IntegrationIndex struct {
+	Integrations []Integration `json:"integrations"`
+}
+
+func fetchIntegrationList() ([]Integration, error) {
 	var index IntegrationIndex
 
 	req, err := http.NewRequest("GET", "https://api.plakar.io/v1/integrations/list.json", nil)
@@ -68,52 +72,5 @@ func fetchList() (*IntegrationIndex, error) {
 		return nil, err
 	}
 
-	return &index, nil
-}
-
-func IterIntegrations(ctx *appcontext.AppContext, filterType string, filterTag string) iter.Seq2[*IntegrationInfo, error] {
-
-	return func(yield func(*IntegrationInfo, error) bool) {
-
-		index, err := fetchList()
-		if err != nil {
-			ctx.GetLogger().Warn("failed to retrieve integrations list %v", err)
-		}
-
-		installed, err := ListInstalledPlugins(ctx)
-		if err != nil {
-			ctx.GetLogger().Warn("failed to list installed plugins %v", err)
-		}
-
-		for _, info := range index.Integrations {
-			if filterType == "storage" && !info.Types.Storage {
-				continue
-			}
-			if filterType == "source" && !info.Types.Source {
-				continue
-			}
-			if filterType == "destination" && !info.Types.Destination {
-				continue
-			}
-			if filterTag != "" && !slices.Contains(info.Tags, filterTag) {
-				continue
-			}
-			info.Installation.Status = "not-installed"
-
-			plugin := installed.GetPlugin(info.Name)
-			if plugin != nil {
-				manifest, err := plugin.Manifest()
-				if err != nil {
-					ctx.GetLogger().Warn("failed to read manifest file: %v", err)
-				} else {
-					info.Installation.Status = "installed"
-					info.Installation.Version = manifest.Version
-				}
-			}
-
-			if !yield(&info, nil) {
-				return
-			}
-		}
-	}
+	return index.Integrations, nil
 }
