@@ -39,7 +39,12 @@ func RunCommand(ctx *appcontext.AppContext, cmd subcommands.Subcommand, repo *re
 
 	report.TaskStart(taskKind, taskName)
 	if repo != nil {
-		report.WithRepositoryName(repo.Location())
+		location, err := repo.Location()
+		if err != nil {
+			return 1, err
+		}
+
+		report.WithRepositoryName(location)
 		report.WithRepository(repo)
 	}
 
