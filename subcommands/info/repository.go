@@ -17,17 +17,17 @@ func (cmd *Info) executeRepository(ctx *appcontext.AppContext, repo *repository.
 
 	fmt.Fprintln(ctx.Stdout, "Packfile:")
 	fmt.Fprintf(ctx.Stdout, " - MaxSize: %s (%d bytes)\n",
-		humanize.Bytes(uint64(repo.Configuration().Packfile.MaxSize)),
+		humanize.IBytes(uint64(repo.Configuration().Packfile.MaxSize)),
 		repo.Configuration().Packfile.MaxSize)
 
 	fmt.Fprintln(ctx.Stdout, "Chunking:")
 	fmt.Fprintln(ctx.Stdout, " - Algorithm:", repo.Configuration().Chunking.Algorithm)
 	fmt.Fprintf(ctx.Stdout, " - MinSize: %s (%d bytes)\n",
-		humanize.Bytes(uint64(repo.Configuration().Chunking.MinSize)), repo.Configuration().Chunking.MinSize)
+		humanize.IBytes(uint64(repo.Configuration().Chunking.MinSize)), repo.Configuration().Chunking.MinSize)
 	fmt.Fprintf(ctx.Stdout, " - NormalSize: %s (%d bytes)\n",
-		humanize.Bytes(uint64(repo.Configuration().Chunking.NormalSize)), repo.Configuration().Chunking.NormalSize)
+		humanize.IBytes(uint64(repo.Configuration().Chunking.NormalSize)), repo.Configuration().Chunking.NormalSize)
 	fmt.Fprintf(ctx.Stdout, " - MaxSize: %s (%d bytes)\n",
-		humanize.Bytes(uint64(repo.Configuration().Chunking.MaxSize)), repo.Configuration().Chunking.MaxSize)
+		humanize.IBytes(uint64(repo.Configuration().Chunking.MaxSize)), repo.Configuration().Chunking.MaxSize)
 
 	fmt.Fprintln(ctx.Stdout, "Hashing:")
 	fmt.Fprintln(ctx.Stdout, " - Algorithm:", repo.Configuration().Hashing.Algorithm)
@@ -79,8 +79,8 @@ func (cmd *Info) executeRepository(ctx *appcontext.AppContext, repo *repository.
 
 	storageSize := repo.Store().Size()
 
-	fmt.Fprintf(ctx.Stdout, "Storage size: %s (%d bytes)\n", humanize.Bytes(uint64(storageSize)), uint64(storageSize))
-	fmt.Fprintf(ctx.Stdout, "Logical size: %s (%d bytes)\n", humanize.Bytes(uint64(logicalSize)), logicalSize)
+	fmt.Fprintf(ctx.Stdout, "Storage size: %s (%d bytes)\n", humanize.IBytes(uint64(storageSize)), uint64(storageSize))
+	fmt.Fprintf(ctx.Stdout, "Logical size: %s (%d bytes)\n", humanize.IBytes(uint64(logicalSize)), logicalSize)
 
 	return 0, nil
 }

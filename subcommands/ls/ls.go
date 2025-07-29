@@ -107,7 +107,7 @@ func (cmd *Ls) list_snapshots(ctx *appcontext.AppContext, repo *repository.Repos
 			fmt.Fprintf(ctx.Stdout, "%s %10s%10s%10s %s\n",
 				snap.Header.Timestamp.UTC().Format(time.RFC3339),
 				hex.EncodeToString(snap.Header.GetIndexShortID()),
-				humanize.Bytes(snap.Header.GetSource(0).Summary.Directory.Size+snap.Header.GetSource(0).Summary.Below.Size),
+				humanize.IBytes(snap.Header.GetSource(0).Summary.Directory.Size+snap.Header.GetSource(0).Summary.Below.Size),
 				snap.Header.Duration.Round(time.Second),
 				utils.SanitizeText(snap.Header.GetSource(0).Importer.Directory))
 		} else {
@@ -115,7 +115,7 @@ func (cmd *Ls) list_snapshots(ctx *appcontext.AppContext, repo *repository.Repos
 			fmt.Fprintf(ctx.Stdout, "%s %3s%10s%10s %s\n",
 				snap.Header.Timestamp.UTC().Format(time.RFC3339),
 				hex.EncodeToString(indexID[:]),
-				humanize.Bytes(snap.Header.GetSource(0).Summary.Directory.Size+snap.Header.GetSource(0).Summary.Below.Size),
+				humanize.IBytes(snap.Header.GetSource(0).Summary.Directory.Size+snap.Header.GetSource(0).Summary.Below.Size),
 				snap.Header.Duration.Round(time.Second),
 				utils.SanitizeText(snap.Header.GetSource(0).Importer.Directory))
 		}
@@ -192,7 +192,7 @@ func (cmd *Ls) list_snapshot(ctx *appcontext.AppContext, repo *repository.Reposi
 			sb.Mode(),
 			username,
 			groupname,
-			humanize.Bytes(uint64(sb.Size())),
+			humanize.IBytes(uint64(sb.Size())),
 			utils.SanitizeText(entryname),
 			linkTarget)
 

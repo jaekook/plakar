@@ -269,9 +269,9 @@ func (cmd *Backup) DoBackup(ctx *appcontext.AppContext, repo *repository.Reposit
 	ctx.GetLogger().Info("backup: created %s snapshot %x of size %s in %s (wrote %s)",
 		"unsigned",
 		snap.Header.GetIndexShortID(),
-		humanize.Bytes(totalSize),
+		humanize.IBytes(totalSize),
 		snap.Header.Duration,
-		humanize.Bytes(uint64(snap.Repository().WBytes())),
+		humanize.IBytes(uint64(snap.Repository().WBytes())),
 	)
 
 	totalErrors := uint64(0)
