@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	github.com/PlakarKorp/go-human2duration v0.1.5
-	github.com/PlakarKorp/kloset v1.0.1-beta.2.0.20250723140527-e66d7cc4467b
+	github.com/PlakarKorp/kloset v1.0.1-beta.2.0.20250729090347-a11838a1a53a
 	github.com/alecthomas/chroma v0.10.0
 	github.com/anacrolix/fuse v0.3.1
 	github.com/charmbracelet/bubbletea v1.3.6
@@ -36,6 +36,7 @@ require (
 	golang.org/x/crypto v0.40.0
 	golang.org/x/mod v0.26.0
 	golang.org/x/sync v0.16.0
+	golang.org/x/sys v0.34.0
 	golang.org/x/term v0.33.0
 	golang.org/x/tools v0.34.0
 	google.golang.org/genproto v0.0.0-20250603155806-513f23925822
@@ -47,7 +48,7 @@ require (
 
 require (
 	github.com/DataDog/zstd v1.5.6 // indirect
-	github.com/PlakarKorp/go-cdc-chunkers v1.0.0 // indirect
+	github.com/PlakarKorp/go-cdc-chunkers v1.0.1 // indirect
 	github.com/alecthomas/chroma/v2 v2.15.0 // indirect
 	github.com/aws/aws-sdk-go v1.44.256 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
@@ -55,7 +56,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.3.0 // indirect
-	github.com/charmbracelet/log v0.4.2 // indirect
 	github.com/charmbracelet/x/ansi v0.9.3 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.13 // indirect
 	github.com/charmbracelet/x/exp/golden v0.0.0-20240815200342-61de596daa2b // indirect
@@ -75,7 +75,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.9 // indirect
 	github.com/getsentry/sentry-go v0.31.1 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
-	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
@@ -130,7 +129,6 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b // indirect
 	golang.org/x/net v0.41.0 // indirect
-	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/text v0.27.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250528174236-200df99c418a // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect

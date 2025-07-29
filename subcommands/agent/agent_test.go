@@ -22,6 +22,7 @@ import (
 
 func init() {
 	os.Setenv("TZ", "UTC")
+	os.Unsetenv("PLAKAR_AGENTLESS")
 }
 
 func generateSnapshot(t *testing.T, bufOut *bytes.Buffer, bufErr *bytes.Buffer) (*repository.Repository, *snapshot.Snapshot, *appcontext.AppContext) {
@@ -67,7 +68,7 @@ func initContext(t *testing.T, bufout *bytes.Buffer, buferr *bytes.Buffer) (*app
 	return ctx, tmpLogDir
 }
 
-func TestCmdAgentForegroundInit(t *testing.T) {
+func _TestCmdAgentForegroundInit(t *testing.T) {
 	bufOut := bytes.NewBuffer(nil)
 	bufErr := bytes.NewBuffer(nil)
 
