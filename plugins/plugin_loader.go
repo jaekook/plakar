@@ -10,13 +10,13 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/PlakarKorp/kloset/kcontext"
 	"github.com/PlakarKorp/kloset/location"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/snapshot"
 	"github.com/PlakarKorp/kloset/snapshot/exporter"
 	"github.com/PlakarKorp/kloset/snapshot/importer"
 	"github.com/PlakarKorp/kloset/storage"
-	"github.com/PlakarKorp/plakar/appcontext"
 	fsexporter "github.com/PlakarKorp/plakar/connectors/fs/exporter"
 	grpc_exporter "github.com/PlakarKorp/plakar/connectors/grpc/exporter"
 	grpc_importer "github.com/PlakarKorp/plakar/connectors/grpc/importer"
@@ -56,7 +56,7 @@ func ValidateName(name string) bool {
 	return true
 }
 
-func ListDir(ctx *appcontext.AppContext, pluginsDir string) ([]string, error) {
+func ListDir(ctx *kcontext.KContext, pluginsDir string) ([]string, error) {
 	var names []string
 
 	dirEntries, err := os.ReadDir(pluginsDir)
@@ -77,7 +77,7 @@ func ListDir(ctx *appcontext.AppContext, pluginsDir string) ([]string, error) {
 	return names, nil
 }
 
-func LoadDir(ctx *appcontext.AppContext, pluginsDir, cacheDir string) error {
+func LoadDir(ctx *kcontext.KContext, pluginsDir, cacheDir string) error {
 	names, err := ListDir(ctx, pluginsDir)
 	if err != nil {
 		return err
@@ -92,7 +92,7 @@ func LoadDir(ctx *appcontext.AppContext, pluginsDir, cacheDir string) error {
 	return nil
 }
 
-func Load(ctx *appcontext.AppContext, pluginsDir, cacheDir, name string) error {
+func Load(ctx *kcontext.KContext, pluginsDir, cacheDir, name string) error {
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {
 		return err
 	}
@@ -166,17 +166,17 @@ func Load(ctx *appcontext.AppContext, pluginsDir, cacheDir, name string) error {
 	return nil
 }
 
-func extract(ctx *appcontext.AppContext, plugin, destDir string) error {
+func extract(ctx *kcontext.KContext, plugin, destDir string) error {
 	opts := map[string]string{
 		"location": "ptar://" + plugin,
 	}
 
-	store, serializedConfig, err := storage.Open(ctx.GetInner(), opts)
+	store, serializedConfig, err := storage.Open(ctx, opts)
 	if err != nil {
 		return err
 	}
 
-	repo, err := repository.New(ctx.GetInner(), nil, store, serializedConfig)
+	repo, err := repository.New(ctx, nil, store, serializedConfig)
 	if err != nil {
 		return err
 	}

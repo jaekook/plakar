@@ -55,7 +55,7 @@ func (cmd *PkgBuild) Parse(ctx *appcontext.AppContext, args []string) error {
 	}
 
 	recipe := flags.Arg(0)
-	if err := plugins.GetRecipe(ctx, recipe, &cmd.Recipe); err != nil {
+	if err := plugins.GetRecipe(recipe, &cmd.Recipe); err != nil {
 		return fmt.Errorf("failed to parse the recipe %s: %w", flags.Arg(0), err)
 	}
 

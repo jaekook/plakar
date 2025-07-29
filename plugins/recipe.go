@@ -11,7 +11,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/PlakarKorp/plakar/appcontext"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -24,7 +23,7 @@ type Recipe struct {
 	Checksum   string `yaml:"checksum"`
 }
 
-func GetRecipe(ctx *appcontext.AppContext, name string, recipe *Recipe) error {
+func GetRecipe(name string, recipe *Recipe) error {
 	var rd io.ReadCloser
 	var err error
 
@@ -41,9 +40,7 @@ func GetRecipe(ctx *appcontext.AppContext, name string, recipe *Recipe) error {
 		remote = true
 	}
 
-	if fullpath == "-" {
-		rd = io.NopCloser(ctx.Stdin)
-	} else if remote {
+	if remote {
 		resp, err := http.Get(fullpath)
 		if err != nil {
 			return fmt.Errorf("can't fetch %s: %w", fullpath, err)

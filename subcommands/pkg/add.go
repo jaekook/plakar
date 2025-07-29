@@ -66,7 +66,7 @@ func (cmd *PkgAdd) Parse(ctx *appcontext.AppContext, args []string) error {
 		//}
 		if !filepath.IsAbs(name) && !strings.HasPrefix(name, "./") {
 			var recipe plugins.Recipe
-			if err := plugins.GetRecipe(ctx, name, &recipe); err != nil {
+			if err := plugins.GetRecipe(name, &recipe); err != nil {
 				return fmt.Errorf("failed to parse the recipe %s: %w", flags.Arg(0), err)
 			}
 			u := *baseURL
@@ -108,7 +108,7 @@ func (cmd *PkgAdd) Execute(ctx *appcontext.AppContext, _ *repository.Repository)
 				filepath.Base(plugin), err)
 		}
 
-		err = plugins.Load(ctx, pluginDir, cachedir, filepath.Base(plugin))
+		err = plugins.Load(ctx.GetInner(), pluginDir, cachedir, filepath.Base(plugin))
 		if err != nil {
 			os.Remove(path)
 			return 1, fmt.Errorf("failed to load %s: %w",
