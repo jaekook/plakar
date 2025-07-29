@@ -49,17 +49,17 @@ func (cmd *DiagRepository) Execute(ctx *appcontext.AppContext, repo *repository.
 
 	fmt.Fprintln(ctx.Stdout, "Packfile:")
 	fmt.Fprintf(ctx.Stdout, " - MaxSize: %s (%d bytes)\n",
-		humanize.Bytes(uint64(repo.Configuration().Packfile.MaxSize)),
+		humanize.IBytes(uint64(repo.Configuration().Packfile.MaxSize)),
 		repo.Configuration().Packfile.MaxSize)
 
 	fmt.Fprintln(ctx.Stdout, "Chunking:")
 	fmt.Fprintln(ctx.Stdout, " - Algorithm:", repo.Configuration().Chunking.Algorithm)
 	fmt.Fprintf(ctx.Stdout, " - MinSize: %s (%d bytes)\n",
-		humanize.Bytes(uint64(repo.Configuration().Chunking.MinSize)), repo.Configuration().Chunking.MinSize)
+		humanize.IBytes(uint64(repo.Configuration().Chunking.MinSize)), repo.Configuration().Chunking.MinSize)
 	fmt.Fprintf(ctx.Stdout, " - NormalSize: %s (%d bytes)\n",
-		humanize.Bytes(uint64(repo.Configuration().Chunking.NormalSize)), repo.Configuration().Chunking.NormalSize)
+		humanize.IBytes(uint64(repo.Configuration().Chunking.NormalSize)), repo.Configuration().Chunking.NormalSize)
 	fmt.Fprintf(ctx.Stdout, " - MaxSize: %s (%d bytes)\n",
-		humanize.Bytes(uint64(repo.Configuration().Chunking.MaxSize)), repo.Configuration().Chunking.MaxSize)
+		humanize.IBytes(uint64(repo.Configuration().Chunking.MaxSize)), repo.Configuration().Chunking.MaxSize)
 
 	fmt.Fprintln(ctx.Stdout, "Hashing:")
 	fmt.Fprintln(ctx.Stdout, " - Algorithm:", repo.Configuration().Hashing.Algorithm)
@@ -116,7 +116,7 @@ func (cmd *DiagRepository) Execute(ctx *appcontext.AppContext, repo *repository.
 		totalSize += snap.Header.GetSource(0).Summary.Directory.Size + snap.Header.GetSource(0).Summary.Below.Size
 		snap.Close()
 	}
-	fmt.Fprintf(ctx.Stdout, "Size: %s (%d bytes)\n", humanize.Bytes(totalSize), totalSize)
+	fmt.Fprintf(ctx.Stdout, "Size: %s (%d bytes)\n", humanize.IBytes(totalSize), totalSize)
 
 	return 0, nil
 }
