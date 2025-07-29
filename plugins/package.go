@@ -36,11 +36,11 @@ func (pkg Package) PkgName() string {
 	return fmt.Sprintf("%s_%s_%s_%s.ptar", pkg.Name, pkg.Version, pkg.Os, pkg.Arch)
 }
 
-func (mgr *Manager) fetchPackages(url string) ([]Package, error) {
+func fetchPackages(url string) ([]Package, error) {
 	var packages []Package
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get %s: %w", mgr.PackagesUrl, err)
+		return nil, fmt.Errorf("failed to get %s: %w", url, err)
 	}
 	if resp.StatusCode/100 != 2 {
 		return nil, fmt.Errorf("HTTP error %d: %s", resp.StatusCode, resp.Status)

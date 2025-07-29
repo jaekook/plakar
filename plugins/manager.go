@@ -52,7 +52,7 @@ func NewManager(pluginsDir string) *Manager {
 	}
 	mgr.packages = Cache[[]Package]{
 		ttl: 5 * time.Minute,
-		get: func() ([]Package, error) { return mgr.fetchPackages(mgr.PackagesUrl) },
+		get: func() ([]Package, error) { return fetchPackages(mgr.PackagesUrl) },
 	}
 	mgr.integrations = Cache[[]Integration]{
 		ttl: 5 * time.Minute,
