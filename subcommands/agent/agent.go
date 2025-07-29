@@ -72,7 +72,7 @@ func (cmd *Agent) Parse(ctx *appcontext.AppContext, args []string) error {
 
 	_, envAgentLess := os.LookupEnv("PLAKAR_AGENTLESS")
 	if envAgentLess {
-		return fmt.Errorf("agent can not be start when PLAKAR_AGENTLESS is set")
+		return fmt.Errorf("agent can not be started when PLAKAR_AGENTLESS is set")
 	}
 
 	flags := flag.NewFlagSet("agent", flag.ExitOnError)
