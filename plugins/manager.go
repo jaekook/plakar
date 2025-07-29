@@ -1,11 +1,9 @@
 package plugins
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
-	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -54,7 +52,7 @@ func NewManager(pluginsDir string) *Manager {
 	}
 	mgr.packages = Cache[[]Package]{
 		ttl: 5 * time.Minute,
-		get: mgr.RetrievePackages,
+		get: func() ([]Package, error) { return mgr.fetchPackages(mgr.PackagesUrl) },
 	}
 	mgr.integrations = Cache[[]Integration]{
 		ttl: 5 * time.Minute,
@@ -64,7 +62,7 @@ func NewManager(pluginsDir string) *Manager {
 }
 
 func (mgr *Manager) PackageUrl(pkg Package) string {
-	return "https://plugins.plakar.io/kloset/pkg/" + mgr.ApiVersion + "/" + pkg.PkgName()
+	return mgr.PackagesUrl + pkg.PkgName()
 }
 
 func (mgr *Manager) ListAvailablePackages() ([]Package, error) {
@@ -156,38 +154,6 @@ func (mgr *Manager) IsInstalled(pkg Package) (bool, error) {
 		return false, nil
 	}
 	return true, nil
-}
-
-func (mgr *Manager) RetrievePackages() ([]Package, error) {
-	var packages []Package
-	resp, err := http.Get(mgr.PackagesUrl)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get %s: %w", mgr.PackagesUrl, err)
-	}
-	if resp.StatusCode/100 != 2 {
-		return nil, fmt.Errorf("HTTP error %d: %s", resp.StatusCode, resp.Status)
-	}
-	defer resp.Body.Close()
-
-	var lst []struct {
-		Name  string
-		Type  string
-		Mtime string
-		Size  uint64
-	}
-	err = json.NewDecoder(resp.Body).Decode(&lst)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode package list: %w", err)
-	}
-
-	for _, e := range lst {
-		var pkg Package
-		if ParsePackage(e.Name, &pkg) == nil {
-			packages = append(packages, pkg)
-		}
-	}
-
-	return packages, nil
 }
 
 func (mgr *Manager) ListIntegrations(filter IntegrationFilter) ([]Integration, error) {
