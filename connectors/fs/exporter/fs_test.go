@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
+	"github.com/PlakarKorp/kloset/kcontext"
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/snapshot/exporter"
-	"github.com/PlakarKorp/plakar/appcontext"
 	"github.com/stretchr/testify/require"
 )
 
@@ -22,10 +22,10 @@ func TestExporter(t *testing.T) {
 	})
 
 	var exporterInstance exporter.Exporter
-	appCtx := appcontext.NewAppContext()
+	ctx := kcontext.NewKContext()
 
 	// Register the fs backen
-	exporterInstance, err = exporter.NewExporter(appCtx.GetInner(), map[string]string{"location": tmpExportDir})
+	exporterInstance, err = exporter.NewExporter(ctx, map[string]string{"location": tmpExportDir})
 	require.NoError(t, err)
 	defer exporterInstance.Close()
 

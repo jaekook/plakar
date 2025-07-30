@@ -200,6 +200,7 @@ func entryPoint() int {
 		fmt.Fprintf(os.Stderr, "%s: could not get data directory: %s\n", flag.CommandLine.Name(), err)
 		return 1
 	}
+	ctx.SetPlugins(plugins.NewManager(filepath.Join(dataDir, "plugins")))
 
 	if opt_disableSecurityCheck {
 		ctx.GetCookies().SetDisabledSecurityCheck()
@@ -284,7 +285,7 @@ func entryPoint() int {
 
 	// use cookiesDir as base since it's the same wrt agentless
 	pluginCache := filepath.Join(cookiesDir, "plugins", plugins.PLUGIN_API_VERSION)
-	if err := plugins.LoadDir(ctx, pluginDir, pluginCache); err != nil {
+	if err := plugins.LoadDir(ctx.GetInner(), pluginDir, pluginCache); err != nil {
 		logger.Warn("failed to load the plugins: %s", err)
 	}
 
