@@ -29,6 +29,7 @@ func NewAppContextFrom(ctx *AppContext) *AppContext {
 		KContext: kcontext.NewKContextFrom(ctx.GetInner()),
 
 		cookies:   ctx.cookies,
+		plugins:   ctx.plugins,
 		ConfigDir: ctx.ConfigDir,
 	}
 }
