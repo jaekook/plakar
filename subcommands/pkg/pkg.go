@@ -56,7 +56,7 @@ type Pkg struct {
 
 func (cmd *Pkg) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags := flag.NewFlagSet("pkg", flag.ExitOnError)
-	flags.BoolVar(&cmd.LongName, "full", false, "show full package name")
+	flags.BoolVar(&cmd.LongName, "long", false, "show full package name")
 	flags.BoolVar(&cmd.ListAll, "available", false, "show all available packages")
 	flags.Usage = func() {
 		fmt.Fprintf(flags.Output(), "Usage: %s",
