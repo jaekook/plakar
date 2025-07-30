@@ -72,7 +72,7 @@ func (ui *uiserver) integrationsInstall(w http.ResponseWriter, r *http.Request) 
 	}
 
 	resp.Status = "ok"
-	resp.AddMessage(fmt.Sprintf("plugin %q installed successfully", pkgName))
+	resp.AddMessage(fmt.Sprintf("plugin %q installed successfully", pkg.Name))
 
 done:
 	return json.NewEncoder(w).Encode(resp)
