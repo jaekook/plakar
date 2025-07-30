@@ -46,7 +46,6 @@ type IntegrationsInstallRequest struct {
 
 func (ui *uiserver) integrationsInstall(w http.ResponseWriter, r *http.Request) error {
 	var cmd pkg.PkgAdd
-	var pkgName string
 	var pkg plugins.Package
 	var req IntegrationsInstallRequest
 
