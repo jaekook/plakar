@@ -131,13 +131,13 @@ func (mb *MockBackend) PutState(MAC objects.MAC, rd io.Reader) (int64, error) {
 	return 0, nil
 }
 
-func (mb *MockBackend) GetState(MAC objects.MAC) (io.Reader, error) {
+func (mb *MockBackend) GetState(MAC objects.MAC) (io.ReadCloser, error) {
 	if mb.behavior == "brokenGetState" {
 		return nil, errors.New("broken get state")
 	}
 
 	var buffer bytes.Buffer
-	return &buffer, nil
+	return io.NopCloser(&buffer), nil
 }
 
 func (mb *MockBackend) DeleteState(MAC objects.MAC) error {
@@ -157,33 +157,33 @@ func (mb *MockBackend) PutPackfile(MAC objects.MAC, rd io.Reader) (int64, error)
 	return 0, nil
 }
 
-func (mb *MockBackend) GetPackfile(MAC objects.MAC) (io.Reader, error) {
+func (mb *MockBackend) GetPackfile(MAC objects.MAC) (io.ReadCloser, error) {
 	if mb.behavior == "brokenGetPackfile" {
 		return nil, errors.New("broken get packfile")
 	}
 
 	packfile := behaviors[mb.behavior].packfile
 	if packfile == "" {
-		return bytes.NewReader([]byte("packfile data")), nil
+		return io.NopCloser(bytes.NewReader([]byte("packfile data"))), nil
 	}
 
-	return bytes.NewReader([]byte(packfile)), nil
+	return io.NopCloser(bytes.NewReader([]byte(packfile))), nil
 }
 
-func (mb *MockBackend) GetPackfileBlob(MAC objects.MAC, offset uint64, length uint32) (io.Reader, error) {
+func (mb *MockBackend) GetPackfileBlob(MAC objects.MAC, offset uint64, length uint32) (io.ReadCloser, error) {
 	if mb.behavior == "brokenGetPackfileBlob" {
 		return nil, errors.New("broken get packfile blob")
 	}
 
 	header := behaviors[mb.behavior].header
 	if header == nil {
-		return bytes.NewReader([]byte("blob data")), nil
+		return io.NopCloser(bytes.NewReader([]byte("blob data"))), nil
 	}
 	data, err := msgpack.Marshal(header)
 	if err != nil {
 		panic(err)
 	}
-	return bytes.NewReader(data), nil
+	return io.NopCloser(bytes.NewReader(data)), nil
 }
 
 func (mb *MockBackend) DeletePackfile(MAC objects.MAC) error {
@@ -203,7 +203,7 @@ func (mb *MockBackend) PutLock(lockID objects.MAC, rd io.Reader) (int64, error) 
 	panic("Not implemented yet")
 }
 
-func (mb *MockBackend) GetLock(lockID objects.MAC) (io.Reader, error) {
+func (mb *MockBackend) GetLock(lockID objects.MAC) (io.ReadCloser, error) {
 	panic("Not implemented yet")
 }
 
