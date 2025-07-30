@@ -54,7 +54,7 @@ func TestExporter(t *testing.T) {
 	// Test creating directories
 	dirs := []string{"dir1", "dir2", "dir3"}
 	for _, dir := range dirs {
-		if err := exporter.CreateDirectory(dir); err != nil {
+		if err := exporter.CreateDirectory(ctx, dir); err != nil {
 			t.Errorf("Failed to create directory %s: %v", dir, err)
 		}
 	}
@@ -62,7 +62,7 @@ func TestExporter(t *testing.T) {
 	// Test storing files
 	for name, content := range testFiles {
 		fp := bytes.NewReader([]byte(content))
-		if err := exporter.StoreFile(name, fp, int64(len(content))); err != nil {
+		if err := exporter.StoreFile(ctx, name, fp, int64(len(content))); err != nil {
 			t.Errorf("Failed to store file %s: %v", name, err)
 		}
 	}
@@ -83,7 +83,7 @@ func TestExporter(t *testing.T) {
 	fileInfo := &objects.FileInfo{
 		Lmode: 0644,
 	}
-	if err := exporter.SetPermissions("file1.txt", fileInfo); err != nil {
+	if err := exporter.SetPermissions(ctx, "file1.txt", fileInfo); err != nil {
 		t.Errorf("Failed to set permissions: %v", err)
 	}
 }
