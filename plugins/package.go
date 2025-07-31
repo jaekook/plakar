@@ -14,7 +14,7 @@ type Package struct {
 	Arch    string
 }
 
-func ParsePackage(name string, pkg *Package) error {
+func ParsePackageName(name string, pkg *Package) error {
 	if !strings.HasSuffix(name, ".ptar") {
 		return fmt.Errorf("package name %q does not end with .ptar", name)
 	}
@@ -34,6 +34,10 @@ func ParsePackage(name string, pkg *Package) error {
 
 func (pkg Package) PkgName() string {
 	return fmt.Sprintf("%s_%s_%s_%s.ptar", pkg.Name, pkg.Version, pkg.Os, pkg.Arch)
+}
+
+func (pkg Package) PluginName() string {
+	return fmt.Sprintf("%s_%s_%s_%s", pkg.Name, pkg.Version, pkg.Os, pkg.Arch)
 }
 
 func fetchPackages(url string) ([]Package, error) {
@@ -60,7 +64,8 @@ func fetchPackages(url string) ([]Package, error) {
 
 	for _, e := range lst {
 		var pkg Package
-		if ParsePackage(e.Name, &pkg) == nil {
+		if ParsePackageName(e.Name, &pkg) == nil {
+			//fmt.Println(e.Name)
 			packages = append(packages, pkg)
 		}
 	}

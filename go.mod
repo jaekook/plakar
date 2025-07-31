@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	github.com/PlakarKorp/go-human2duration v0.1.5
-	github.com/PlakarKorp/kloset v1.0.1-beta.2.0.20250729090347-a11838a1a53a
+	github.com/PlakarKorp/kloset v1.0.1-beta.2.0.20250731070337-f43b76092b88
 	github.com/alecthomas/chroma v0.10.0
 	github.com/anacrolix/fuse v0.3.1
 	github.com/charmbracelet/bubbletea v1.3.6

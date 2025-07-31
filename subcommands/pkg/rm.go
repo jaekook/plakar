@@ -19,15 +19,10 @@ package pkg
 import (
 	"flag"
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/plakar/appcontext"
-	"github.com/PlakarKorp/plakar/plugins"
 	"github.com/PlakarKorp/plakar/subcommands"
-	"github.com/PlakarKorp/plakar/utils"
 )
 
 type PkgRm struct {
@@ -52,37 +47,15 @@ func (cmd *PkgRm) Parse(ctx *appcontext.AppContext, args []string) error {
 }
 
 func (cmd *PkgRm) Execute(ctx *appcontext.AppContext, _ *repository.Repository) (int, error) {
-	cachedir, err := utils.GetCacheDir("plakar")
-	if err != nil {
-		return 1, err
-	}
-	cachedir = filepath.Join(cachedir, "plugins", plugins.PLUGIN_API_VERSION)
 
-	dataDir, err := utils.GetDataDir("plakar")
-	if err != nil {
-		return 1, err
-	}
-
-	pluginsDir := filepath.Join(dataDir, "plugins", plugins.PLUGIN_API_VERSION)
-	names, err := plugins.ListDir(ctx.GetInner(), pluginsDir)
-	if err != nil {
-		return 1, err
-	}
-
-	for _, argName := range cmd.Args {
-		for _, name := range names {
-			if argName == name || argName == strings.Split(name, "_")[0] {
-				err := os.Remove(filepath.Join(pluginsDir, name))
-				if err != nil {
-					return 1, fmt.Errorf("failed to remove %q: %w", name, err)
-				}
-				extlen := len(filepath.Ext(name))
-				pluginCache := filepath.Join(cachedir, name[:len(name)-extlen])
-				err = os.RemoveAll(pluginCache)
-				if err != nil {
-					return 1, fmt.Errorf("failed to remove cache for %q: %w", name, err)
-				}
-			}
+	for _, name := range cmd.Args {
+		pkg, err := ctx.GetPlugins().FindInstalledPackage(name)
+		if err != nil {
+			return 1, fmt.Errorf("failed to remove %q: %w", name, err)
+		}
+		err = ctx.GetPlugins().UninstallPackage(ctx.GetInner(), pkg)
+		if err != nil {
+			return 1, fmt.Errorf("failed to remove %q: %w", name, err)
 		}
 	}
 
