@@ -158,11 +158,6 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return nil
 
 	case "import":
-		allSections := false
-		if len(args) == 0 {
-			allSections = true
-		}
-
 		newConfMap, err := utils.GetConf(ctx.Stdin)
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
@@ -171,7 +166,7 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 			return fmt.Errorf("no valid %ss found in config", cmd)
 		}
 
-		if allSections {
+		if len(args) == 0 {
 			for name, section := range newConfMap {
 				if hasFunc(name) {
 					fmt.Fprintf(ctx.Stderr, "%s %q already exists, skipping\n", cmd, name)
