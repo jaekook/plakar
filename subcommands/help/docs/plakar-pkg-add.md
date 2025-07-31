@@ -20,6 +20,9 @@ is an absolute path, or if it starts with
 './',
 then it is considered a path to a local plugin file, otherwise
 it is downloaded from the Plakar plugin server.
+In the latter case, the user must be logged in via the
+plakar-login(1)
+command.
 
 # FILES
 
@@ -40,6 +43,7 @@ it is downloaded from the Plakar plugin server.
 # SEE ALSO
 
 plakar-pkg(1),
+plakar-pkg-login(1),
 plakar-pkg-create(1),
 plakar-pkg-rm(1)
 
