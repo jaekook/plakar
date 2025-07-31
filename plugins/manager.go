@@ -275,6 +275,11 @@ func (mgr *Manager) ReloadPlugins(ctx *kcontext.KContext) error {
 }
 
 func (mgr *Manager) UninstallPackage(ctx *kcontext.KContext, pkg Package) error {
+	err := pkg.Validate()
+	if err != nil {
+		return err
+	}
+
 	mgr.pluginsMtx.Lock()
 	defer mgr.pluginsMtx.Unlock()
 	plugin, ok := mgr.plugins[pkg]
@@ -287,7 +292,7 @@ func (mgr *Manager) UninstallPackage(ctx *kcontext.KContext, pkg Package) error 
 
 	pluginFile := mgr.PluginFile(pkg)
 
-	err := os.Remove(pluginFile)
+	err = os.Remove(pluginFile)
 	if err != nil {
 		return fmt.Errorf("failed to remove %q: %w", pluginFile, err)
 	}
@@ -301,6 +306,11 @@ func (mgr *Manager) UninstallPackage(ctx *kcontext.KContext, pkg Package) error 
 }
 
 func (mgr *Manager) InstallPackage(ctx *kcontext.KContext, pkg Package, filename string) error {
+	err := pkg.Validate()
+	if err != nil {
+		return err
+	}
+
 	mgr.pluginsMtx.Lock()
 	defer mgr.pluginsMtx.Unlock()
 
