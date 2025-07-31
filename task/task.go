@@ -15,6 +15,15 @@ import (
 )
 
 func RunCommand(ctx *appcontext.AppContext, cmd subcommands.Subcommand, repo *repository.Repository, taskName string) (int, error) {
+	location := ""
+	var err error
+
+	if repo != nil {
+		location, err = repo.Location()
+		if err != nil {
+			return 1, err
+		}
+	}
 
 	reporter := reporting.NewReporter(ctx)
 	report := reporter.NewReport()
@@ -39,16 +48,10 @@ func RunCommand(ctx *appcontext.AppContext, cmd subcommands.Subcommand, repo *re
 
 	report.TaskStart(taskKind, taskName)
 	if repo != nil {
-		location, err := repo.Location()
-		if err != nil {
-			return 1, err
-		}
-
 		report.WithRepositoryName(location)
 		report.WithRepository(repo)
 	}
 
-	var err error
 	var status int
 	var snapshotID objects.MAC
 	var warning error
