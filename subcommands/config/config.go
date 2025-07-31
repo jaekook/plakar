@@ -158,10 +158,6 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return nil
 
 	case "import":
-		if len(args) != 0 {
-			return fmt.Errorf("usage: plakar %s import", cmd)
-		}
-
 		newConfMap, err := utils.GetConf(ctx.Stdin)
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
@@ -169,13 +165,31 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		if len(newConfMap) == 0 {
 			return fmt.Errorf("no valid %ss found in config", cmd)
 		}
-		for name, section := range newConfMap {
-			if hasFunc(name) {
-				fmt.Fprintf(ctx.Stderr, "%s %q already exists, skipping\n", cmd, name)
-				continue
+
+		if len(args) == 0 {
+			for name, section := range newConfMap {
+				if hasFunc(name) {
+					fmt.Fprintf(ctx.Stderr, "%s %q already exists, skipping\n", cmd, name)
+					continue
+				}
+				cfgMap[name] = make(map[string]string)
+				maps.Copy(cfgMap[name], section)
 			}
-			cfgMap[name] = make(map[string]string)
-			maps.Copy(cfgMap[name], section)
+		} else {
+			for _, requestedName := range args {
+				if hasFunc(requestedName) {
+					fmt.Fprintf(ctx.Stderr, "%s %q already exists, skipping\n", cmd, requestedName)
+					continue
+				}
+				if section, ok := newConfMap[requestedName]; !ok {
+					fmt.Fprintf(ctx.Stderr, "%s %q does not exist in config", cmd, requestedName)
+					continue
+				} else {
+					name := normalizeName(requestedName)
+					cfgMap[name] = make(map[string]string)
+					maps.Copy(cfgMap[name], section)
+				}
+			}
 		}
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 
