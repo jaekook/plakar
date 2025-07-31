@@ -101,7 +101,7 @@ func (reporter *Reporter) getEmitter() Emitter {
 	// Check if user is logged
 	token, err := reporter.ctx.GetCookies().GetAuthToken()
 	if err != nil {
-		reporter.ctx.GetLogger().Warn("cannot get auth token: %v", err)
+		//reporter.ctx.GetLogger().Warn("cannot get auth token: %v", err)
 		return reporter.emitter
 	}
 	if token == "" {
@@ -111,7 +111,7 @@ func (reporter *Reporter) getEmitter() Emitter {
 	sc := services.NewServiceConnector(reporter.ctx, token)
 	enabled, err := sc.GetServiceStatus("alerting")
 	if err != nil {
-		reporter.ctx.GetLogger().Warn("failed to check alerting service: %v", err)
+		//reporter.ctx.GetLogger().Warn("failed to check alerting service: %v", err)
 		return reporter.emitter
 	}
 	if !enabled {
