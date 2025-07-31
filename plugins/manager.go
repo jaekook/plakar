@@ -39,7 +39,7 @@ type Manager struct {
 	Arch       string
 
 	PluginsDir string // Where plugins are installed
-	CacheDir   string // where plugins are decomppressed
+	CacheDir   string // where plugins are decompressed
 
 	PackagesUrl string // Where prebuilt packages are retrieved from
 
@@ -251,7 +251,7 @@ func (mgr *Manager) doLoadPlugins(ctx *kcontext.KContext) error {
 		var plugin Plugin
 		err := plugin.SetUp(ctx, mgr.PluginFile(pkg), pkg.PluginName(), mgr.CacheDir)
 		if err != nil {
-			defer mgr.UnloadPlugins(ctx)
+			mgr.doUnloadPlugins(ctx)
 			return fmt.Errorf("failed to load plugin %q", mgr.PluginFile(pkg))
 		}
 		mgr.plugins[pkg] = &plugin
