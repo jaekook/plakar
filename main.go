@@ -440,7 +440,7 @@ func entryPoint() int {
 	}
 
 	if store != nil {
-		err = store.Close()
+		err = store.Close(ctx)
 		if err != nil {
 			logger.Warn("could not close repository: %s", err)
 		}
