@@ -229,17 +229,19 @@ func (mgr *Manager) PluginCache(pkg Package) string {
 	return filepath.Join(mgr.CacheDir, pkg.PluginName())
 }
 
-func (mgr *Manager) UnloadPlugins(ctx *kcontext.KContext) {
-	mgr.pluginsMtx.Lock()
-	defer mgr.pluginsMtx.Unlock()
+func (mgr *Manager) doUnloadPlugins(ctx *kcontext.KContext) {
 	for _, plugin := range mgr.plugins {
 		plugin.TearDown(ctx)
 	}
 }
 
-func (mgr *Manager) LoadPlugins(ctx *kcontext.KContext) error {
+func (mgr *Manager) UnloadPlugins(ctx *kcontext.KContext) {
 	mgr.pluginsMtx.Lock()
 	defer mgr.pluginsMtx.Unlock()
+	mgr.doUnloadPlugins(ctx)
+}
+
+func (mgr *Manager) doLoadPlugins(ctx *kcontext.KContext) error {
 	packages, err := mgr.ListInstalledPackages()
 	if err != nil {
 		return err
@@ -256,6 +258,20 @@ func (mgr *Manager) LoadPlugins(ctx *kcontext.KContext) error {
 	}
 
 	return nil
+}
+
+func (mgr *Manager) LoadPlugins(ctx *kcontext.KContext) error {
+	mgr.pluginsMtx.Lock()
+	defer mgr.pluginsMtx.Unlock()
+	return mgr.doLoadPlugins(ctx)
+}
+
+func (mgr *Manager) ReloadPlugins(ctx *kcontext.KContext) error {
+	mgr.pluginsMtx.Lock()
+	defer mgr.pluginsMtx.Unlock()
+
+	mgr.doUnloadPlugins(ctx)
+	return mgr.doLoadPlugins(ctx)
 }
 
 func (mgr *Manager) UninstallPackage(ctx *kcontext.KContext, pkg Package) error {
