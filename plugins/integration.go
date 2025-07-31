@@ -43,8 +43,9 @@ type Integration struct {
 }
 
 type IntegrationFilter struct {
-	Type string
-	Tag  string
+	Type   string
+	Tag    string
+	Status string
 }
 
 type IntegrationIndex struct {

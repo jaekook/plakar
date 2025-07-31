@@ -195,6 +195,10 @@ func (mgr *Manager) ListIntegrations(filter IntegrationFilter) ([]Integration, e
 			info.Installation.Version = pkg.Version
 		}
 
+		if filter.Status != "" && filter.Status != info.Installation.Status {
+			continue
+		}
+
 		ok, err := mgr.IsAvailable(mgr.IntegrationAsPackage(&info))
 		if ok {
 			info.Installation.Available = true
