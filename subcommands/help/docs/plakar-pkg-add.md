@@ -42,8 +42,8 @@ command.
 
 # SEE ALSO
 
+plakar-login(1),
 plakar-pkg(1),
-plakar-pkg-login(1),
 plakar-pkg-create(1),
 plakar-pkg-rm(1)
 
