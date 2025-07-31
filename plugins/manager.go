@@ -156,15 +156,17 @@ func (mgr *Manager) FindInstalledPackage(name string) (Package, error) {
 	return Package{}, fmt.Errorf("package not installed")
 }
 
-func (mgr *Manager) IsInstalled(pkg Package) (bool, error) {
-	_, err := os.Stat(filepath.Join(mgr.PluginsDir, pkg.PkgName()))
+func (mgr *Manager) IsInstalled(pkg Package) (bool, Package, error) {
+	packages, err := mgr.ListInstalledPackages()
 	if err != nil {
-		if !errors.Is(err, fs.ErrNotExist) {
-			return false, err
-		}
-		return false, nil
+		return false, Package{}, fmt.Errorf("failed to list installed packages")
 	}
-	return true, nil
+	for _, p := range packages {
+		if p.Name == pkg.Name {
+			return true, p, nil
+		}
+	}
+	return false, Package{}, nil
 }
 
 func (mgr *Manager) ListIntegrations(filter IntegrationFilter) ([]Integration, error) {

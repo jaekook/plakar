@@ -79,9 +79,6 @@ func (cmd *Pkg) Execute(ctx *appcontext.AppContext, _ *repository.Repository) (i
 	var err error
 
 	if cmd.ListAll {
-		if !ctx.GetCookies().HasAuthToken() {
-			return 1, fmt.Errorf("login is required to retrieve the package list")
-		}
 		var filter plugins.IntegrationFilter
 		integrations, err := ctx.GetPlugins().ListIntegrations(filter)
 		if err != nil {

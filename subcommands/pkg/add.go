@@ -96,6 +96,11 @@ func installPlugin(ctx *appcontext.AppContext, pluginFile string) error {
 		return fmt.Errorf("invalid package name: %w", err)
 	}
 
+	ok, _, err := ctx.GetPlugins().IsInstalled(pkg)
+	if ok {
+		return fmt.Errorf("package name %q already installed", pkg.Name)
+	}
+
 	if isRemote(pluginFile) {
 		pluginFile, err = fetchPlugin(ctx, pluginFile)
 		if err != nil {
