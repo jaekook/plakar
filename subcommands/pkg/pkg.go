@@ -90,7 +90,6 @@ func (cmd *Pkg) Execute(ctx *appcontext.AppContext, _ *repository.Repository) (i
 				packages = append(packages, pkg)
 			}
 		}
-
 	} else {
 		packages, err = ctx.GetPlugins().ListInstalledPackages()
 		if err != nil {

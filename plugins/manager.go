@@ -8,7 +8,10 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"sync"
 	"time"
+
+	"github.com/PlakarKorp/kloset/kcontext"
 )
 
 type Cache[T any] struct {
@@ -35,20 +38,27 @@ type Manager struct {
 	Os         string
 	Arch       string
 
-	PluginsDir  string // Where plugins are installed
-	PackagesUrl string // Where packages are retrieved from
+	PluginsDir string // Where plugins are installed
+	CacheDir   string // where plugins are decomppressed
 
+	PackagesUrl string // Where prebuilt packages are retrieved from
+
+	pluginsMtx   sync.Mutex
+	plugins      map[Package]*Plugin  // list of loaded plugins
 	packages     Cache[[]Package]     // list of available packages
 	integrations Cache[[]Integration] // list of integrations
 }
 
-func NewManager(pluginsDir string) *Manager {
+func NewManager(pluginsDir, cacheDir string) *Manager {
 	mgr := &Manager{
 		ApiVersion:  PLUGIN_API_VERSION,
 		Os:          runtime.GOOS,
 		Arch:        runtime.GOARCH,
-		PluginsDir:  filepath.Join(pluginsDir, PLUGIN_API_VERSION),
+		PluginsDir:  filepath.Join(pluginsDir, "plugins", PLUGIN_API_VERSION),
+		CacheDir:    filepath.Join(cacheDir, "plugins", PLUGIN_API_VERSION),
 		PackagesUrl: "https://plugins.plakar.io/kloset/pkg/" + PLUGIN_API_VERSION + "/",
+
+		plugins: make(map[Package]*Plugin),
 	}
 	mgr.packages = Cache[[]Package]{
 		ttl: 5 * time.Minute,
@@ -86,10 +96,8 @@ func (mgr *Manager) IsAvailable(pkg Package) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	for _, entry := range packages {
-		if pkg == entry {
-			return true, nil
-		}
+	if slices.Contains(packages, pkg) {
+		return true, nil
 	}
 	return false, nil
 }
@@ -123,7 +131,7 @@ func (mgr *Manager) ListInstalledPackages() ([]Package, error) {
 			continue
 		}
 		var pkg Package
-		err := ParsePackage(entry.Name(), &pkg)
+		err := ParsePackageName(entry.Name(), &pkg)
 		if err == nil {
 			packages = append(packages, pkg)
 		}
@@ -141,19 +149,24 @@ func (mgr *Manager) FindInstalledPackage(name string) (Package, error) {
 		if pkg.Name == name {
 			return pkg, nil
 		}
+		if pkg.PkgName() == name {
+			return pkg, nil
+		}
 	}
 	return Package{}, fmt.Errorf("package not installed")
 }
 
-func (mgr *Manager) IsInstalled(pkg Package) (bool, error) {
-	_, err := os.Stat(filepath.Join(mgr.PluginsDir, pkg.PkgName()))
+func (mgr *Manager) IsInstalled(pkg Package) (bool, Package, error) {
+	packages, err := mgr.ListInstalledPackages()
 	if err != nil {
-		if !errors.Is(err, fs.ErrNotExist) {
-			return false, err
-		}
-		return false, nil
+		return false, Package{}, fmt.Errorf("failed to list installed packages")
 	}
-	return true, nil
+	for _, p := range packages {
+		if p.Name == pkg.Name {
+			return true, p, nil
+		}
+	}
+	return false, Package{}, nil
 }
 
 func (mgr *Manager) ListIntegrations(filter IntegrationFilter) ([]Integration, error) {
@@ -184,6 +197,10 @@ func (mgr *Manager) ListIntegrations(filter IntegrationFilter) ([]Integration, e
 			info.Installation.Version = pkg.Version
 		}
 
+		if filter.Status != "" && filter.Status != info.Installation.Status {
+			continue
+		}
+
 		ok, err := mgr.IsAvailable(mgr.IntegrationAsPackage(&info))
 		if ok {
 			info.Installation.Available = true
@@ -202,4 +219,120 @@ func (mgr *Manager) IntegrationAsPackage(int *Integration) Package {
 		Os:      mgr.Os,
 		Arch:    mgr.Arch,
 	}
+}
+
+func (mgr *Manager) PluginFile(pkg Package) string {
+	return filepath.Join(mgr.PluginsDir, pkg.PkgName())
+}
+
+func (mgr *Manager) PluginCache(pkg Package) string {
+	return filepath.Join(mgr.CacheDir, pkg.PluginName())
+}
+
+func (mgr *Manager) doUnloadPlugins(ctx *kcontext.KContext) {
+	for _, plugin := range mgr.plugins {
+		plugin.TearDown(ctx)
+	}
+}
+
+func (mgr *Manager) UnloadPlugins(ctx *kcontext.KContext) {
+	mgr.pluginsMtx.Lock()
+	defer mgr.pluginsMtx.Unlock()
+	mgr.doUnloadPlugins(ctx)
+}
+
+func (mgr *Manager) doLoadPlugins(ctx *kcontext.KContext) error {
+	packages, err := mgr.ListInstalledPackages()
+	if err != nil {
+		return err
+	}
+
+	for _, pkg := range packages {
+		var plugin Plugin
+		err := plugin.SetUp(ctx, mgr.PluginFile(pkg), pkg.PluginName(), mgr.CacheDir)
+		if err != nil {
+			defer mgr.UnloadPlugins(ctx)
+			return fmt.Errorf("failed to load plugin %q", mgr.PluginFile(pkg))
+		}
+		mgr.plugins[pkg] = &plugin
+	}
+
+	return nil
+}
+
+func (mgr *Manager) LoadPlugins(ctx *kcontext.KContext) error {
+	mgr.pluginsMtx.Lock()
+	defer mgr.pluginsMtx.Unlock()
+	return mgr.doLoadPlugins(ctx)
+}
+
+func (mgr *Manager) ReloadPlugins(ctx *kcontext.KContext) error {
+	mgr.pluginsMtx.Lock()
+	defer mgr.pluginsMtx.Unlock()
+
+	mgr.doUnloadPlugins(ctx)
+	return mgr.doLoadPlugins(ctx)
+}
+
+func (mgr *Manager) UninstallPackage(ctx *kcontext.KContext, pkg Package) error {
+	mgr.pluginsMtx.Lock()
+	defer mgr.pluginsMtx.Unlock()
+	plugin, ok := mgr.plugins[pkg]
+	if !ok {
+		return fmt.Errorf("package not installed")
+	}
+
+	delete(mgr.plugins, pkg)
+	plugin.TearDown(ctx)
+
+	pluginFile := mgr.PluginFile(pkg)
+
+	err := os.Remove(pluginFile)
+	if err != nil {
+		return fmt.Errorf("failed to remove %q: %w", pluginFile, err)
+	}
+
+	err = os.RemoveAll(mgr.PluginCache(pkg))
+	if err != nil {
+		return fmt.Errorf("failed to remove cache for %q: %w", pkg.PluginName(), err)
+	}
+
+	return nil
+}
+
+func (mgr *Manager) InstallPackage(ctx *kcontext.KContext, pkg Package, filename string) error {
+	mgr.pluginsMtx.Lock()
+	defer mgr.pluginsMtx.Unlock()
+
+	// Check if installed
+	installed, err := mgr.ListInstalledPackages()
+	if err != nil {
+		return fmt.Errorf("failed to list installed package: %w", err)
+	}
+	for _, p := range installed {
+		if p == pkg {
+			return fmt.Errorf("plugin %q already installed", pkg.Name)
+		}
+		if p.Name == pkg.Name {
+			return fmt.Errorf("plugin %q already installed in a different version, remove first", pkg.Name)
+		}
+	}
+
+	var plugin Plugin
+
+	// Try to setup the plugin
+	err = plugin.SetUp(ctx, filename, pkg.PluginName(), mgr.CacheDir)
+	if err != nil {
+		return fmt.Errorf("failed to load plugin %q: %w", pkg.Name, err)
+	}
+
+	err = installPlugin(filename, mgr.PluginFile(pkg))
+	if err != nil {
+		os.RemoveAll(mgr.PluginCache(pkg))
+		plugin.TearDown(ctx)
+		return fmt.Errorf("failed to install plugin file %s: %w", filename, err)
+	}
+
+	mgr.plugins[pkg] = &plugin
+	return nil
 }

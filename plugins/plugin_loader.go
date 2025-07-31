@@ -2,12 +2,11 @@ package plugins
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io/fs"
+	"io"
 	"os"
+	"path"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/PlakarKorp/kloset/kcontext"
@@ -24,141 +23,61 @@ import (
 	"github.com/PlakarKorp/plakar/locate"
 )
 
-func ParseName(name string) (string, string, string, string, error) {
-	if !strings.HasSuffix(name, ".ptar") {
-		return "", "", "", "", fmt.Errorf("plugin name %q does not end with .ptar", name)
-	}
+type TearDownFunc func() error
 
-	baseName := strings.TrimSuffix(name, ".ptar")
-	atoms := strings.Split(baseName, "_")
-	if len(atoms) != 4 {
-		return "", "", "", "", fmt.Errorf("plugin name %q does not contain all atoms (name, version, OS, architecture)", name)
-	}
-
-	return atoms[0], atoms[1], atoms[2], atoms[3], nil
+type Plugin struct {
+	teardown []TearDownFunc
 }
 
-func ValidateName(name string) bool {
-	pluginName, pluginVersion, osName, archName, err := ParseName(name)
-	if err != nil {
-		return false
-	}
+func (plugin *Plugin) SetUp(ctx *kcontext.KContext, pluginFile, pluginName, cacheDir string) error {
 
-	_, _ = pluginName, pluginVersion
-
-	if osName != runtime.GOOS {
-		return false
-	}
-	if archName != runtime.GOARCH {
-		return false
-	}
-
-	return true
-}
-
-func ListDir(ctx *kcontext.KContext, pluginsDir string) ([]string, error) {
-	var names []string
-
-	dirEntries, err := os.ReadDir(pluginsDir)
-	if err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return names, nil
-		}
-		return names, err
-	}
-
-	for _, entry := range dirEntries {
-		if !entry.Type().IsRegular() {
-			continue
-		}
-
-		names = append(names, entry.Name())
-	}
-	return names, nil
-}
-
-func LoadDir(ctx *kcontext.KContext, pluginsDir, cacheDir string) error {
-	names, err := ListDir(ctx, pluginsDir)
-	if err != nil {
-		return err
-	}
-
-	for _, name := range names {
-		if err := Load(ctx, pluginsDir, cacheDir, name); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func Load(ctx *kcontext.KContext, pluginsDir, cacheDir, name string) error {
 	if err := os.MkdirAll(cacheDir, 0755); err != nil {
 		return err
 	}
 
-	extlen := len(filepath.Ext(name))
-	plugin := filepath.Join(cacheDir, name[:len(name)-extlen])
-
-	if _, err := os.Stat(plugin); err != nil {
-		path := filepath.Join(pluginsDir, name)
-		if err := extract(ctx, path, plugin); err != nil {
+	pluginPath := filepath.Join(cacheDir, pluginName)
+	if _, err := os.Stat(pluginPath); err != nil {
+		if err := extractPlugin(ctx, pluginFile, pluginPath); err != nil {
 			return err
 		}
 	}
 
-	manifestFile := filepath.Join(plugin, "manifest.yaml")
+	manifestFile := filepath.Join(pluginPath, "manifest.yaml")
 	manifest := Manifest{}
 	if err := ParseManifestFile(manifestFile, &manifest); err != nil {
 		return fmt.Errorf("failed to decode the manifest: %w", err)
 	}
 
 	for _, conn := range manifest.Connectors {
-		exe := filepath.Join(plugin, conn.Executable)
-		if !strings.HasPrefix(exe, plugin) {
-			return fmt.Errorf("bad executable path %q in plugin %s", conn.Executable, name)
+		exe := filepath.Join(pluginPath, conn.Executable)
+		if !strings.HasPrefix(exe, pluginPath) {
+			return fmt.Errorf("bad executable path %q in plugin %s", conn.Executable, pluginName)
 		}
 
 		var flags location.Flags
 		for _, flag := range conn.LocationFlags {
 			f, err := location.ParseFlag(flag)
 			if err != nil {
-				return fmt.Errorf("unknown flag %q in plugin %s", flag, name)
+				return fmt.Errorf("unknown flag %q in plugin %s", flag, pluginName)
 			}
 			flags |= f
 		}
 
+		var err error
 		for _, proto := range conn.Protocols {
 			switch conn.Type {
 			case "importer":
-				importer.Register(proto, flags, func(ctx context.Context, o *importer.Options, s string, config map[string]string) (importer.Importer, error) {
-					client, err := connectPlugin(exe)
-					if err != nil {
-						return nil, fmt.Errorf("failed to connect to plugin: %w", err)
-					}
-
-					return grpc_importer.NewImporter(ctx, client, o, s, config)
-				})
+				err = plugin.registerImporter(ctx, proto, flags, exe)
 			case "exporter":
-				exporter.Register(proto, flags, func(ctx context.Context, o *exporter.Options, s string, config map[string]string) (exporter.Exporter, error) {
-					client, err := connectPlugin(exe)
-					if err != nil {
-						return nil, fmt.Errorf("failed to connect to plugin: %w", err)
-					}
-
-					return grpc_exporter.NewExporter(ctx, client, o, s, config)
-				})
+				err = plugin.registerExporter(ctx, proto, flags, exe)
 			case "storage":
-				storage.Register(proto, flags, func(ctx context.Context, s string, config map[string]string) (storage.Store, error) {
-					client, err := connectPlugin(exe)
-					if err != nil {
-						return nil, fmt.Errorf("failed to connect to plugin: %w", err)
-					}
-
-					return grpc_storage.NewStorage(ctx, client, s, config)
-				})
+				err = plugin.registerStorage(ctx, proto, flags, exe)
 			default:
-				return fmt.Errorf("unknown plugin type: %s", conn.Type)
+				err = fmt.Errorf("unknown plugin type: %s", conn.Type)
+			}
+			if err != nil {
+				plugin.TearDown(ctx)
+				return err
 			}
 		}
 	}
@@ -166,9 +85,68 @@ func Load(ctx *kcontext.KContext, pluginsDir, cacheDir, name string) error {
 	return nil
 }
 
-func extract(ctx *kcontext.KContext, plugin, destDir string) error {
+func (plugin *Plugin) TearDown(ctx *kcontext.KContext) {
+	for _, fn := range plugin.teardown {
+		err := fn()
+		if err != nil {
+			ctx.GetLogger().Warn("%v", err)
+		}
+	}
+	plugin.teardown = nil
+}
+
+func (plugin *Plugin) registerStorage(ctx *kcontext.KContext, proto string, flags location.Flags, exe string) error {
+	err := storage.Register(proto, flags, func(ctx context.Context, s string, config map[string]string) (storage.Store, error) {
+		client, err := connectPlugin(exe)
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect to plugin: %w", err)
+		}
+
+		return grpc_storage.NewStorage(ctx, client, s, config)
+	})
+	if err != nil {
+		return err
+
+	}
+	plugin.teardown = append(plugin.teardown, func() error { return storage.Unregister(proto) })
+	return nil
+}
+
+func (plugin *Plugin) registerImporter(ctx *kcontext.KContext, proto string, flags location.Flags, exe string) error {
+	err := importer.Register(proto, flags, func(ctx context.Context, o *importer.Options, s string, config map[string]string) (importer.Importer, error) {
+		client, err := connectPlugin(exe)
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect to plugin: %w", err)
+		}
+
+		return grpc_importer.NewImporter(ctx, client, o, s, config)
+	})
+	if err != nil {
+		return err
+	}
+	plugin.teardown = append(plugin.teardown, func() error { return importer.Unregister(proto) })
+	return nil
+}
+
+func (plugin *Plugin) registerExporter(ctx *kcontext.KContext, proto string, flags location.Flags, exe string) error {
+	err := exporter.Register(proto, flags, func(ctx context.Context, o *exporter.Options, s string, config map[string]string) (exporter.Exporter, error) {
+		client, err := connectPlugin(exe)
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect to plugin: %w", err)
+		}
+
+		return grpc_exporter.NewExporter(ctx, client, o, s, config)
+	})
+	if err != nil {
+		return err
+	}
+	plugin.teardown = append(plugin.teardown, func() error { return exporter.Unregister(proto) })
+	return nil
+}
+
+func extractPlugin(ctx *kcontext.KContext, pluginFile, destDir string) error {
 	opts := map[string]string{
-		"location": "ptar://" + plugin,
+		"location": "ptar://" + pluginFile,
 	}
 
 	store, serializedConfig, err := storage.Open(ctx, opts)
@@ -221,4 +199,35 @@ func extract(ctx *kcontext.KContext, plugin, destDir string) error {
 	}
 
 	return nil
+}
+
+func installPlugin(filename, pluginFile string) error {
+
+	if err := os.MkdirAll(path.Dir(pluginFile), 0755); err != nil {
+		return fmt.Errorf("failed to create plugin dir: %w", err)
+	}
+
+	if err := os.Link(filename, pluginFile); err == nil {
+		// load
+		return nil
+	}
+
+	fp, err := os.Open(filename)
+	if err != nil {
+		return err
+	}
+	defer fp.Close()
+
+	// maybe a different filesystem
+	tmp, err := os.CreateTemp(path.Dir(pluginFile), "pkg-add-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmp.Name())
+
+	if _, err := io.Copy(tmp, fp); err != nil {
+		return err
+	}
+
+	return os.Rename(tmp.Name(), pluginFile)
 }
