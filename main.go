@@ -64,7 +64,6 @@ import (
 	_ "github.com/PlakarKorp/plakar/connectors/fs"
 	_ "github.com/PlakarKorp/plakar/connectors/http"
 	_ "github.com/PlakarKorp/plakar/connectors/ptar"
-	_ "github.com/PlakarKorp/plakar/connectors/s3"
 	_ "github.com/PlakarKorp/plakar/connectors/sftp"
 	_ "github.com/PlakarKorp/plakar/connectors/sqlite"
 	_ "github.com/PlakarKorp/plakar/connectors/stdio"

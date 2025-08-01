@@ -11,13 +11,11 @@ import (
 	"runtime/pprof"
 	"strings"
 
-	_ "github.com/PlakarKorp/integration-ftp/importer"
 	"github.com/PlakarKorp/kloset/btree"
 	"github.com/PlakarKorp/kloset/snapshot/importer"
 	"github.com/PlakarKorp/kloset/snapshot/vfs"
 	"github.com/PlakarKorp/plakar/appcontext"
 	_ "github.com/PlakarKorp/plakar/connectors/fs/importer"
-	_ "github.com/PlakarKorp/plakar/connectors/s3/importer"
 	_ "github.com/PlakarKorp/plakar/connectors/sftp/importer"
 	_ "github.com/PlakarKorp/plakar/connectors/stdio/importer"
 	"github.com/PlakarKorp/plakar/utils"
