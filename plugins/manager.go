@@ -39,7 +39,7 @@ type Manager struct {
 	Arch       string
 
 	PluginsDir string // Where plugins are installed
-	CacheDir   string // where plugins are decomppressed
+	CacheDir   string // where plugins are decompressed
 
 	PackagesUrl string // Where prebuilt packages are retrieved from
 
@@ -251,13 +251,29 @@ func (mgr *Manager) doLoadPlugins(ctx *kcontext.KContext) error {
 		var plugin Plugin
 		err := plugin.SetUp(ctx, mgr.PluginFile(pkg), pkg.PluginName(), mgr.CacheDir)
 		if err != nil {
-			defer mgr.UnloadPlugins(ctx)
+			mgr.doUnloadPlugins(ctx)
 			return fmt.Errorf("failed to load plugin %q", mgr.PluginFile(pkg))
 		}
 		mgr.plugins[pkg] = &plugin
 	}
 
 	return nil
+}
+
+func (mgr *Manager) checkIfPluginsNeedReload() (bool, error) {
+	var loaded []Package
+	for pkg := range mgr.plugins {
+		loaded = append(loaded, pkg)
+	}
+	installed, err := mgr.ListInstalledPackages()
+	if err != nil {
+		return false, err
+	}
+
+	slices.SortFunc(loaded, PackageCmp)
+	slices.SortFunc(installed, PackageCmp)
+
+	return !slices.Equal(loaded, installed), nil
 }
 
 func (mgr *Manager) LoadPlugins(ctx *kcontext.KContext) error {
@@ -270,11 +286,32 @@ func (mgr *Manager) ReloadPlugins(ctx *kcontext.KContext) error {
 	mgr.pluginsMtx.Lock()
 	defer mgr.pluginsMtx.Unlock()
 
+	needed, err := mgr.checkIfPluginsNeedReload()
+	if err != nil {
+		return err
+	}
+
+	if !needed {
+		return nil
+	}
+	mgr.doUnloadPlugins(ctx)
+	return mgr.doLoadPlugins(ctx)
+}
+
+func (mgr *Manager) ForceReloadPlugins(ctx *kcontext.KContext) error {
+	mgr.pluginsMtx.Lock()
+	defer mgr.pluginsMtx.Unlock()
+
 	mgr.doUnloadPlugins(ctx)
 	return mgr.doLoadPlugins(ctx)
 }
 
 func (mgr *Manager) UninstallPackage(ctx *kcontext.KContext, pkg Package) error {
+	err := pkg.Validate()
+	if err != nil {
+		return err
+	}
+
 	mgr.pluginsMtx.Lock()
 	defer mgr.pluginsMtx.Unlock()
 	plugin, ok := mgr.plugins[pkg]
@@ -287,7 +324,7 @@ func (mgr *Manager) UninstallPackage(ctx *kcontext.KContext, pkg Package) error 
 
 	pluginFile := mgr.PluginFile(pkg)
 
-	err := os.Remove(pluginFile)
+	err = os.Remove(pluginFile)
 	if err != nil {
 		return fmt.Errorf("failed to remove %q: %w", pluginFile, err)
 	}
@@ -301,6 +338,11 @@ func (mgr *Manager) UninstallPackage(ctx *kcontext.KContext, pkg Package) error 
 }
 
 func (mgr *Manager) InstallPackage(ctx *kcontext.KContext, pkg Package, filename string) error {
+	err := pkg.Validate()
+	if err != nil {
+		return err
+	}
+
 	mgr.pluginsMtx.Lock()
 	defer mgr.pluginsMtx.Unlock()
 

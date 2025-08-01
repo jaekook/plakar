@@ -93,7 +93,7 @@ func installPlugin(ctx *appcontext.AppContext, pluginFile string) error {
 
 	err := plugins.ParsePackageName(path.Base(pluginFile), &pkg)
 	if err != nil {
-		return fmt.Errorf("invalid package name: %w", err)
+		return err
 	}
 
 	ok, _, err := ctx.GetPlugins().IsInstalled(pkg)
