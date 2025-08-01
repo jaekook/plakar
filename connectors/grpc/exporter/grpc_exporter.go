@@ -81,6 +81,16 @@ func (g *GrpcExporter) SetPermissions(ctx context.Context, pathname string, file
 	return err
 }
 
+func (g *GrpcExporter) CreateLink(ctx context.Context, oldname string, newname string, ltype exporter.LinkType) error {
+	_, err := g.GrpcClient.CreateLink(ctx, &grpc_exporter.CreateLinkRequest{
+		Oldname: oldname,
+		Newname: newname,
+		Ltype:   uint32(ltype),
+	})
+
+	return err
+}
+
 func (g *GrpcExporter) StoreFile(ctx context.Context, pathname string, fp io.Reader, size int64) error {
 	stream, err := g.GrpcClient.StoreFile(ctx)
 	if err != nil {

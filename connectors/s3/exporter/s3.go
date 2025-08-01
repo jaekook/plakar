@@ -18,6 +18,7 @@ package s3
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -118,6 +119,10 @@ func (p *S3Exporter) StoreFile(ctx context.Context, pathname string, fp io.Reade
 
 func (p *S3Exporter) SetPermissions(ctx context.Context, pathname string, fileinfo *objects.FileInfo) error {
 	return nil
+}
+
+func (p *S3Exporter) CreateLink(ctx context.Context, oldname string, newname string, ltype exporter.LinkType) error {
+	return errors.ErrUnsupported
 }
 
 func (p *S3Exporter) Close(ctx context.Context) error {

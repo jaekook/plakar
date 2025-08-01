@@ -18,6 +18,7 @@ package ftp
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/url"
 	"strings"
@@ -104,6 +105,10 @@ func (p *FTPExporter) StoreFile(ctx context.Context, pathname string, fp io.Read
 func (p *FTPExporter) SetPermissions(ctx context.Context, pathname string, fileinfo *objects.FileInfo) error {
 	// can't chown/chmod on FTP
 	return nil
+}
+
+func (p *FTPExporter) CreateLink(ctx context.Context, oldname string, newname string, ltype exporter.LinkType) error {
+	return errors.ErrUnsupported
 }
 
 func (p *FTPExporter) Close(ctx context.Context) error {
