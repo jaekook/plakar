@@ -10,6 +10,7 @@ PLAKAR-LOGIN(1) - General Commands Manual
 \[**-email**&nbsp;*email*]
 \[**-github**]
 \[**-no-spawn**]
+\[**-status**]
 
 # DESCRIPTION
 
@@ -49,6 +50,11 @@ The options are as follows:
 **-no-spawn**
 
 > Do not automatically open a browser window for authentication flows.
+
+**-status**
+
+> Check wether the user is currently logged in.
+> This option cannot be used with any other options.
 
 # EXAMPLES
 

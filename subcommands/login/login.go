@@ -33,10 +33,6 @@ func init() {
 }
 
 func (cmd *Login) Parse(ctx *appcontext.AppContext, args []string) error {
-	var opt_nospawn bool
-	var opt_github bool
-	var opt_email string
-
 	flags := flag.NewFlagSet("login", flag.ExitOnError)
 	flags.Usage = func() {
 		fmt.Fprintf(flags.Output(), "Usage: %s [OPTIONS]\n", flags.Name())
@@ -44,27 +40,31 @@ func (cmd *Login) Parse(ctx *appcontext.AppContext, args []string) error {
 		flags.PrintDefaults()
 	}
 
-	flags.BoolVar(&opt_nospawn, "no-spawn", false, "don't spawn browser")
-	flags.BoolVar(&opt_github, "github", false, "login with GitHub")
-	flags.StringVar(&opt_email, "email", "", "login with email")
+	flags.BoolVar(&cmd.Status, "status", false, "do not login, just display the status")
+	flags.BoolVar(&cmd.NoSpawn, "no-spawn", false, "don't spawn browser")
+	flags.BoolVar(&cmd.Github, "github", false, "login with GitHub")
+	flags.StringVar(&cmd.Email, "email", "", "login with email")
 	flags.Parse(args)
 
-	if opt_github && opt_email != "" {
-		return fmt.Errorf("specify either -github or -email, not both")
+	if cmd.Status {
+		if cmd.Github || cmd.Email != "" || cmd.NoSpawn {
+			return fmt.Errorf("the -status option must be used alone")
+		}
+	} else {
+		if cmd.Github && cmd.Email != "" {
+			return fmt.Errorf("specify either -github or -email, not both")
+		}
+
+		if !cmd.Github && cmd.Email == "" {
+			fmt.Println("no provided login method, defaulting to GitHub")
+			cmd.Github = true
+		}
+
+		if cmd.NoSpawn && !cmd.Github {
+			return fmt.Errorf("the -no-spawn option is only valid with -github")
+		}
 	}
 
-	if !opt_github && opt_email == "" {
-		fmt.Println("no provided login method, defaulting to GitHub")
-		opt_github = true
-	}
-
-	if opt_nospawn && !opt_github {
-		return fmt.Errorf("the -no-spawn option is only valid with -github")
-	}
-
-	cmd.Github = opt_github
-	cmd.Email = opt_email
-	cmd.NoSpawn = opt_nospawn
 	cmd.RepositorySecret = ctx.GetSecret()
 
 	return nil
@@ -73,6 +73,7 @@ func (cmd *Login) Parse(ctx *appcontext.AppContext, args []string) error {
 type Login struct {
 	subcommands.SubcommandBase
 
+	Status  bool
 	Github  bool
 	Email   string
 	NoSpawn bool
@@ -80,6 +81,16 @@ type Login struct {
 
 func (cmd *Login) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
 	var err error
+
+	if cmd.Status {
+		token, _ := ctx.GetCookies().GetAuthToken()
+		status := "not logged in"
+		if token != "" {
+			status = "logged in"
+		}
+		fmt.Fprintf(ctx.Stdout, "%s\n", status)
+		return 0, nil
+	}
 
 	if cmd.Email != "" {
 		if addr, err := utils.ValidateEmail(cmd.Email); err != nil {
