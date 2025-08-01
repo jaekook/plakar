@@ -22,6 +22,8 @@ import (
 	"fmt"
 	"io"
 	"maps"
+	"net/http"
+	"os"
 	"strings"
 
 	"github.com/PlakarKorp/kloset/snapshot/exporter"
@@ -158,7 +160,40 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return nil
 
 	case "import":
-		newConfMap, err := utils.GetConf(ctx.Stdin)
+		var opt_rclone bool
+		var opt_config string
+		var opt_overwrite bool
+		flags := flag.NewFlagSet("import", flag.ExitOnError)
+		flags.BoolVar(&opt_rclone, "rclone", false, "import using rclone")
+		flags.StringVar(&opt_config, "config", "", "import from a file")
+		flags.BoolVar(&opt_overwrite, "overwrite", false, "overwrite existing configurations")
+		flags.Parse(args)
+
+		var rd io.Reader = ctx.Stdin
+		if opt_config != "" {
+			if strings.HasPrefix(opt_config, "http://") || strings.HasPrefix(opt_config, "https://") {
+				resp, err := http.Get(opt_config)
+				if err != nil {
+					return fmt.Errorf("failed to fetch config from %q: %w", opt_config, err)
+				}
+				defer resp.Body.Close()
+				rd = resp.Body
+			} else {
+				f, err := os.Open(opt_config)
+				if err != nil {
+					return fmt.Errorf("failed to open file %q: %w", opt_config, err)
+				}
+				defer f.Close()
+				rd = f
+			}
+		}
+
+		thirdParty := ""
+		if opt_rclone {
+			thirdParty = "rclone"
+		}
+
+		newConfMap, err := utils.GetConf(rd, thirdParty)
 		if err != nil {
 			return fmt.Errorf("failed to load config: %w", err)
 		}
@@ -166,9 +201,9 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 			return fmt.Errorf("no valid %ss found in config", cmd)
 		}
 
-		if len(args) == 0 {
+		if flags.NArg() == 0 {
 			for name, section := range newConfMap {
-				if hasFunc(name) {
+				if hasFunc(name) && !opt_overwrite {
 					fmt.Fprintf(ctx.Stderr, "%s %q already exists, skipping\n", cmd, name)
 					continue
 				}
@@ -176,8 +211,8 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 				maps.Copy(cfgMap[name], section)
 			}
 		} else {
-			for _, requestedName := range args {
-				if hasFunc(requestedName) {
+			for _, requestedName := range flags.Args() {
+				if hasFunc(requestedName) && !opt_overwrite {
 					fmt.Fprintf(ctx.Stderr, "%s %q already exists, skipping\n", cmd, requestedName)
 					continue
 				}

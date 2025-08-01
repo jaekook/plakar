@@ -33,10 +33,20 @@ parameters.
 Check wether the importer for the source identified by
 .Ar name
 is properly configured.
-.It Cm import Op Ar names
-Ingest a source configuration from stdin.
+.It Cm import Oo Fl config Ar location Oc Oo Fl overwrite Oc Oo Fl rclone Oc Oo Ar sections ... Oc
+Import a configuration from either stdin (default),
+a file, or a URL.
 If
-.Ar names
+.Ar location
+is specified, the input will be read from that file or URL.
+If
+.Fl overwrite
+is specified, existing sections will be overwritten by new ones.
+qIf
+.Fl rclone
+is specified, the input will be treated as an rclone configuration.
+If
+.Ar sections
 are specified, only those sections will be imported.
 .It Cm ls
 Display the current sources configuration.

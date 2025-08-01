@@ -226,7 +226,7 @@ func LoadJSON(rd io.Reader) (map[string]map[string]string, error) {
 	return raw, nil
 }
 
-func GetConf(rd io.Reader) (map[string]map[string]string, error) {
+func GetConf(rd io.Reader, thirdParty string) (map[string]map[string]string, error) {
 	data, err := io.ReadAll(rd)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config data: %w", err)
@@ -239,11 +239,12 @@ func GetConf(rd io.Reader) (map[string]map[string]string, error) {
 		return nil, fmt.Errorf("failed to parse config data: %w", err)
 	}
 
-	for _, section := range configMap {
-		if section["type"] != "" {
-			section["location"] = "rclone://"
+	if thirdParty != "" {
+		for _, section := range configMap {
+			section["location"] = thirdParty + "://"
 		}
 	}
+
 	for _, section := range configMap {
 		for key, value := range section {
 			if value == "" {

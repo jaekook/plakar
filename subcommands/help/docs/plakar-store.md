@@ -39,11 +39,21 @@ The subcommands are as follows:
 > *name*
 > is properly configured.
 
-**import** \[*names*]
+**import** \[**-config** *location*] \[**-overwrite**] \[**-rclone**] \[*sections ...*]
 
-> Ingest a store configuration from stdin.
+> Import a configuration from either stdin (default),
+> a file, or a URL.
 > If
-> *names*
+> *location*
+> is specified, the input will be read from that file or URL.
+> If
+> **-overwrite**
+> is specified, existing sections will be overwritten by new ones.
+> qIf
+> **-rclone**
+> is specified, the input will be treated as an rclone configuration.
+> If
+> *sections*
 > are specified, only those sections will be imported.
 
 **ping** *name*
