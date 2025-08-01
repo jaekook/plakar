@@ -62,7 +62,6 @@ import (
 	_ "github.com/PlakarKorp/plakar/subcommands/version"
 
 	_ "github.com/PlakarKorp/plakar/connectors/fs"
-	_ "github.com/PlakarKorp/plakar/connectors/ftp"
 	_ "github.com/PlakarKorp/plakar/connectors/http"
 	_ "github.com/PlakarKorp/plakar/connectors/ptar"
 	_ "github.com/PlakarKorp/plakar/connectors/s3"
