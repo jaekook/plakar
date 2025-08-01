@@ -120,10 +120,10 @@ func fetchPlugin(ctx *appcontext.AppContext, path string) (string, error) {
 	defer fp.Close()
 
 	rd, err := openURL(ctx, path)
-	defer rd.Close()
 	if err != nil {
 		return "", err
 	}
+	defer rd.Close()
 
 	if _, err := io.Copy(fp, rd); err != nil {
 		defer os.Remove(fp.Name())
