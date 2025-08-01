@@ -1,10 +1,13 @@
 package plugins
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
+
+	"golang.org/x/mod/semver"
 )
 
 type Package struct {
@@ -29,6 +32,54 @@ func ParsePackageName(name string, pkg *Package) error {
 	pkg.Version = atoms[1]
 	pkg.Os = atoms[2]
 	pkg.Arch = atoms[3]
+
+	err := pkg.Validate()
+	if err != nil {
+		*pkg = Package{}
+		return err
+	}
+
+	return nil
+}
+
+func PackageCmp(a, b Package) int {
+	return cmp.Compare(a.PkgName(), b.PkgName())
+}
+
+func isNameChar(c byte) bool {
+	return 'A' <= c && c <= 'Z' || 'a' <= c && c <= 'z' || '0' <= c && c <= '9' || c == '-'
+}
+
+func isOsArchChar(c byte) bool {
+	return 'A' <= c && c <= 'Z' || 'a' <= c && c <= 'z' || '0' <= c && c <= '9'
+}
+
+func (pkg Package) Validate() error {
+	if pkg.Name == "" {
+		return fmt.Errorf("package has no name")
+	}
+	for i := 0; i < len(pkg.Name); i++ {
+		if !isNameChar(pkg.Name[i]) {
+			return fmt.Errorf("package name contains invalid char '%c'", pkg.Name[i])
+		}
+	}
+
+	if !semver.IsValid(pkg.Version) {
+		return fmt.Errorf("package has invalid version %q", pkg.Version)
+	}
+
+	for i := 0; i < len(pkg.Os); i++ {
+		if !isNameChar(pkg.Os[i]) {
+			return fmt.Errorf("package OS contains invalid char '%c'", pkg.Os[i])
+		}
+	}
+
+	for i := 0; i < len(pkg.Arch); i++ {
+		if !isNameChar(pkg.Arch[i]) {
+			return fmt.Errorf("package Arch contains invalid char '%c'", pkg.Arch[i])
+		}
+	}
+
 	return nil
 }
 
