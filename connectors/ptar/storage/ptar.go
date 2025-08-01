@@ -29,6 +29,7 @@ import (
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/storage"
 	"github.com/PlakarKorp/kloset/versioning"
+	"github.com/dustin/go-humanize"
 )
 
 type Store struct {
@@ -157,6 +158,10 @@ func (s *Store) Open(ctx context.Context) ([]byte, error) {
 	_, err = fp.Seek(s.configOffset, io.SeekStart)
 	if err != nil {
 		return nil, err
+	}
+
+	if s.configLength <= 0 || s.configLength > 32*1024 {
+		return nil, fmt.Errorf("invalid configuration length: %s, file corrupted", humanize.IBytes(uint64(s.configLength)))
 	}
 
 	config := make([]byte, s.configLength)
