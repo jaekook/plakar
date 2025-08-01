@@ -756,6 +756,102 @@ func (*SetPermissionsResponse) Descriptor() ([]byte, []int) {
 	return file_exporter_proto_rawDescGZIP(), []int{13}
 }
 
+type CreateLinkRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Oldname       string                 `protobuf:"bytes,1,opt,name=oldname,proto3" json:"oldname,omitempty"`
+	Newname       string                 `protobuf:"bytes,2,opt,name=newname,proto3" json:"newname,omitempty"`
+	Ltype         uint32                 `protobuf:"varint,3,opt,name=ltype,proto3" json:"ltype,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateLinkRequest) Reset() {
+	*x = CreateLinkRequest{}
+	mi := &file_exporter_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateLinkRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateLinkRequest) ProtoMessage() {}
+
+func (x *CreateLinkRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_exporter_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateLinkRequest.ProtoReflect.Descriptor instead.
+func (*CreateLinkRequest) Descriptor() ([]byte, []int) {
+	return file_exporter_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *CreateLinkRequest) GetOldname() string {
+	if x != nil {
+		return x.Oldname
+	}
+	return ""
+}
+
+func (x *CreateLinkRequest) GetNewname() string {
+	if x != nil {
+		return x.Newname
+	}
+	return ""
+}
+
+func (x *CreateLinkRequest) GetLtype() uint32 {
+	if x != nil {
+		return x.Ltype
+	}
+	return 0
+}
+
+type CreateLinkResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateLinkResponse) Reset() {
+	*x = CreateLinkResponse{}
+	mi := &file_exporter_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateLinkResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateLinkResponse) ProtoMessage() {}
+
+func (x *CreateLinkResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_exporter_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateLinkResponse.ProtoReflect.Descriptor instead.
+func (*CreateLinkResponse) Descriptor() ([]byte, []int) {
+	return file_exporter_proto_rawDescGZIP(), []int{15}
+}
+
 type CloseRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -764,7 +860,7 @@ type CloseRequest struct {
 
 func (x *CloseRequest) Reset() {
 	*x = CloseRequest{}
-	mi := &file_exporter_proto_msgTypes[14]
+	mi := &file_exporter_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -776,7 +872,7 @@ func (x *CloseRequest) String() string {
 func (*CloseRequest) ProtoMessage() {}
 
 func (x *CloseRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_exporter_proto_msgTypes[14]
+	mi := &file_exporter_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -789,7 +885,7 @@ func (x *CloseRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloseRequest.ProtoReflect.Descriptor instead.
 func (*CloseRequest) Descriptor() ([]byte, []int) {
-	return file_exporter_proto_rawDescGZIP(), []int{14}
+	return file_exporter_proto_rawDescGZIP(), []int{16}
 }
 
 type CloseResponse struct {
@@ -800,7 +896,7 @@ type CloseResponse struct {
 
 func (x *CloseResponse) Reset() {
 	*x = CloseResponse{}
-	mi := &file_exporter_proto_msgTypes[15]
+	mi := &file_exporter_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -812,7 +908,7 @@ func (x *CloseResponse) String() string {
 func (*CloseResponse) ProtoMessage() {}
 
 func (x *CloseResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_exporter_proto_msgTypes[15]
+	mi := &file_exporter_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -825,7 +921,7 @@ func (x *CloseResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CloseResponse.ProtoReflect.Descriptor instead.
 func (*CloseResponse) Descriptor() ([]byte, []int) {
-	return file_exporter_proto_rawDescGZIP(), []int{15}
+	return file_exporter_proto_rawDescGZIP(), []int{17}
 }
 
 var File_exporter_proto protoreflect.FileDescriptor
@@ -876,15 +972,22 @@ const file_exporter_proto_rawDesc = "" +
 	"\x15SetPermissionsRequest\x12\x1a\n" +
 	"\bpathname\x18\x01 \x01(\tR\bpathname\x12/\n" +
 	"\tfile_info\x18\x02 \x01(\v2\x12.exporter.FileInfoR\bfileInfo\"\x18\n" +
-	"\x16SetPermissionsResponse\"\x0e\n" +
+	"\x16SetPermissionsResponse\"]\n" +
+	"\x11CreateLinkRequest\x12\x18\n" +
+	"\aoldname\x18\x01 \x01(\tR\aoldname\x12\x18\n" +
+	"\anewname\x18\x02 \x01(\tR\anewname\x12\x14\n" +
+	"\x05ltype\x18\x03 \x01(\rR\x05ltype\"\x14\n" +
+	"\x12CreateLinkResponse\"\x0e\n" +
 	"\fCloseRequest\"\x0f\n" +
-	"\rCloseResponse2\xa7\x03\n" +
+	"\rCloseResponse2\xf0\x03\n" +
 	"\bExporter\x125\n" +
 	"\x04Init\x12\x15.exporter.InitRequest\x1a\x16.exporter.InitResponse\x125\n" +
 	"\x04Root\x12\x15.exporter.RootRequest\x1a\x16.exporter.RootResponse\x12V\n" +
 	"\x0fCreateDirectory\x12 .exporter.CreateDirectoryRequest\x1a!.exporter.CreateDirectoryResponse\x12F\n" +
 	"\tStoreFile\x12\x1a.exporter.StoreFileRequest\x1a\x1b.exporter.StoreFileResponse(\x01\x12S\n" +
-	"\x0eSetPermissions\x12\x1f.exporter.SetPermissionsRequest\x1a .exporter.SetPermissionsResponse\x128\n" +
+	"\x0eSetPermissions\x12\x1f.exporter.SetPermissionsRequest\x1a .exporter.SetPermissionsResponse\x12G\n" +
+	"\n" +
+	"CreateLink\x12\x1b.exporter.CreateLinkRequest\x1a\x1c.exporter.CreateLinkResponse\x128\n" +
 	"\x05Close\x12\x16.exporter.CloseRequest\x1a\x17.exporter.CloseResponseb\x06proto3"
 
 var (
@@ -899,7 +1002,7 @@ func file_exporter_proto_rawDescGZIP() []byte {
 	return file_exporter_proto_rawDescData
 }
 
-var file_exporter_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
+var file_exporter_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
 var file_exporter_proto_goTypes = []any{
 	(*Options)(nil),                 // 0: exporter.Options
 	(*InitRequest)(nil),             // 1: exporter.InitRequest
@@ -915,32 +1018,36 @@ var file_exporter_proto_goTypes = []any{
 	(*FileInfo)(nil),                // 11: exporter.FileInfo
 	(*SetPermissionsRequest)(nil),   // 12: exporter.SetPermissionsRequest
 	(*SetPermissionsResponse)(nil),  // 13: exporter.SetPermissionsResponse
-	(*CloseRequest)(nil),            // 14: exporter.CloseRequest
-	(*CloseResponse)(nil),           // 15: exporter.CloseResponse
-	nil,                             // 16: exporter.InitRequest.ConfigEntry
-	(*timestamppb.Timestamp)(nil),   // 17: google.protobuf.Timestamp
+	(*CreateLinkRequest)(nil),       // 14: exporter.CreateLinkRequest
+	(*CreateLinkResponse)(nil),      // 15: exporter.CreateLinkResponse
+	(*CloseRequest)(nil),            // 16: exporter.CloseRequest
+	(*CloseResponse)(nil),           // 17: exporter.CloseResponse
+	nil,                             // 18: exporter.InitRequest.ConfigEntry
+	(*timestamppb.Timestamp)(nil),   // 19: google.protobuf.Timestamp
 }
 var file_exporter_proto_depIdxs = []int32{
 	0,  // 0: exporter.InitRequest.options:type_name -> exporter.Options
-	16, // 1: exporter.InitRequest.config:type_name -> exporter.InitRequest.ConfigEntry
+	18, // 1: exporter.InitRequest.config:type_name -> exporter.InitRequest.ConfigEntry
 	8,  // 2: exporter.StoreFileRequest.header:type_name -> exporter.Header
 	9,  // 3: exporter.StoreFileRequest.data:type_name -> exporter.Data
-	17, // 4: exporter.FileInfo.mod_time:type_name -> google.protobuf.Timestamp
+	19, // 4: exporter.FileInfo.mod_time:type_name -> google.protobuf.Timestamp
 	11, // 5: exporter.SetPermissionsRequest.file_info:type_name -> exporter.FileInfo
 	1,  // 6: exporter.Exporter.Init:input_type -> exporter.InitRequest
 	3,  // 7: exporter.Exporter.Root:input_type -> exporter.RootRequest
 	5,  // 8: exporter.Exporter.CreateDirectory:input_type -> exporter.CreateDirectoryRequest
 	7,  // 9: exporter.Exporter.StoreFile:input_type -> exporter.StoreFileRequest
 	12, // 10: exporter.Exporter.SetPermissions:input_type -> exporter.SetPermissionsRequest
-	14, // 11: exporter.Exporter.Close:input_type -> exporter.CloseRequest
-	2,  // 12: exporter.Exporter.Init:output_type -> exporter.InitResponse
-	4,  // 13: exporter.Exporter.Root:output_type -> exporter.RootResponse
-	6,  // 14: exporter.Exporter.CreateDirectory:output_type -> exporter.CreateDirectoryResponse
-	10, // 15: exporter.Exporter.StoreFile:output_type -> exporter.StoreFileResponse
-	13, // 16: exporter.Exporter.SetPermissions:output_type -> exporter.SetPermissionsResponse
-	15, // 17: exporter.Exporter.Close:output_type -> exporter.CloseResponse
-	12, // [12:18] is the sub-list for method output_type
-	6,  // [6:12] is the sub-list for method input_type
+	14, // 11: exporter.Exporter.CreateLink:input_type -> exporter.CreateLinkRequest
+	16, // 12: exporter.Exporter.Close:input_type -> exporter.CloseRequest
+	2,  // 13: exporter.Exporter.Init:output_type -> exporter.InitResponse
+	4,  // 14: exporter.Exporter.Root:output_type -> exporter.RootResponse
+	6,  // 15: exporter.Exporter.CreateDirectory:output_type -> exporter.CreateDirectoryResponse
+	10, // 16: exporter.Exporter.StoreFile:output_type -> exporter.StoreFileResponse
+	13, // 17: exporter.Exporter.SetPermissions:output_type -> exporter.SetPermissionsResponse
+	15, // 18: exporter.Exporter.CreateLink:output_type -> exporter.CreateLinkResponse
+	17, // 19: exporter.Exporter.Close:output_type -> exporter.CloseResponse
+	13, // [13:20] is the sub-list for method output_type
+	6,  // [6:13] is the sub-list for method input_type
 	6,  // [6:6] is the sub-list for extension type_name
 	6,  // [6:6] is the sub-list for extension extendee
 	0,  // [0:6] is the sub-list for field type_name
@@ -961,7 +1068,7 @@ func file_exporter_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_exporter_proto_rawDesc), len(file_exporter_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   17,
+			NumMessages:   19,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

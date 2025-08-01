@@ -18,6 +18,7 @@ package stdio
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -73,6 +74,10 @@ func (p *StdioExporter) StoreFile(ctx context.Context, pathname string, fp io.Re
 func (p *StdioExporter) SetPermissions(ctx context.Context, pathname string, fileinfo *objects.FileInfo) error {
 	// can't chown/chmod on Stdio
 	return nil
+}
+
+func (p *StdioExporter) CreateLink(ctx context.Context, oldname string, newname string, ltype exporter.LinkType) error {
+	return errors.ErrUnsupported
 }
 
 func (p *StdioExporter) Close(ctx context.Context) error {

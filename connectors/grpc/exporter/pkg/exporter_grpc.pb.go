@@ -24,6 +24,7 @@ const (
 	Exporter_CreateDirectory_FullMethodName = "/exporter.Exporter/CreateDirectory"
 	Exporter_StoreFile_FullMethodName       = "/exporter.Exporter/StoreFile"
 	Exporter_SetPermissions_FullMethodName  = "/exporter.Exporter/SetPermissions"
+	Exporter_CreateLink_FullMethodName      = "/exporter.Exporter/CreateLink"
 	Exporter_Close_FullMethodName           = "/exporter.Exporter/Close"
 )
 
@@ -36,6 +37,7 @@ type ExporterClient interface {
 	CreateDirectory(ctx context.Context, in *CreateDirectoryRequest, opts ...grpc.CallOption) (*CreateDirectoryResponse, error)
 	StoreFile(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[StoreFileRequest, StoreFileResponse], error)
 	SetPermissions(ctx context.Context, in *SetPermissionsRequest, opts ...grpc.CallOption) (*SetPermissionsResponse, error)
+	CreateLink(ctx context.Context, in *CreateLinkRequest, opts ...grpc.CallOption) (*CreateLinkResponse, error)
 	Close(ctx context.Context, in *CloseRequest, opts ...grpc.CallOption) (*CloseResponse, error)
 }
 
@@ -100,6 +102,16 @@ func (c *exporterClient) SetPermissions(ctx context.Context, in *SetPermissionsR
 	return out, nil
 }
 
+func (c *exporterClient) CreateLink(ctx context.Context, in *CreateLinkRequest, opts ...grpc.CallOption) (*CreateLinkResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateLinkResponse)
+	err := c.cc.Invoke(ctx, Exporter_CreateLink_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *exporterClient) Close(ctx context.Context, in *CloseRequest, opts ...grpc.CallOption) (*CloseResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CloseResponse)
@@ -119,6 +131,7 @@ type ExporterServer interface {
 	CreateDirectory(context.Context, *CreateDirectoryRequest) (*CreateDirectoryResponse, error)
 	StoreFile(grpc.ClientStreamingServer[StoreFileRequest, StoreFileResponse]) error
 	SetPermissions(context.Context, *SetPermissionsRequest) (*SetPermissionsResponse, error)
+	CreateLink(context.Context, *CreateLinkRequest) (*CreateLinkResponse, error)
 	Close(context.Context, *CloseRequest) (*CloseResponse, error)
 	mustEmbedUnimplementedExporterServer()
 }
@@ -144,6 +157,9 @@ func (UnimplementedExporterServer) StoreFile(grpc.ClientStreamingServer[StoreFil
 }
 func (UnimplementedExporterServer) SetPermissions(context.Context, *SetPermissionsRequest) (*SetPermissionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetPermissions not implemented")
+}
+func (UnimplementedExporterServer) CreateLink(context.Context, *CreateLinkRequest) (*CreateLinkResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateLink not implemented")
 }
 func (UnimplementedExporterServer) Close(context.Context, *CloseRequest) (*CloseResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Close not implemented")
@@ -248,6 +264,24 @@ func _Exporter_SetPermissions_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Exporter_CreateLink_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateLinkRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExporterServer).CreateLink(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Exporter_CreateLink_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExporterServer).CreateLink(ctx, req.(*CreateLinkRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Exporter_Close_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CloseRequest)
 	if err := dec(in); err != nil {
@@ -288,6 +322,10 @@ var Exporter_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetPermissions",
 			Handler:    _Exporter_SetPermissions_Handler,
+		},
+		{
+			MethodName: "CreateLink",
+			Handler:    _Exporter_CreateLink_Handler,
 		},
 		{
 			MethodName: "Close",

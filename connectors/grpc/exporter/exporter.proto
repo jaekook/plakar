@@ -10,6 +10,7 @@ service Exporter {
   rpc CreateDirectory(CreateDirectoryRequest) returns (CreateDirectoryResponse);
   rpc StoreFile(stream StoreFileRequest) returns (StoreFileResponse);
   rpc SetPermissions(SetPermissionsRequest) returns (SetPermissionsResponse);
+  rpc CreateLink(CreateLinkRequest) returns (CreateLinkResponse);
   rpc Close(CloseRequest) returns (CloseResponse);
 }
 
@@ -78,6 +79,14 @@ message SetPermissionsRequest {
 }
 
 message SetPermissionsResponse {}
+
+message CreateLinkRequest {
+  string oldname = 1;
+  string newname = 2;
+  uint32 ltype = 3;
+}
+
+message CreateLinkResponse {}
 
 message CloseRequest {}
 

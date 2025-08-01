@@ -99,6 +99,14 @@ func (p *SFTPExporter) SetPermissions(ctx context.Context, pathname string, file
 	return nil
 }
 
+func (p *SFTPExporter) CreateLink(ctx context.Context, oldname string, newname string, ltype exporter.LinkType) error {
+	if ltype == exporter.HARDLINK {
+		return p.client.Link(oldname, newname)
+	}
+
+	return p.client.Symlink(oldname, newname)
+}
+
 func (p *SFTPExporter) Close(ctx context.Context) error {
 	return p.client.Close()
 }

@@ -84,6 +84,14 @@ func (p *FSExporter) SetPermissions(ctx context.Context, pathname string, filein
 	return nil
 }
 
+func (p *FSExporter) CreateLink(ctx context.Context, oldname string, newname string, ltype exporter.LinkType) error {
+	if ltype == exporter.HARDLINK {
+		return os.Link(oldname, newname)
+	}
+
+	return os.Symlink(oldname, newname)
+}
+
 func (p *FSExporter) Close(ctx context.Context) error {
 	return nil
 }
