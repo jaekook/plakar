@@ -7,8 +7,8 @@ github.com/PlakarKorp/go-cdc-chunkers v1.0.1 h1:7yNCCMxfZwVcZJ7O4TTCROm/pKTlZv5v
 github.com/PlakarKorp/go-cdc-chunkers v1.0.1/go.mod h1:y7ag92JABKPBDoSOPwedssQ5NIOgjRm4Mu6yTBpmUMY=
 github.com/PlakarKorp/go-human2duration v0.1.5 h1:6pw79LhjPuj5o8Xp9kUcle26+APaCII34odJtgb2kzY=
 github.com/PlakarKorp/go-human2duration v0.1.5/go.mod h1:1kg75kTlYCYURVyciaeO2GFdLgGDMhIfBTBpfydv1sk=
-github.com/PlakarKorp/integration-ftp v0.1.0-beta.2 h1:YjCjHLiD0HBZcyn41jxjaOGsKYF1afnanRL4NFauiZU=
-github.com/PlakarKorp/integration-ftp v0.1.0-beta.2/go.mod h1:9ubRf1eX1u5u/18esBEwMLk1zz6awSevDvatzOAhx2A=
+github.com/PlakarKorp/integration-ftp v0.1.0-beta.3 h1:BCOw3Gl/e7dWFCaCELUbw42+tYmYHoDV3ym7YAQ+zjU=
+github.com/PlakarKorp/integration-ftp v0.1.0-beta.3/go.mod h1:E3YlqmMKIljCf0KhSB7Eaf15aw6Ew8RNOZsiU6QN4pU=
 github.com/PlakarKorp/kloset v1.0.1-beta.4 h1:DRTdtUk5LUqq/B3YGKs8aqp9Bw0QRoO8BtAAIwalhiE=
 github.com/PlakarKorp/kloset v1.0.1-beta.4/go.mod h1:iuSvXRXzYm2+qWAEvZcqrYrMNc4QZ7tWixJcry6ovZ4=
 github.com/aclements/go-perfevent v0.0.0-20240301234650-f7843625020f h1:JjxwchlOepwsUWcQwD2mLUAGE9aCp0/ehy6yCHFBOvo=

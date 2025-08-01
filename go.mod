@@ -1,10 +1,10 @@
 module github.com/PlakarKorp/plakar
 
-go 1.24.4
+go 1.23.4
 
 require (
 	github.com/PlakarKorp/go-human2duration v0.1.5
-	github.com/PlakarKorp/integration-ftp v0.1.0-beta.2
+	github.com/PlakarKorp/integration-ftp v0.1.0-beta.3
 	github.com/PlakarKorp/kloset v1.0.1-beta.4
 	github.com/alecthomas/chroma v0.10.0
 	github.com/anacrolix/fuse v0.3.1
