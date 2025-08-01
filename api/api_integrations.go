@@ -58,6 +58,8 @@ func (ui *uiserver) integrationsInstall(w http.ResponseWriter, r *http.Request) 
 		goto done
 	}
 
+	ui.reloadPlugins()
+
 	pkg.Name = req.Id
 	pkg.Version = req.Version
 	pkg.Os = ui.ctx.GetPlugins().Os
@@ -84,6 +86,8 @@ func (ui *uiserver) integrationsUninstall(w http.ResponseWriter, r *http.Request
 	resp.Status = "failed"
 
 	id := r.PathValue("id")
+
+	ui.reloadPlugins()
 
 	pkg, err := ui.ctx.GetPlugins().FindInstalledPackage(id)
 	if err != nil {

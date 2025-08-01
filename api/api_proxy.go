@@ -185,6 +185,8 @@ func (ui *uiserver) servicesGetIntegration(w http.ResponseWriter, r *http.Reques
 		Status: filterStatus,
 	}
 
+	ui.reloadPlugins()
+
 	ints, err := ui.ctx.GetPlugins().ListIntegrations(filter)
 	if err != nil {
 		return err
@@ -205,15 +207,15 @@ func (ui *uiserver) servicesGetIntegration(w http.ResponseWriter, r *http.Reques
 func (ui *uiserver) servicesGetIntegrationId(w http.ResponseWriter, r *http.Request) error {
 	id := r.PathValue("id")
 
+	ui.reloadPlugins()
+
 	var filter plugins.IntegrationFilter
 	ints, err := ui.ctx.GetPlugins().ListIntegrations(filter)
 	if err != nil {
 		return err
 	}
+
 	for _, int := range ints {
-		if err != nil {
-			return err
-		}
 		if int.Id == id {
 			return json.NewEncoder(w).Encode(int)
 		}
