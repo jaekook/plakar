@@ -16,7 +16,6 @@ import (
 	"github.com/PlakarKorp/kloset/snapshot/vfs"
 	"github.com/PlakarKorp/plakar/appcontext"
 	_ "github.com/PlakarKorp/plakar/connectors/fs/importer"
-	_ "github.com/PlakarKorp/plakar/connectors/sftp/importer"
 	_ "github.com/PlakarKorp/plakar/connectors/stdio/importer"
 	"github.com/PlakarKorp/plakar/utils"
 	"github.com/cockroachdb/pebble/v2"
