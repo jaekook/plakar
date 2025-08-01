@@ -40,9 +40,23 @@ The subcommands are as follows:
 > *name*
 > is properly configured.
 
-**import** \[*names*]
+**import**
 
-> Ingest a destination configuration from stdin.
+> \[**-config** *location*]
+> \[**-overwrite**]
+> \[**-rclone**]
+> \[*section ...*]
+
+> Ingest a configuration from stdin.
+> If
+> *location*
+> is specified, the input will be read from that file or URL.
+> If
+> **-rclone**
+> is specified, the input will be treated as an rclone configuration.
+> If
+> **-overwrite**
+> is specified, existing sections will be overwritten by new ones.
 > If
 > *names*
 > are specified, only those sections will be imported.
