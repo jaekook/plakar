@@ -1,6 +1,7 @@
 package plugins
 
 import (
+	"cmp"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -39,6 +40,10 @@ func ParsePackageName(name string, pkg *Package) error {
 	}
 
 	return nil
+}
+
+func PackageCmp(a, b Package) int {
+	return cmp.Compare(a.PkgName(), b.PkgName())
 }
 
 func isNameChar(c byte) bool {

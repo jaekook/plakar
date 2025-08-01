@@ -260,6 +260,22 @@ func (mgr *Manager) doLoadPlugins(ctx *kcontext.KContext) error {
 	return nil
 }
 
+func (mgr *Manager) checkIfPluginsNeedReload() (bool, error) {
+	var loaded []Package
+	for pkg := range mgr.plugins {
+		loaded = append(loaded, pkg)
+	}
+	installed, err := mgr.ListInstalledPackages()
+	if err != nil {
+		return false, err
+	}
+
+	slices.SortFunc(loaded, PackageCmp)
+	slices.SortFunc(installed, PackageCmp)
+
+	return !slices.Equal(loaded, installed), nil
+}
+
 func (mgr *Manager) LoadPlugins(ctx *kcontext.KContext) error {
 	mgr.pluginsMtx.Lock()
 	defer mgr.pluginsMtx.Unlock()
@@ -267,6 +283,22 @@ func (mgr *Manager) LoadPlugins(ctx *kcontext.KContext) error {
 }
 
 func (mgr *Manager) ReloadPlugins(ctx *kcontext.KContext) error {
+	mgr.pluginsMtx.Lock()
+	defer mgr.pluginsMtx.Unlock()
+
+	needed, err := mgr.checkIfPluginsNeedReload()
+	if err != nil {
+		return err
+	}
+
+	if !needed {
+		return nil
+	}
+	mgr.doUnloadPlugins(ctx)
+	return mgr.doLoadPlugins(ctx)
+}
+
+func (mgr *Manager) ForceReloadPlugins(ctx *kcontext.KContext) error {
 	mgr.pluginsMtx.Lock()
 	defer mgr.pluginsMtx.Unlock()
 
