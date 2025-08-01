@@ -87,24 +87,22 @@ func entryPoint() int {
 		opt_cpuDefault = opt_cpuDefault - 1
 	}
 
-	opt_userDefault, err := user.Current()
+	userDefault, err := user.Current()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: go away casper !\n", flag.CommandLine.Name())
 		return 1
 	}
 
-	opt_hostnameDefault, err := os.Hostname()
+	hostnameDefault, err := os.Hostname()
 	if err != nil {
-		opt_hostnameDefault = "localhost"
+		hostnameDefault = "localhost"
 	}
 
 	opt_machineIdDefault, err := machineid.ID()
 	if err != nil {
-		opt_machineIdDefault = uuid.NewSHA1(uuid.Nil, []byte(opt_hostnameDefault)).String()
+		opt_machineIdDefault = uuid.NewSHA1(uuid.Nil, []byte(hostnameDefault)).String()
 	}
 	opt_machineIdDefault = strings.ToLower(opt_machineIdDefault)
-
-	opt_usernameDefault := opt_userDefault.Username
 
 	opt_configDefault, err := utils.GetConfigDir("plakar")
 	if err != nil {
@@ -115,8 +113,6 @@ func entryPoint() int {
 	// command line overrides
 	var opt_cpuCount int
 	var opt_configdir string
-	var opt_username string
-	var opt_hostname string
 	var opt_cpuProfile string
 	var opt_memProfile string
 	var opt_time bool
@@ -129,8 +125,6 @@ func entryPoint() int {
 
 	flag.StringVar(&opt_configdir, "config", opt_configDefault, "configuration directory")
 	flag.IntVar(&opt_cpuCount, "cpu", opt_cpuDefault, "limit the number of usable cores")
-	flag.StringVar(&opt_username, "username", opt_usernameDefault, "default username")
-	flag.StringVar(&opt_hostname, "hostname", opt_hostnameDefault, "default hostname")
 	flag.StringVar(&opt_cpuProfile, "profile-cpu", "", "profile CPU usage")
 	flag.StringVar(&opt_memProfile, "profile-mem", "", "profile MEM usage")
 	flag.BoolVar(&opt_time, "time", false, "display command execution time")
@@ -255,8 +249,8 @@ func entryPoint() int {
 
 	ctx.OperatingSystem = runtime.GOOS
 	ctx.Architecture = runtime.GOARCH
-	ctx.Username = opt_username
-	ctx.Hostname = opt_hostname
+	ctx.Username = userDefault.Username
+	ctx.Hostname = hostnameDefault
 	ctx.CommandLine = strings.Join(os.Args, " ")
 	ctx.MachineID = opt_machineIdDefault
 	ctx.KeyFromFile = secretFromKeyfile
@@ -307,7 +301,7 @@ func entryPoint() int {
 			if def != "" {
 				repositoryPath = "@" + def
 			} else {
-				repositoryPath = "fs:" + filepath.Join(opt_userDefault.HomeDir, ".plakar")
+				repositoryPath = "fs:" + filepath.Join(userDefault.HomeDir, ".plakar")
 			}
 		}
 
