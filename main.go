@@ -64,7 +64,6 @@ import (
 	_ "github.com/PlakarKorp/plakar/connectors/fs"
 	_ "github.com/PlakarKorp/plakar/connectors/ptar"
 	_ "github.com/PlakarKorp/plakar/connectors/stdio"
-	_ "github.com/PlakarKorp/plakar/connectors/tar"
 )
 
 var ErrCantUnlock = errors.New("failed to unlock repository")
