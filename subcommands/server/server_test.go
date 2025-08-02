@@ -10,11 +10,11 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/PlakarKorp/integration-fs/exporter"
 	"github.com/PlakarKorp/kloset/hashing"
 	"github.com/PlakarKorp/kloset/resources"
 	"github.com/PlakarKorp/kloset/storage"
 	"github.com/PlakarKorp/kloset/versioning"
-	_ "github.com/PlakarKorp/plakar/connectors/fs/exporter"
 	"github.com/PlakarKorp/plakar/network"
 	ptesting "github.com/PlakarKorp/plakar/testing"
 	"github.com/stretchr/testify/require"

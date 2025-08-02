@@ -1,6 +1,8 @@
 module github.com/PlakarKorp/plakar
 
-go 1.23.4
+go 1.24.1
+
+toolchain go1.24.5
 
 require (
 	github.com/PlakarKorp/go-human2duration v0.1.5
@@ -46,6 +48,7 @@ require (
 require (
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/PlakarKorp/go-cdc-chunkers v1.0.1 // indirect
+	github.com/PlakarKorp/integration-fs v1.0.3 // indirect
 	github.com/alecthomas/chroma/v2 v2.15.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect

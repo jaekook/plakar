@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"testing"
 
-	_ "github.com/PlakarKorp/plakar/connectors/fs/importer"
+	_ "github.com/PlakarKorp/integration-fs/importer"
 
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/repository"

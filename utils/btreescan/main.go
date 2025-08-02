@@ -15,7 +15,6 @@ import (
 	"github.com/PlakarKorp/kloset/snapshot/importer"
 	"github.com/PlakarKorp/kloset/snapshot/vfs"
 	"github.com/PlakarKorp/plakar/appcontext"
-	_ "github.com/PlakarKorp/plakar/connectors/fs/importer"
 	"github.com/PlakarKorp/plakar/utils"
 	"github.com/cockroachdb/pebble/v2"
 	"github.com/vmihailenco/msgpack/v5"
