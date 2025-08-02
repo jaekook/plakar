@@ -61,9 +61,10 @@ import (
 	_ "github.com/PlakarKorp/plakar/subcommands/ui"
 	_ "github.com/PlakarKorp/plakar/subcommands/version"
 
+	_ "github.com/PlakarKorp/integration-ptar/storage"
+	_ "github.com/PlakarKorp/integration-stdio/exporter"
+	_ "github.com/PlakarKorp/integration-stdio/importer"
 	_ "github.com/PlakarKorp/plakar/connectors/fs"
-	_ "github.com/PlakarKorp/plakar/connectors/ptar"
-	_ "github.com/PlakarKorp/plakar/connectors/stdio"
 )
 
 var ErrCantUnlock = errors.New("failed to unlock repository")
