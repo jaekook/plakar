@@ -6,6 +6,7 @@ toolchain go1.24.5
 
 require (
 	github.com/PlakarKorp/go-human2duration v0.1.5
+	github.com/PlakarKorp/integration-fs v1.0.3
 	github.com/PlakarKorp/integration-ptar v0.1.0-beta.1
 	github.com/PlakarKorp/integration-stdio v0.1.0-beta.2
 	github.com/PlakarKorp/kloset v1.0.1-beta.4
@@ -24,7 +25,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/muesli/termenv v0.16.0
 	github.com/pkg/sftp v1.13.9
-	github.com/pkg/xattr v0.4.12
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/prometheus/client_golang v1.23.0
 	github.com/spf13/viper v1.20.1
@@ -48,7 +48,6 @@ require (
 require (
 	github.com/DataDog/zstd v1.5.7 // indirect
 	github.com/PlakarKorp/go-cdc-chunkers v1.0.1 // indirect
-	github.com/PlakarKorp/integration-fs v1.0.3 // indirect
 	github.com/alecthomas/chroma/v2 v2.15.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
@@ -97,6 +96,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.3 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pkg/xattr v0.4.12 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.65.0 // indirect
 	github.com/prometheus/procfs v0.17.0 // indirect
