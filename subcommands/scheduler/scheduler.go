@@ -40,6 +40,8 @@ func init() {
 		subcommands.BeforeRepositoryOpen, "scheduler", "start")
 	subcommands.Register(func() subcommands.Subcommand { return &SchedulerStop{} },
 		subcommands.BeforeRepositoryOpen, "scheduler", "stop")
+	subcommands.Register(func() subcommands.Subcommand { return &SchedulerTerminate{} },
+		subcommands.BeforeRepositoryOpen, "scheduler", "terminate")
 	subcommands.Register(func() subcommands.Subcommand { return &Scheduler{} },
 		subcommands.BeforeRepositoryOpen, "scheduler")
 }
@@ -211,6 +213,13 @@ func handleClient(_ *appcontext.AppContext, conn net.Conn) {
 		} else {
 			response.ExitCode = 0
 		}
+	case "terminate":
+		if _, err := terminate(); err != nil {
+			response.ExitCode = 1
+			response.Err = err.Error()
+		} else {
+			response.ExitCode = 0
+		}
 	case "configure":
 		if _, err := configureTasks(request.Payload); err != nil {
 			response.ExitCode = 1
@@ -264,6 +273,10 @@ func stopTasks() (int, error) {
 	schedulerContextSingleton.schedulerCtx = nil
 
 	return 0, nil
+}
+
+func terminate() (int, error) {
+	return 0, stop()
 }
 
 func configureTasks(schedConfigBytes []byte) (int, error) {

@@ -114,6 +114,25 @@ func (c *Client) Stop() (int, error) {
 	return response.ExitCode, err
 }
 
+func (c *Client) Terminate() (int, error) {
+	var request Request
+	request.Type = "terminate"
+	if err := c.enc.Encode(request); err != nil {
+		return 1, fmt.Errorf("failed to send packet: %w", err)
+	}
+
+	var response Response
+	if err := c.dec.Decode(&response); err != nil {
+		return 1, fmt.Errorf("failed to decode response: %w", err)
+	}
+
+	var err error
+	if response.Err != "" {
+		err = fmt.Errorf("scheduler error: %s", response.Err)
+	}
+	return response.ExitCode, err
+}
+
 func (c *Client) Configure(configBytes []byte) (int, error) {
 	var request Request
 	request.Type = "configure"
