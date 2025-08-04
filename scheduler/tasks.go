@@ -104,7 +104,6 @@ func (s *Scheduler) backupTask(taskset Task, task BackupConfig) {
 
 			if retval, err := agent.ExecuteRPC(s.ctx, []string{"backup"}, backupSubcommand, storeConfig); err != nil || retval != 0 {
 				s.ctx.GetLogger().Error("Error creating backup: %s", err)
-				//				report.TaskFailed(1, "Error creating backup: retval=%d, err=%s", retval, err)
 				goto close
 			}
 
@@ -152,17 +151,9 @@ func (s *Scheduler) checkTask(taskset Task, task CheckConfig) {
 				continue
 			}
 
-			report := s.reporter.NewReport()
-			report.TaskStart("check", taskset.Name)
-			report.WithRepositoryName(taskset.Repository)
-			report.WithRepository(repo)
-
 			retval, err := agent.ExecuteRPC(s.ctx, []string{"check"}, checkSubcommand, storeConfig)
 			if err != nil || retval != 0 {
 				s.ctx.GetLogger().Error("Error executing check: %s", err)
-				report.TaskFailed(1, "Error executing check: retval=%d, err=%s", retval, err)
-			} else {
-				report.TaskDone()
 			}
 
 			repo.Close()
@@ -198,17 +189,10 @@ func (s *Scheduler) restoreTask(taskset Task, task RestoreConfig) {
 				s.ctx.GetLogger().Error("Error loading repository: %s", err)
 				continue
 			}
-			report := s.reporter.NewReport()
-			report.TaskStart("restore", taskset.Name)
-			report.WithRepositoryName(taskset.Repository)
-			report.WithRepository(repo)
 
 			retval, err := agent.ExecuteRPC(s.ctx, []string{"restore"}, restoreSubcommand, storeConfig)
 			if err != nil || retval != 0 {
 				s.ctx.GetLogger().Error("Error executing restore: %s", err)
-				report.TaskFailed(1, "Error executing restore: retval=%d, err=%s", retval, err)
-			} else {
-				report.TaskDone()
 			}
 
 			repo.Close()
@@ -257,18 +241,12 @@ func (s *Scheduler) syncTask(taskset Task, task SyncConfig) {
 				s.ctx.GetLogger().Error("Error loading repository: %s", err)
 				continue
 			}
-			report := s.reporter.NewReport()
-			report.TaskStart("sync", taskset.Name)
-			report.WithRepositoryName(taskset.Repository)
-			report.WithRepository(repo)
 
 			retval, err := agent.ExecuteRPC(s.ctx, []string{"sync"}, syncSubcommand, storeConfig)
 			if err != nil || retval != 0 {
 				s.ctx.GetLogger().Error("sync: %s", err)
-				report.TaskFailed(1, "Error executing sync: retval=%d, err=%s", retval, err)
 			} else {
 				s.ctx.GetLogger().Info("sync: synchronization succeeded")
-				report.TaskDone()
 			}
 
 			repo.Close()
@@ -302,15 +280,10 @@ func (s *Scheduler) maintenanceTask(task MaintenanceConfig) {
 				s.ctx.GetLogger().Error("Error loading repository: %s", err)
 				continue
 			}
-			report := s.reporter.NewReport()
-			report.TaskStart("maintenance", "maintenance")
-			report.WithRepositoryName(task.Repository)
-			report.WithRepository(repo)
 
 			retval, err := agent.ExecuteRPC(s.ctx, []string{"maintenance"}, maintenanceSubcommand, storeConfig)
 			if err != nil || retval != 0 {
 				s.ctx.GetLogger().Error("Error executing maintenance: %s", err)
-				report.TaskFailed(1, "Error executing maintenance: retval=%d, err=%s", retval, err)
 				goto close
 			} else {
 				s.ctx.GetLogger().Info("maintenance of repository %s succeeded", task.Repository)
@@ -321,13 +294,11 @@ func (s *Scheduler) maintenanceTask(task MaintenanceConfig) {
 				retval, err := agent.ExecuteRPC(s.ctx, []string{"rm"}, rmSubcommand, storeConfig)
 				if err != nil || retval != 0 {
 					s.ctx.GetLogger().Error("Error removing obsolete backups: %s", err)
-					report.TaskWarning("Error removing obsolete backups: retval=%d, err=%s", retval, err)
 					goto close
 				} else {
 					s.ctx.GetLogger().Info("Retention purge succeeded")
 				}
 			}
-			report.TaskDone()
 
 		close:
 			repo.Close()
