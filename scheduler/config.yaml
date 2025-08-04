@@ -1,10 +1,10 @@
 agent:
   reporting: true
   #  emitter: http://localhost:8080/report
-  maintenance:
-    - interval: 10s
-      repository: /Users/gilles/.plakar
-      retention: 24h
+  #maintenance:
+  #  - interval: 10s
+  #    repository: /Users/gilles/.plakar
+  #    retention: 24h
 
   tasks:
     - name: system
@@ -16,12 +16,17 @@ agent:
         retention: 60s
         #check: true
 
-      check:
-        - interval: 10s
-          path: /
-          latest: true
+      #restore:
+      #  - target: /tmp/foobar
+      #    path: /tmp/foobar
+      #    interval: 5s
 
-      sync:
-        - interval: 10s
-          direction: with
-          peer: /tmp/foobar
+      #check:
+      #  - interval: 10s
+      #    path: /
+      #    latest: true
+
+      #sync:
+      #  - interval: 10s
+      #    direction: with
+      #    peer: /tmp/foobar
