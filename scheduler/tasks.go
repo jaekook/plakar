@@ -101,33 +101,19 @@ func (s *Scheduler) backupTask(taskset Task, task BackupConfig) {
 				s.ctx.GetLogger().Error("Error loading repository: %s", err)
 				continue
 			}
-			report := s.reporter.NewReport()
-			report.TaskStart("backup", taskset.Name)
-			report.WithRepositoryName(taskset.Repository)
-			report.WithRepository(repo)
 
-			var reportWarning error
-			if retval, err, snapId, warning := backupSubcommand.DoBackup(s.ctx, repo); err != nil || retval != 0 {
+			if retval, err := agent.ExecuteRPC(s.ctx, []string{"backup"}, backupSubcommand, storeConfig); err != nil || retval != 0 {
 				s.ctx.GetLogger().Error("Error creating backup: %s", err)
-				report.TaskFailed(1, "Error creating backup: retval=%d, err=%s", retval, err)
+				//				report.TaskFailed(1, "Error creating backup: retval=%d, err=%s", retval, err)
 				goto close
-			} else {
-				reportWarning = warning
-				report.WithSnapshotID(snapId)
 			}
 
 			if task.Retention != 0 {
 				rmSubcommand.LocateOptions.Before = time.Now().Add(-task.Retention)
 				if retval, err := agent.ExecuteRPC(s.ctx, []string{"rm"}, rmSubcommand, storeConfig); err != nil || retval != 0 {
 					s.ctx.GetLogger().Error("Error removing obsolete backups: %s", err)
-					report.TaskWarning("Error removing obsolete backups: retval=%d, err=%s", retval, err)
 					goto close
 				}
-			}
-			if reportWarning != nil {
-				report.TaskWarning("Warning during backup: %s", reportWarning)
-			} else {
-				report.TaskDone()
 			}
 
 		close:
