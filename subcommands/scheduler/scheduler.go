@@ -127,14 +127,29 @@ func (cmd *Scheduler) ListenAndServe(ctx *appcontext.AppContext) error {
 
 	var inflight atomic.Int64
 	var nextID atomic.Int64
+
+	cancelled := false
+	go func() {
+		<-ctx.Done()
+		cancelled = true
+		listener.Close()
+	}()
+
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			if opErr, ok := err.(*net.OpError); ok && opErr.Err.Error() == "use of closed network connection" {
-				return nil
+			if cancelled {
+				return ctx.Err()
 			}
+
+			// this can never happen, right?
+			//if opErr, ok := err.(*net.OpError); ok && opErr.Err.Error() == "use of closed network connection" {
+			//	return nil
+			//}
+
 			// TODO: we should retry / wait and retry on
 			// some errors, not everything is fatal.
+
 			return err
 		}
 
