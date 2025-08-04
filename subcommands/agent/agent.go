@@ -22,13 +22,14 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"net"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
+	"sync/atomic"
+	"time"
 
 	"github.com/PlakarKorp/kloset/events"
 	"github.com/PlakarKorp/kloset/logging"
@@ -41,7 +42,6 @@ import (
 	"github.com/PlakarKorp/plakar/task"
 	"github.com/PlakarKorp/plakar/utils"
 
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/vmihailenco/msgpack/v5"
 )
 
@@ -52,12 +52,6 @@ func init() {
 		subcommands.AgentSupport|subcommands.BeforeRepositoryOpen, "agent", "tasks", "start")
 	subcommands.Register(func() subcommands.Subcommand { return &AgentTasksStop{} },
 		subcommands.AgentSupport|subcommands.BeforeRepositoryOpen, "agent", "tasks", "stop")
-	subcommands.Register(func() subcommands.Subcommand { return &AgentRestart{} },
-		subcommands.AgentSupport|subcommands.BeforeRepositoryOpen|subcommands.IgnoreVersion, "agent", "reload")
-	subcommands.Register(func() subcommands.Subcommand { return &AgentRestart{} },
-		subcommands.AgentSupport|subcommands.BeforeRepositoryOpen|subcommands.IgnoreVersion, "agent", "restart")
-	subcommands.Register(func() subcommands.Subcommand { return &AgentStop{} },
-		subcommands.AgentSupport|subcommands.BeforeRepositoryOpen|subcommands.IgnoreVersion, "agent", "stop")
 	subcommands.Register(func() subcommands.Subcommand { return &Agent{} },
 		subcommands.BeforeRepositoryOpen, "agent", "start")
 	subcommands.Register(func() subcommands.Subcommand { return &Agent{} },
@@ -85,6 +79,7 @@ func (cmd *Agent) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.StringVar(&cmd.prometheus, "prometheus", "", "prometheus exporter interface, e.g. 127.0.0.1:9090")
 	flags.BoolVar(&opt_foreground, "foreground", false, "run in foreground")
 	flags.StringVar(&opt_logfile, "log", "", "log file")
+	flags.DurationVar(&cmd.Teardown, "teardown", 0, "delay before tearing down the agent (for testing purposes)")
 	flags.Parse(args)
 	if flags.NArg() != 0 {
 		return fmt.Errorf("too many arguments")
@@ -128,66 +123,6 @@ type AgentContext struct {
 	mtx             sync.Mutex
 }
 
-type AgentStop struct {
-	subcommands.SubcommandBase
-}
-
-func (cmd *AgentStop) Parse(ctx *appcontext.AppContext, args []string) error {
-	flags := flag.NewFlagSet("agent stop", flag.ExitOnError)
-	flags.Usage = func() {
-		fmt.Fprintf(flags.Output(), "Usage: %s [OPTIONS]\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "\nOPTIONS:\n")
-		flags.PrintDefaults()
-	}
-	flags.Parse(args)
-	if flags.NArg() != 0 {
-		return fmt.Errorf("too many arguments")
-	}
-
-	return nil
-}
-
-func (cmd *AgentStop) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
-	if err := stop(); err != nil {
-		return 1, err
-	}
-	return 0, nil
-}
-
-type AgentRestart struct {
-	subcommands.SubcommandBase
-}
-
-func (cmd *AgentRestart) Parse(ctx *appcontext.AppContext, args []string) error {
-	flags := flag.NewFlagSet("agent restart", flag.ExitOnError)
-	flags.Usage = func() {
-		fmt.Fprintf(flags.Output(), "Usage: %s [OPTIONS]\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "\nOPTIONS:\n")
-		flags.PrintDefaults()
-	}
-	flags.Parse(args)
-	if flags.NArg() != 0 {
-		return fmt.Errorf("too many arguments")
-	}
-
-	return nil
-}
-
-func (cmd *AgentRestart) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
-	if err := restart(); err != nil {
-		return 1, fmt.Errorf("failed to restart agent: %w", err)
-	}
-	return 0, nil
-}
-
-func restart() error {
-	exePath, err := os.Executable()
-	if err != nil {
-		return fmt.Errorf("cannot find executable path: %w", err)
-	}
-	return syscall.Exec(exePath, append([]string{exePath}, os.Args[1:]...), os.Environ())
-}
-
 type Agent struct {
 	subcommands.SubcommandBase
 
@@ -195,15 +130,8 @@ type Agent struct {
 	socketPath string
 
 	listener net.Listener
-}
 
-func (cmd *Agent) checkSocket() bool {
-	conn, err := net.Dial("unix", cmd.socketPath)
-	if err != nil {
-		return false
-	}
-	conn.Close()
-	return true
+	Teardown time.Duration
 }
 
 func (cmd *Agent) Close() error {
@@ -236,31 +164,8 @@ func (cmd *Agent) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 	return 0, nil
 }
 
+/*
 func (cmd *Agent) ListenAndServe(ctx *appcontext.AppContext) error {
-	if _, err := os.Stat(cmd.socketPath); err == nil {
-		if !cmd.checkSocket() {
-			cmd.Close()
-		} else {
-			return fmt.Errorf("already running")
-		}
-	} else if !os.IsNotExist(err) {
-		return err
-	}
-
-	var err error
-
-	// Bind socket
-	cmd.listener, err = net.Listen("unix", cmd.socketPath)
-	if err != nil {
-		return fmt.Errorf("failed to bind socket: %w", err)
-	}
-	defer os.Remove(cmd.socketPath)
-
-	// Set socket permissions
-	if err := os.Chmod(cmd.socketPath, 0600); err != nil {
-		cmd.Close()
-		return fmt.Errorf("failed to set socket permissions: %w", err)
-	}
 
 	var promlistener net.Listener
 	if cmd.prometheus != "" {
@@ -307,10 +212,56 @@ func (cmd *Agent) ListenAndServe(ctx *appcontext.AppContext) error {
 		go handleClient(ctx, &wg, conn)
 	}
 }
+*/
 
-func handleClient(ctx *appcontext.AppContext, wg *sync.WaitGroup, conn net.Conn) {
+func (cmd *Agent) ListenAndServe(ctx *appcontext.AppContext) error {
+	listener, err := net.Listen("unix", cmd.socketPath)
+	if err != nil {
+		return fmt.Errorf("failed to bind the socket: %w", err)
+	}
+
+	// TODO: open the cache here
+
+	var inflight atomic.Int64
+	var nextID atomic.Int64
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			if opErr, ok := err.(*net.OpError); ok && opErr.Err.Error() == "use of closed network connection" {
+				return nil
+			}
+			// TODO: we should retry / wait and retry on
+			// some errors, not everything is fatal.
+			return err
+		}
+
+		inflight.Add(1)
+
+		log.Println("accepted a connection from:", conn.LocalAddr())
+		log.Println("inflight:", inflight.Load())
+		go func() {
+			myid := nextID.Add(1)
+			defer func() {
+				n := inflight.Add(-1)
+				if n == 0 {
+					time.Sleep(cmd.Teardown)
+					if nextID.Load() == myid && inflight.Load() == 0 {
+						listener.Close()
+					}
+				}
+			}()
+
+			if err := ctx.ReloadConfig(); err != nil {
+				ctx.GetLogger().Warn("could not load configuration: %v", err)
+			}
+
+			handleClient(ctx, conn)
+		}()
+	}
+}
+
+func handleClient(ctx *appcontext.AppContext, conn net.Conn) {
 	defer conn.Close()
-	defer wg.Done()
 
 	mu := sync.Mutex{}
 

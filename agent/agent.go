@@ -111,7 +111,7 @@ func NewClient(socketPath string, ignoreVersion bool) (*Client, error) {
 				return nil, fmt.Errorf("failed to get executable: %w", err)
 			}
 
-			plakar := exec.Command(me, "agent", "start")
+			plakar := exec.Command(me, "agent", "-teardown", "1m")
 			if err := plakar.Start(); err != nil {
 				return nil, fmt.Errorf("failed to start the agent: %w", err)
 			}
