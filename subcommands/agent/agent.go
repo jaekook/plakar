@@ -22,7 +22,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
@@ -148,8 +147,6 @@ func (cmd *Agent) ListenAndServe(ctx *appcontext.AppContext) error {
 
 		inflight.Add(1)
 
-		log.Println("accepted a connection from:", conn.LocalAddr())
-		log.Println("inflight:", inflight.Load())
 		go func() {
 			myid := nextID.Add(1)
 			defer func() {
