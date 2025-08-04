@@ -56,6 +56,7 @@ import (
 	_ "github.com/PlakarKorp/plakar/subcommands/ptar"
 	_ "github.com/PlakarKorp/plakar/subcommands/restore"
 	_ "github.com/PlakarKorp/plakar/subcommands/rm"
+	_ "github.com/PlakarKorp/plakar/subcommands/scheduler"
 	_ "github.com/PlakarKorp/plakar/subcommands/server"
 	_ "github.com/PlakarKorp/plakar/subcommands/services"
 	_ "github.com/PlakarKorp/plakar/subcommands/ui"

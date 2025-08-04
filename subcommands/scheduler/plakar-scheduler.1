@@ -1,0 +1,23 @@
+.Dd July 3, 2025
+.Dt PLAKAR-SCHEDULER 1
+.Os
+.Sh NAME
+.Nm plakar-scheduler
+.Nd Run the Plakar scheduler
+.Sh SYNOPSIS
+.Nm plakar scheduler
+.Sh DESCRIPTION
+The
+.Nm plakar scheduler
+runs in the background and manages task execution based on the defined schedule.
+.Sh DIAGNOSTICS
+.Ex -std
+.Bl -tag -width Ds
+.It 0
+Command completed successfully.
+.It >0
+An error occurred, such as invalid parameters, inability to create the
+repository, or configuration issues.
+.El
+.Sh SEE ALSO
+.Xr plakar 1

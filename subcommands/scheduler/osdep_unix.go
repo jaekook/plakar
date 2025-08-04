@@ -1,6 +1,6 @@
 //go:build !windows
 
-package agent
+package scheduler
 
 import (
 	"log/syslog"
@@ -41,4 +41,8 @@ func daemonize(argv []string) error {
 		os.Exit(0)
 		return nil
 	}
+}
+
+func stop() error {
+	return syscall.Kill(os.Getpid(), syscall.SIGINT)
 }
