@@ -27,7 +27,7 @@ import (
 )
 
 func init() {
-	subcommands.Register(func() subcommands.Subcommand { return &Logout{} }, subcommands.AgentSupport, "logout")
+	subcommands.Register(func() subcommands.Subcommand { return &Logout{} }, subcommands.BeforeRepositoryOpen, "logout")
 }
 
 func (cmd *Logout) Parse(ctx *appcontext.AppContext, args []string) error {
@@ -38,6 +38,11 @@ func (cmd *Logout) Parse(ctx *appcontext.AppContext, args []string) error {
 		flags.PrintDefaults()
 	}
 	flags.Parse(args)
+
+	if flags.NArg() > 0 {
+		return fmt.Errorf("too many arguments")
+	}
+
 	return nil
 }
 
@@ -46,8 +51,9 @@ type Logout struct {
 }
 
 func (cmd *Logout) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
-	if ctx.GetCookies().HasAuthToken() {
-		ctx.GetCookies().DeleteAuthToken()
+	if !ctx.GetCookies().HasAuthToken() {
+		return 1, fmt.Errorf("not logged in")
 	}
+	ctx.GetCookies().DeleteAuthToken()
 	return 0, nil
 }

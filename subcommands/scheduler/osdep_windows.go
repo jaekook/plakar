@@ -1,4 +1,4 @@
-package agent
+package scheduler
 
 import (
 	"errors"
@@ -11,5 +11,9 @@ func setupSyslog(ctx *appcontext.AppContext) error {
 }
 
 func daemonize(argv []string) error {
+	return errors.ErrUnsupported
+}
+
+func stop() error {
 	return errors.ErrUnsupported
 }

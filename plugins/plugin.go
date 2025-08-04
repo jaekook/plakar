@@ -114,12 +114,16 @@ func (plugin *Plugin) registerStorage(ctx *kcontext.KContext, proto string, flag
 
 func (plugin *Plugin) registerImporter(ctx *kcontext.KContext, proto string, flags location.Flags, exe string) error {
 	err := importer.Register(proto, flags, func(ctx context.Context, o *importer.Options, s string, config map[string]string) (importer.Importer, error) {
+		fmt.Fprintf(os.Stderr, "####1: %s\n", exe)
 		client, err := connectPlugin(exe)
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect to plugin: %w", err)
 		}
+		fmt.Fprintf(os.Stderr, "####2: %s %p\n", exe, client)
 
-		return grpc_importer.NewImporter(ctx, client, o, s, config)
+		imp, err := grpc_importer.NewImporter(ctx, client, o, s, config)
+		fmt.Fprintf(os.Stderr, "####3: %s %s\n", imp, err)
+		return imp, err
 	})
 	if err != nil {
 		return err

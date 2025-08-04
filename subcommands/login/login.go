@@ -29,7 +29,7 @@ import (
 )
 
 func init() {
-	subcommands.Register(func() subcommands.Subcommand { return &Login{} }, subcommands.AgentSupport, "login")
+	subcommands.Register(func() subcommands.Subcommand { return &Login{} }, subcommands.BeforeRepositoryOpen, "login")
 }
 
 func (cmd *Login) Parse(ctx *appcontext.AppContext, args []string) error {
@@ -45,6 +45,10 @@ func (cmd *Login) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.BoolVar(&cmd.Github, "github", false, "login with GitHub")
 	flags.StringVar(&cmd.Email, "email", "", "login with email")
 	flags.Parse(args)
+
+	if flags.NArg() > 0 {
+		return fmt.Errorf("too many arguments")
+	}
 
 	if cmd.Status {
 		if cmd.Github || cmd.Email != "" || cmd.NoSpawn {
@@ -64,8 +68,6 @@ func (cmd *Login) Parse(ctx *appcontext.AppContext, args []string) error {
 			return fmt.Errorf("the -no-spawn option is only valid with -github")
 		}
 	}
-
-	cmd.RepositorySecret = ctx.GetSecret()
 
 	return nil
 }
@@ -100,7 +102,7 @@ func (cmd *Login) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 		}
 	}
 
-	flow, err := plogin.NewLoginFlow(ctx, repo.Configuration().RepositoryID, cmd.NoSpawn)
+	flow, err := plogin.NewLoginFlow(ctx, cmd.NoSpawn)
 	if err != nil {
 		return 1, err
 	}
@@ -108,9 +110,9 @@ func (cmd *Login) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 
 	var token string
 	if cmd.Github {
-		token, err = flow.Run("github", map[string]string{"repository_id": repo.Configuration().RepositoryID.String()})
+		token, err = flow.Run("github", map[string]string{})
 	} else if cmd.Email != "" {
-		token, err = flow.Run("email", map[string]string{"email": cmd.Email, "repository_id": repo.Configuration().RepositoryID.String()})
+		token, err = flow.Run("email", map[string]string{"email": cmd.Email})
 	} else {
 		return 1, fmt.Errorf("invalid login method")
 	}
