@@ -7,9 +7,6 @@ PLAKAR-AGENT(1) - General Commands Manual
 # SYNOPSIS
 
 **plakar&nbsp;agent**
-\[**-foreground**]
-\[**-log**&nbsp;*filename*]
-\[**stop**]
 
 # DESCRIPTION
 
@@ -19,25 +16,7 @@ command starts the Plakar agent which will execute subsequent
 plakar(1)
 commands on their behalfs for faster processing.
 **plakar agent**
-continues running indefinitely.
-
-The options are as follows:
-
-**-foreground**
-
-> Do not daemonize agent,
-> run in foreground.
-
-**-log** *filename*
-
-> Redirect all output to
-> *filename*.
-
-With the
-**stop**
-argument,
-**plakar agent**
-will be stopped.
+continues is auto-spawned and terminates when idle for too long.
 
 # DIAGNOSTICS
 
