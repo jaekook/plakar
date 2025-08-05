@@ -67,11 +67,11 @@ func (plugin *Plugin) SetUp(ctx *kcontext.KContext, pluginFile, pluginName, cach
 		for _, proto := range conn.Protocols {
 			switch conn.Type {
 			case "importer":
-				err = plugin.registerImporter(ctx, proto, flags, exe)
+				err = plugin.registerImporter(ctx, proto, flags, exe, conn.Args)
 			case "exporter":
-				err = plugin.registerExporter(ctx, proto, flags, exe)
+				err = plugin.registerExporter(ctx, proto, flags, exe, conn.Args)
 			case "storage":
-				err = plugin.registerStorage(ctx, proto, flags, exe)
+				err = plugin.registerStorage(ctx, proto, flags, exe, conn.Args)
 			default:
 				err = fmt.Errorf("unknown plugin type: %s", conn.Type)
 			}
@@ -95,9 +95,9 @@ func (plugin *Plugin) TearDown(ctx *kcontext.KContext) {
 	plugin.teardown = nil
 }
 
-func (plugin *Plugin) registerStorage(ctx *kcontext.KContext, proto string, flags location.Flags, exe string) error {
+func (plugin *Plugin) registerStorage(ctx *kcontext.KContext, proto string, flags location.Flags, exe string, args []string) error {
 	err := storage.Register(proto, flags, func(ctx context.Context, s string, config map[string]string) (storage.Store, error) {
-		client, err := connectPlugin(exe)
+		client, err := connectPlugin(exe, args)
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect to plugin: %w", err)
 		}
@@ -112,18 +112,13 @@ func (plugin *Plugin) registerStorage(ctx *kcontext.KContext, proto string, flag
 	return nil
 }
 
-func (plugin *Plugin) registerImporter(ctx *kcontext.KContext, proto string, flags location.Flags, exe string) error {
+func (plugin *Plugin) registerImporter(ctx *kcontext.KContext, proto string, flags location.Flags, exe string, args []string) error {
 	err := importer.Register(proto, flags, func(ctx context.Context, o *importer.Options, s string, config map[string]string) (importer.Importer, error) {
-		fmt.Fprintf(os.Stderr, "####1: %s\n", exe)
-		client, err := connectPlugin(exe)
+		client, err := connectPlugin(exe, args)
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect to plugin: %w", err)
 		}
-		fmt.Fprintf(os.Stderr, "####2: %s %p\n", exe, client)
-
-		imp, err := grpc_importer.NewImporter(ctx, client, o, s, config)
-		fmt.Fprintf(os.Stderr, "####3: %s %s\n", imp, err)
-		return imp, err
+		return grpc_importer.NewImporter(ctx, client, o, s, config)
 	})
 	if err != nil {
 		return err
@@ -132,9 +127,9 @@ func (plugin *Plugin) registerImporter(ctx *kcontext.KContext, proto string, fla
 	return nil
 }
 
-func (plugin *Plugin) registerExporter(ctx *kcontext.KContext, proto string, flags location.Flags, exe string) error {
+func (plugin *Plugin) registerExporter(ctx *kcontext.KContext, proto string, flags location.Flags, exe string, args []string) error {
 	err := exporter.Register(proto, flags, func(ctx context.Context, o *exporter.Options, s string, config map[string]string) (exporter.Exporter, error) {
-		client, err := connectPlugin(exe)
+		client, err := connectPlugin(exe, args)
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect to plugin: %w", err)
 		}
