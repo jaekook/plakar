@@ -9,8 +9,6 @@ github.com/PlakarKorp/go-human2duration v0.1.5 h1:6pw79LhjPuj5o8Xp9kUcle26+APaCI
 github.com/PlakarKorp/go-human2duration v0.1.5/go.mod h1:1kg75kTlYCYURVyciaeO2GFdLgGDMhIfBTBpfydv1sk=
 github.com/PlakarKorp/integration-fs v1.0.3 h1:DB5OIAyXURUmiAwiehAsZ2gCSsVrE2swWwZ/YzfpWGg=
 github.com/PlakarKorp/integration-fs v1.0.3/go.mod h1:6od5Bzx/eOPArWHRTlXeHZ2NmRjt2crR5UeKSpZPxS0=
-github.com/PlakarKorp/integration-grpc v1.0.0 h1:8t8iB1ir7raj1CRN7NIzY8qzLEFibcj3HwIVKnQwHpQ=
-github.com/PlakarKorp/integration-grpc v1.0.0/go.mod h1:vIW2eX96Qt4OvrYSVc+yuXVhkSl2nwGWseGcq4/N3q8=
 github.com/PlakarKorp/integration-grpc v1.0.1 h1:mlYxMT2YjJruWtwxUEevgrjAbwzwQAMQLwcndSivob8=
 github.com/PlakarKorp/integration-grpc v1.0.1/go.mod h1:69psavK+FWuSPvcWWeG/pP9dIlyi+LAp1V1SwYH8Clg=
 github.com/PlakarKorp/integration-ptar v0.1.0-beta.1 h1:v31Tt7dh1Maf8b5VjKV7NtjWSuOvKw5vp4gqCaw5L5M=
