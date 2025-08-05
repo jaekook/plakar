@@ -9,6 +9,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	fsexporter "github.com/PlakarKorp/integration-fs/exporter"
+	grpc_exporter "github.com/PlakarKorp/integration-grpc/exporter"
+	grpc_importer "github.com/PlakarKorp/integration-grpc/importer"
+	grpc_storage "github.com/PlakarKorp/integration-grpc/storage"
 	"github.com/PlakarKorp/kloset/kcontext"
 	"github.com/PlakarKorp/kloset/location"
 	"github.com/PlakarKorp/kloset/repository"
@@ -16,10 +20,6 @@ import (
 	"github.com/PlakarKorp/kloset/snapshot/exporter"
 	"github.com/PlakarKorp/kloset/snapshot/importer"
 	"github.com/PlakarKorp/kloset/storage"
-	fsexporter "github.com/PlakarKorp/plakar/connectors/fs/exporter"
-	grpc_exporter "github.com/PlakarKorp/plakar/connectors/grpc/exporter"
-	grpc_importer "github.com/PlakarKorp/plakar/connectors/grpc/importer"
-	grpc_storage "github.com/PlakarKorp/plakar/connectors/grpc/storage"
 	"github.com/PlakarKorp/plakar/locate"
 )
 
@@ -118,7 +118,6 @@ func (plugin *Plugin) registerImporter(ctx *kcontext.KContext, proto string, fla
 		if err != nil {
 			return nil, fmt.Errorf("failed to connect to plugin: %w", err)
 		}
-
 		return grpc_importer.NewImporter(ctx, client, o, s, config)
 	})
 	if err != nil {
