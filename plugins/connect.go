@@ -46,12 +46,7 @@ func forkChild(pluginPath string, args []string) (int, error) {
 
 	childFile := os.NewFile(uintptr(sp[0]), "child-conn")
 
-	var cmd *exec.Cmd
-	if len(args) == 0 {
-		cmd = exec.Command(pluginPath)
-	} else {
-		cmd = exec.Command(pluginPath, args...)
-	}
+	cmd := exec.Command(pluginPath, args...)
 	cmd.Stdin = childFile
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
