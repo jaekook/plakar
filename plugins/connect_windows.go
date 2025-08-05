@@ -6,6 +6,6 @@ import (
 	"google.golang.org/grpc"
 )
 
-func connectPlugin(pluginPath string) (grpc.ClientConnInterface, error) {
+func connectPlugin(pluginPath string, args []string) (grpc.ClientConnInterface, error) {
 	return nil, errors.ErrUnsupported
 }
