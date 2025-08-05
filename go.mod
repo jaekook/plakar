@@ -7,10 +7,10 @@ toolchain go1.24.5
 require (
 	github.com/PlakarKorp/go-human2duration v0.1.5
 	github.com/PlakarKorp/integration-fs v1.0.3
-	github.com/PlakarKorp/integration-grpc v1.0.0
+	github.com/PlakarKorp/integration-grpc v1.0.1
 	github.com/PlakarKorp/integration-ptar v0.1.0-beta.1
 	github.com/PlakarKorp/integration-stdio v0.1.0-beta.2
-	github.com/PlakarKorp/kloset v1.0.1-beta.4
+	github.com/PlakarKorp/kloset v1.0.1-beta.5
 	github.com/alecthomas/chroma v0.10.0
 	github.com/anacrolix/fuse v0.3.1
 	github.com/charmbracelet/bubbletea v1.3.6
