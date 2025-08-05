@@ -113,6 +113,10 @@ func installPlugin(ctx *appcontext.AppContext, pluginFile string) error {
 }
 
 func fetchPlugin(ctx *appcontext.AppContext, path string) (string, error) {
+	if err := os.MkdirAll(ctx.GetPlugins().PluginsDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create plugin dir: %w", err)
+	}
+
 	fp, err := os.CreateTemp(ctx.GetPlugins().PluginsDir, "fetch-plugin-*")
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp file: %w", err)
