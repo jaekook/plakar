@@ -251,8 +251,9 @@ func (mgr *Manager) doLoadPlugins(ctx *kcontext.KContext) error {
 		var plugin Plugin
 		err := plugin.SetUp(ctx, mgr.PluginFile(pkg), pkg.PluginName(), mgr.CacheDir)
 		if err != nil {
-			mgr.doUnloadPlugins(ctx)
-			return fmt.Errorf("failed to load plugin %q", mgr.PluginFile(pkg))
+			ctx.GetLogger().Warn("failed to load plugin %q: %v", mgr.PluginFile(pkg), err)
+			continue
+
 		}
 		mgr.plugins[pkg] = &plugin
 	}
@@ -315,12 +316,10 @@ func (mgr *Manager) UninstallPackage(ctx *kcontext.KContext, pkg Package) error 
 	mgr.pluginsMtx.Lock()
 	defer mgr.pluginsMtx.Unlock()
 	plugin, ok := mgr.plugins[pkg]
-	if !ok {
-		return fmt.Errorf("package not installed")
+	if ok {
+		delete(mgr.plugins, pkg)
+		plugin.TearDown(ctx)
 	}
-
-	delete(mgr.plugins, pkg)
-	plugin.TearDown(ctx)
 
 	pluginFile := mgr.PluginFile(pkg)
 
@@ -349,7 +348,7 @@ func (mgr *Manager) InstallPackage(ctx *kcontext.KContext, pkg Package, filename
 	// Check if installed
 	installed, err := mgr.ListInstalledPackages()
 	if err != nil {
-		return fmt.Errorf("failed to list installed package: %w", err)
+		return fmt.Errorf("failed to list installed packages: %w", err)
 	}
 	for _, p := range installed {
 		if p == pkg {
