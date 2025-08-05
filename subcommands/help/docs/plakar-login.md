@@ -69,6 +69,7 @@ Authenticate via GitHub (default, opens browser):
 # SEE ALSO
 
 plakar(1),
+plakar-logout(1),
 plakar-services(1)
 
 Plakar - July 8, 2025
