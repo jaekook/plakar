@@ -80,7 +80,7 @@ func NewClient(socketPath string, ignoreVersion bool) (*Client, error) {
 		}
 
 		attempt++
-		if attempt > 100 {
+		if attempt > 1000 {
 			return nil, fmt.Errorf("failed to run the agent")
 		}
 
