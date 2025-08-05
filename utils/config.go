@@ -241,15 +241,13 @@ func GetConf(rd io.Reader, thirdParty string) (map[string]map[string]string, err
 
 	if thirdParty != "" {
 		for _, section := range configMap {
-			section["location"] = thirdParty + "://"
-		}
-	}
-
-	for _, section := range configMap {
-		for key, value := range section {
-			if value == "" {
+			for key, value := range section {
+				if value != "" {
+					section[thirdParty+"_"+key] = value
+				}
 				delete(section, key)
 			}
+			section["location"] = thirdParty + "://"
 		}
 	}
 	return configMap, nil
