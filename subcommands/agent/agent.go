@@ -127,7 +127,21 @@ func (cmd *Agent) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 }
 
 func (cmd *Agent) ListenAndServe(ctx *appcontext.AppContext) error {
+	lock, err := agent.LockedFile(cmd.socketPath + ".agent-lock")
+	if err != nil {
+		return fmt.Errorf("failed to obtain lock")
+	}
+	conn, err := net.Dial("unix", cmd.socketPath)
+	if err == nil {
+		lock.Unlock()
+		conn.Close()
+		return fmt.Errorf("agent already running")
+	}
+	os.Remove(cmd.socketPath)
+
 	listener, err := net.Listen("unix", cmd.socketPath)
+	lock.Unlock()
+
 	if err != nil {
 		return fmt.Errorf("failed to bind the socket: %w", err)
 	}
