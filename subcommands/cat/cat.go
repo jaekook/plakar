@@ -110,18 +110,16 @@ func (cmd *Cat) Execute(ctx *appcontext.AppContext, repo *repository.Repository)
 		file := entry.Open(fs)
 		var rd io.ReadCloser = file
 
-		if !cmd.NoDecompress {
-			if entry.ResolvedObject.ContentType == "application/gzip" && !cmd.NoDecompress {
-				gzRd, err := gzip.NewReader(rd)
-				if err != nil {
-					ctx.GetLogger().Error("cat: %s: %s", pathname, err)
-					errors++
-					file.Close()
-					snap.Close()
-					continue
-				}
-				rd = gzRd
+		if !cmd.NoDecompress && entry.ResolvedObject.ContentType == "application/gzip" {
+			gzRd, err := gzip.NewReader(rd)
+			if err != nil {
+				ctx.GetLogger().Error("cat: %s: %s", pathname, err)
+				errors++
+				file.Close()
+				snap.Close()
+				continue
 			}
+			rd = gzRd
 		}
 
 		if cmd.Highlight {
