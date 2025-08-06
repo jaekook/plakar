@@ -48,6 +48,10 @@ func (cmd *Ui) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.BoolVar(&cmd.NoSpawn, "no-spawn", false, "don't spawn browser")
 	flags.Parse(args)
 
+	if flags.NArg() > 0 {
+		return fmt.Errorf("Too many arguments")
+	}
+
 	cmd.RepositorySecret = ctx.GetSecret()
 
 	return nil
