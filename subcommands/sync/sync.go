@@ -43,11 +43,16 @@ func (cmd *Sync) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.Usage = func() {
 		fmt.Fprintf(flags.Output(), "Usage: %s [SNAPSHOT] to REPOSITORY\n", flags.Name())
 		fmt.Fprintf(flags.Output(), "       %s [SNAPSHOT] from REPOSITORY\n", flags.Name())
+		fmt.Fprintf(flags.Output(), "       %s [SNAPSHOT] with REPOSITORY\n", flags.Name())
 		flags.PrintDefaults()
 	}
 	cmd.SrcLocateOptions.InstallFlags(flags)
 
 	flags.Parse(args)
+
+	if flags.NArg() > 2 {
+		return fmt.Errorf("Too many arguments")
+	}
 
 	direction := ""
 	peerRepositoryPath := ""
@@ -66,7 +71,7 @@ func (cmd *Sync) Parse(ctx *appcontext.AppContext, args []string) error {
 		peerRepositoryPath = args[2]
 
 	default:
-		return fmt.Errorf("usage: sync [SNAPSHOT] to|from REPOSITORY")
+		return fmt.Errorf("usage: sync [SNAPSHOT] to|from|with REPOSITORY")
 	}
 
 	if direction != "to" && direction != "from" && direction != "with" {
