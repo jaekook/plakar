@@ -33,6 +33,7 @@ type Integration struct {
 	Tags          []string         `json:"tags"`
 	APIVersion    string           `json:"api_version"`
 	LatestVersion string           `json:"latest_version"`
+	Stage         string           `json:"stage"`
 	Types         IntegrationTypes `json:"types"`
 
 	Documentation string `json:"documentation"` // README.md

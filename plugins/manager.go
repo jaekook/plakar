@@ -8,10 +8,12 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/PlakarKorp/kloset/kcontext"
+	"golang.org/x/mod/semver"
 )
 
 type Cache[T any] struct {
@@ -168,6 +170,20 @@ func (mgr *Manager) IsInstalled(pkg Package) (bool, Package, error) {
 	}
 	return false, Package{}, nil
 }
+func GetStageFromVersion(version string) string {
+	stage := strings.TrimPrefix(semver.Prerelease(version), "-")
+
+	if stage == "" {
+		return "stable"
+	}
+	if stage == "rc" {
+		return "testing"
+	}
+
+	stage, _, _ = strings.Cut(stage, ".")
+
+	return stage
+}
 
 func (mgr *Manager) ListIntegrations(filter IntegrationFilter) ([]Integration, error) {
 	integrations, err := mgr.integrations.Get()
@@ -201,10 +217,12 @@ func (mgr *Manager) ListIntegrations(filter IntegrationFilter) ([]Integration, e
 			continue
 		}
 
-		ok, err := mgr.IsAvailable(mgr.IntegrationAsPackage(&info))
+		ok, _ := mgr.IsAvailable(mgr.IntegrationAsPackage(&info))
 		if ok {
 			info.Installation.Available = true
 		}
+
+		info.Stage = GetStageFromVersion(info.LatestVersion)
 
 		res = append(res, info)
 	}
