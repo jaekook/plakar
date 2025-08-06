@@ -50,7 +50,7 @@ func (cmd *Sync) Parse(ctx *appcontext.AppContext, args []string) error {
 
 	flags.Parse(args)
 
-	if flags.NArg() > 2 {
+	if flags.NArg() > 3 {
 		return fmt.Errorf("Too many arguments")
 	}
 
