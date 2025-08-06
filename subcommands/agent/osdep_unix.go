@@ -25,7 +25,11 @@ func daemonize(argv []string) error {
 		return err
 	}
 
-	procAttr := syscall.ProcAttr{}
+	procAttr := syscall.ProcAttr{
+		Sys: &syscall.SysProcAttr{
+			Setsid: true,
+		},
+	}
 	procAttr.Files = []uintptr{
 		uintptr(syscall.Stdin),
 		uintptr(syscall.Stdout),
