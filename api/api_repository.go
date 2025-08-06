@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"runtime"
 	"slices"
 	"sort"
 	"strings"
@@ -31,6 +32,8 @@ type RepositoryInfoResponse struct {
 	Location      string                  `json:"location"`
 	Snapshots     RepositoryInfoSnapshots `json:"snapshots"`
 	Configuration storage.Configuration   `json:"configuration"`
+	OS            string                  `json:"os"`
+	Arch          string                  `json:"arch"`
 }
 
 func getNSnapshotsPerDay(repo *repository.Repository, ndays int) ([]int, error) {
@@ -101,6 +104,8 @@ func (ui *uiserver) repositoryInfo(w http.ResponseWriter, r *http.Request) error
 			SnapshotsPerDay: nSnapshotsPerDay,
 		},
 		Configuration: ui.config,
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
 	}})
 }
 
