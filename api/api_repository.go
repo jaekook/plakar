@@ -221,7 +221,7 @@ func (ui *uiserver) repositoryState(w http.ResponseWriter, r *http.Request) erro
 		return err
 	}
 
-	_, rd, err := ui.repository.GetState(stateBytes32)
+	rd, err := ui.repository.GetState(stateBytes32)
 	if err != nil {
 		return err
 	}

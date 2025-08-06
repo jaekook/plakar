@@ -369,13 +369,13 @@ func (cmd *Maintenance) Lock() (chan bool, error) {
 			continue
 		}
 
-		version, rd, err := cmd.repository.GetLock(lockID)
+		rd, err := cmd.repository.GetLock(lockID)
 		if err != nil {
 			cmd.repository.DeleteLock(cmd.maintenanceID)
 			return nil, err
 		}
 
-		lock, err := repository.NewLockFromStream(version, rd)
+		lock, err := repository.NewLockFromStream(rd)
 		rd.Close()
 		if err != nil {
 			cmd.repository.DeleteLock(cmd.maintenanceID)
