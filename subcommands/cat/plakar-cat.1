@@ -1,4 +1,4 @@
-.Dd July 3, 2025
+.Dd August 6, 2025
 .Dt PLAKAR-CAT 1
 .Os
 .Sh NAME
@@ -22,8 +22,7 @@ highlighting based on the file type.
 The options are as follows:
 .Bl -tag -width Ds
 .It Fl no-decompress
-Display the file content as-is, without attempting to decompress it,
-even if it is compressed.
+Unless set, Plakar attempts to decompress application/gzip files.
 .It Fl highlight
 Apply syntax highlighting to the output based on the file type.
 .El
