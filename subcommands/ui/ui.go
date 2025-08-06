@@ -42,7 +42,7 @@ func (cmd *Ui) Parse(ctx *appcontext.AppContext, args []string) error {
 		flags.PrintDefaults()
 	}
 
-	flags.StringVar(&cmd.Addr, "addr", "", "address to listen on")
+	flags.StringVar(&cmd.Addr, "addr", "", "address to listen on (default: random port on localhost)")
 	flags.BoolVar(&cmd.Cors, "cors", false, "enable CORS")
 	flags.BoolVar(&cmd.NoAuth, "no-auth", false, "don't use authentication")
 	flags.BoolVar(&cmd.NoSpawn, "no-spawn", false, "don't spawn browser")
