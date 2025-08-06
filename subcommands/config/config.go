@@ -316,6 +316,6 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 
 	default:
-		return fmt.Errorf("usage: plakar %s [add|check|import|ls|ping|rm|set|show|unset]", cmd)
+		return fmt.Errorf("usage: plakar %s [add|check|import|ping|rm|set|show|unset]", cmd)
 	}
 }
