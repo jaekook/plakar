@@ -68,7 +68,7 @@ func NewManager(pluginsDir, cacheDir string) *Manager {
 	}
 	mgr.integrations = Cache[[]Integration]{
 		ttl: 5 * time.Minute,
-		get: fetchIntegrationList,
+		get: func() ([]Integration, error) { return fetchIntegrationList(mgr.ApiVersion) },
 	}
 	return mgr
 }
