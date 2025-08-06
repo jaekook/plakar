@@ -146,11 +146,22 @@ func (cmd *Agent) ListenAndServe(ctx *appcontext.AppContext) error {
 		return fmt.Errorf("failed to bind the socket: %w", err)
 	}
 
+	cancelled := false
+	go func() {
+		<-ctx.Done()
+		cancelled = true
+		listener.Close()
+	}()
+
 	var inflight atomic.Int64
 	var nextID atomic.Int64
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
+			if cancelled {
+				return ctx.Err()
+			}
+
 			if opErr, ok := err.(*net.OpError); ok && opErr.Err.Error() == "use of closed network connection" {
 				return nil
 			}
