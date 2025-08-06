@@ -53,10 +53,11 @@ type IntegrationIndex struct {
 	Integrations []Integration `json:"integrations"`
 }
 
-func fetchIntegrationList() ([]Integration, error) {
+func fetchIntegrationList(version string) ([]Integration, error) {
 	var index IntegrationIndex
 
-	req, err := http.NewRequest("GET", "https://api.plakar.io/v1/integrations/list.json", nil)
+	route := fmt.Sprintf("https://api.plakar.io/v1/integrations/%s.json", version)
+	req, err := http.NewRequest("GET", route, nil)
 	if err != nil {
 		return nil, err
 	}
