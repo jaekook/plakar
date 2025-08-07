@@ -125,6 +125,13 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 
 	case "check":
+		p := flag.NewFlagSet("check", flag.ExitOnError)
+		p.Usage = func() {
+			fmt.Fprintf(ctx.Stdout, "Usage: plakar %s %s <name>\n", cmd, p.Name())
+			p.PrintDefaults()
+		}
+		p.Parse(args)
+
 		if len(args) != 1 {
 			return fmt.Errorf("usage: plakar %s check <name>", cmd)
 		}
