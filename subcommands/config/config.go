@@ -181,6 +181,10 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		flags.BoolVar(&opt_rclone, "rclone", false, "import using rclone")
 		flags.StringVar(&opt_config, "config", "", "import from a file")
 		flags.BoolVar(&opt_overwrite, "overwrite", false, "overwrite existing configurations")
+		flags.Usage = func() {
+			fmt.Fprintf(ctx.Stdout, "Usage: plakar %s %s [OPTIONS] <section>...\n", cmd, flags.Name())
+			flags.PrintDefaults()
+		}
 		flags.Parse(args)
 
 		var rd io.Reader = ctx.Stdin
