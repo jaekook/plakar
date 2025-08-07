@@ -33,9 +33,9 @@ func init() {
 func (cmd *Services) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags := flag.NewFlagSet("services", flag.ExitOnError)
 	flags.Usage = func() {
-		fmt.Fprintf(flags.Output(), "Usage: %s [OPTIONS]\n", flags.Name())
-		fmt.Fprintf(flags.Output(), "\nOPTIONS:\n")
-		flags.PrintDefaults()
+		fmt.Fprintf(flags.Output(), "Usage: %s status SERVICE\n", flags.Name())
+		fmt.Fprintf(flags.Output(), "       %s enable SERVICE\n", flags.Name())
+		fmt.Fprintf(flags.Output(), "       %s disable SERVICE\n", flags.Name())
 	}
 	flags.Parse(args)
 
