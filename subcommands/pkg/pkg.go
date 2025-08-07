@@ -62,7 +62,7 @@ func (cmd *Pkg) Parse(ctx *appcontext.AppContext, args []string) error {
 		fmt.Fprintf(flags.Output(), "Usage: %s",
 			flags.Name())
 		fmt.Fprintf(flags.Output(), "\nOPTIONS:\n")
-		flag.PrintDefaults()
+		flags.PrintDefaults()
 	}
 
 	flags.Parse(args)
