@@ -232,8 +232,15 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return fmt.Errorf("not implemented")
 
 	case "rm":
+		p := flag.NewFlagSet("rm", flag.ExitOnError)
+		p.Usage = func() {
+			fmt.Fprintf(ctx.Stdout, "Usage: plakar %s %s <name>\n", cmd, p.Name())
+			p.PrintDefaults()
+		}
+		p.Parse(args)
+
 		if len(args) != 1 {
-			return fmt.Errorf("usage: plakar %s rm <name>", cmd)
+			return fmt.Errorf("Usage: plakar %s %s <name>", cmd, p.Name())
 		}
 
 		name := normalizeName(args[0])
