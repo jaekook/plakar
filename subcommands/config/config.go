@@ -229,7 +229,7 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 
 	case "ping":
-		return fmt.Errorf("not implemented")
+		return fmt.Errorf("the ping subcomand is not yet implemented in this version of plakar")
 
 	case "rm":
 		p := flag.NewFlagSet("rm", flag.ExitOnError)
