@@ -6,7 +6,7 @@
 .Nd Display file contents from a Plakar snapshot
 .Sh SYNOPSIS
 .Nm plakar cat
-.Op Fl no-decompress
+.Op Fl decompress
 .Op Fl highlight
 .Ar snapshotID : Ns Ar path ...
 .Sh DESCRIPTION
@@ -21,8 +21,8 @@ highlighting based on the file type.
 .Pp
 The options are as follows:
 .Bl -tag -width Ds
-.It Fl no-decompress
-Unless set, Plakar attempts to decompress application/gzip files.
+.It Fl decompress
+If set, Plakar attempts to decompress application/gzip files.
 .It Fl highlight
 Apply syntax highlighting to the output based on the file type.
 .El

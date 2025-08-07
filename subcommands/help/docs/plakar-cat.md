@@ -7,7 +7,7 @@ PLAKAR-CAT(1) - General Commands Manual
 # SYNOPSIS
 
 **plakar&nbsp;cat**
-\[**-no-decompress**]
+\[**-decompress**]
 \[**-highlight**]
 *snapshotID*:*path&nbsp;...*
 
@@ -24,9 +24,9 @@ highlighting based on the file type.
 
 The options are as follows:
 
-**-no-decompress**
+**-decompress**
 
-> Unless set, Plakar attempts to decompress application/gzip files.
+> If set, Plakar attempts to decompress application/gzip files.
 
 **-highlight**
 
