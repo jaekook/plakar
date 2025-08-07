@@ -244,8 +244,15 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 
 	case "set":
-		if len(args) == 0 {
-			return fmt.Errorf("usage: plakar %s set <name> [<key>=<value>, ...]", cmd)
+		p := flag.NewFlagSet("set", flag.ExitOnError)
+		p.Usage = func() {
+			fmt.Fprintf(ctx.Stdout, "Usage: plakar %s %s <name> <key>=<value>...\n", cmd, p.Name())
+			p.PrintDefaults()
+		}
+		p.Parse(args)
+
+		if len(args) < 2 {
+			return fmt.Errorf("Usage: plakar %s %s <name> <key>=<value>...", cmd, p.Name())
 		}
 		name := normalizeName(args[0])
 		if !hasFunc(name) {
