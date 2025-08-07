@@ -265,6 +265,11 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		var opt_ini bool
 		var opt_yaml bool
 		p := flag.NewFlagSet("show", flag.ExitOnError)
+		p.Usage = func() {
+			fmt.Fprintf(ctx.Stdout, "Usage: plakar %s %s [<name>...]\n", cmd, p.Name())
+			p.PrintDefaults()
+		}
+
 		p.BoolVar(&opt_json, "json", false, "output in JSON format")
 		p.BoolVar(&opt_ini, "ini", false, "output in INI format")
 		p.BoolVar(&opt_yaml, "yaml", false, "output in YAML format (default)")
