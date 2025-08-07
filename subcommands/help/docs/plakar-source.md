@@ -57,11 +57,6 @@ The subcommands are as follows:
 > *sections*
 > are specified, only those sections will be imported.
 
-**ls**
-
-> Display the current sources configuration.
-> This is the default if no subcommand is specified.
-
 **ping** *name*
 
 > Try to open the data source identified by
