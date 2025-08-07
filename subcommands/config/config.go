@@ -305,8 +305,15 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return nil
 
 	case "unset":
+		p := flag.NewFlagSet("unset", flag.ExitOnError)
+		p.Usage = func() {
+			fmt.Fprintf(ctx.Stdout, "Usage: plakar %s %s <name> <key>...\n", cmd, p.Name())
+			p.PrintDefaults()
+		}
+		p.Parse(args)
+
 		if len(args) < 2 {
-			return fmt.Errorf("usage: plakar %s unset <name> <key>...", cmd)
+			return fmt.Errorf("Usage: plakar %s %s <name> <key>...", cmd, p.Name())
 		}
 		name := normalizeName(args[0])
 		if !hasFunc(name) {
