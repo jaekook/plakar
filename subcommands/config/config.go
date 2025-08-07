@@ -300,8 +300,8 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return nil
 
 	case "unset":
-		if len(args) == 0 {
-			return fmt.Errorf("usage: plakar %s unset <name> [<key>, ...]", cmd)
+		if len(args) < 2 {
+			return fmt.Errorf("usage: plakar %s unset <name> <key>...", cmd)
 		}
 		name := normalizeName(args[0])
 		if !hasFunc(name) {
