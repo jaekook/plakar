@@ -97,8 +97,15 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 
 	switch subcmd {
 	case "add":
+		p := flag.NewFlagSet("add", flag.ExitOnError)
+		p.Usage = func() {
+			fmt.Fprintf(ctx.Stdout, "Usage: plakar %s %s <name> <location> [<key>=<value>...]\n", cmd, p.Name())
+			p.PrintDefaults()
+		}
+		p.Parse(args)
+
 		if len(args) < 2 {
-			return fmt.Errorf("usage: plakar %s %s <name> <location> [<key>=<value>, ...]", cmd, subcmd)
+			return fmt.Errorf("Usage: plakar %s %s <name> <location> [<key>=<value>...]", cmd, p.Name())
 		}
 
 		name, location := normalizeName(args[0]), normalizeLocation(args[1])
@@ -111,7 +118,7 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		for _, kv := range args[2:] {
 			key, val, found := strings.Cut(kv, "=")
 			if !found || key == "" {
-				return fmt.Errorf("usage: plakar %s %s <name> <location> [<key>=<value>, ...]", cmd, subcmd)
+				return fmt.Errorf("Usage: plakar %s %s <name> <location> [<key>=<value>...]", cmd, p.Name())
 			}
 			cfgMap[name][key] = val
 		}
