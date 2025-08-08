@@ -125,7 +125,6 @@ func (cmd *Restore) Execute(ctx *appcontext.AppContext, repo *repository.Reposit
 
 			locateOptions := locate.NewDefaultLocateOptions()
 			locateOptions.MaxConcurrency = ctx.MaxConcurrency
-			locateOptions.SortOrder = locate.LocateSortOrderDescending
 			locateOptions.Latest = true
 			locateOptions.Name = cmd.OptName
 			locateOptions.Category = cmd.OptCategory
