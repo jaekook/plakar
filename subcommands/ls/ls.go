@@ -59,7 +59,6 @@ func (cmd *Ls) Parse(ctx *appcontext.AppContext, args []string) error {
 		return fmt.Errorf("too many arguments")
 	}
 
-	cmd.LocateOptions.SortOrder = locate.LocateSortOrderDescending
 	cmd.RepositorySecret = ctx.GetSecret()
 	cmd.Path = flags.Arg(0)
 
@@ -91,6 +90,7 @@ func (cmd *Ls) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 
 func (cmd *Ls) list_snapshots(ctx *appcontext.AppContext, repo *repository.Repository) error {
 	cmd.LocateOptions.MaxConcurrency = ctx.MaxConcurrency
+	cmd.LocateOptions.SortOrder = locate.LocateSortOrderDescending
 
 	snapshotIDs, err := locate.LocateSnapshotIDs(repo, cmd.LocateOptions)
 	if err != nil {
