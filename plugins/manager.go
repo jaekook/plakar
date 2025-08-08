@@ -154,6 +154,9 @@ func (mgr *Manager) FindInstalledPackage(name string) (Package, error) {
 		if pkg.PkgName() == name {
 			return pkg, nil
 		}
+		if pkg.PkgNameAndVersion() == name {
+			return pkg, nil
+		}
 	}
 	return Package{}, fmt.Errorf("package not installed")
 }
