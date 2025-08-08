@@ -230,17 +230,25 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 			}
 		} else {
 			for _, requestedName := range flags.Args() {
-				if hasFunc(requestedName) && !opt_overwrite {
-					fmt.Fprintf(ctx.Stderr, "%s %q already exists, skipping\n", cmd, requestedName)
+				origName, targetName, found := strings.Cut(requestedName, ":")
+				if !found {
+					targetName = normalizeName(origName)
+				}
+				if origName == "" || targetName == "" {
+					fmt.Fprintf(ctx.Stderr, "%s empty section name in %q, skipping\n", cmd, requestedName)
 					continue
 				}
-				if section, ok := newConfMap[requestedName]; !ok {
-					fmt.Fprintf(ctx.Stderr, "%s %q does not exist in config", cmd, requestedName)
+
+				if hasFunc(targetName) && !opt_overwrite {
+					fmt.Fprintf(ctx.Stderr, "%s %q already exists, skipping\n", cmd, targetName)
+					continue
+				}
+				if section, ok := newConfMap[origName]; !ok {
+					fmt.Fprintf(ctx.Stderr, "%s %q does not exist in config\n", cmd, origName)
 					continue
 				} else {
-					name := normalizeName(requestedName)
-					cfgMap[name] = make(map[string]string)
-					maps.Copy(cfgMap[name], section)
+					cfgMap[targetName] = make(map[string]string)
+					maps.Copy(cfgMap[targetName], section)
 				}
 			}
 		}

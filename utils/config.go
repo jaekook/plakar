@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"gopkg.in/ini.v1"
 
@@ -310,9 +311,15 @@ func GetConf(rd io.Reader, thirdParty string) (map[string]map[string]string, err
 
 	if thirdParty != "" {
 		for _, section := range configMap {
+			var ignore []string
 			for key, value := range section {
+				if slices.Contains(ignore, key) {
+					continue
+				}
 				if value != "" {
-					section[thirdParty+"_"+key] = value
+					newKey := thirdParty + "_" + key
+					section[newKey] = value
+					ignore = append(ignore, newKey)
 				}
 				delete(section, key)
 			}
