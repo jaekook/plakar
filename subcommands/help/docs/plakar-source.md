@@ -44,18 +44,23 @@ The subcommands are as follows:
 
 > Import a configuration from either stdin (default),
 > a file, or a URL.
+
 > If
 > *location*
 > is specified, the input will be read from that file or URL.
+
 > If
 > **-overwrite**
 > is specified, existing sections will be overwritten by new ones.
+
 > If
 > **-rclone**
 > is specified, the input will be treated as an rclone configuration.
+
 > If
 > *sections*
 > are specified, only those sections will be imported.
+> A section can be renamed on import by appending a colon and the new name.
 
 **ping** *name*
 
