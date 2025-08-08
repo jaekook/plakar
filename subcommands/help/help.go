@@ -27,6 +27,7 @@ import (
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/charmbracelet/glamour"
 	"github.com/muesli/termenv"
+	"golang.org/x/term"
 )
 
 //go:embed docs/*
@@ -76,9 +77,26 @@ func (cmd *Help) Execute(ctx *appcontext.AppContext, repo *repository.Repository
 		return 1, err
 	}
 
+	disableColors := false
+	if _, nocolor := os.LookupEnv("NO_COLOR"); nocolor {
+		disableColors = true
+	} else if !term.IsTerminal(int(os.Stdout.Fd())) {
+		disableColors = true
+	}
+
+	options := []glamour.TermRendererOption{}
+	if disableColors {
+		options = []glamour.TermRendererOption{
+			glamour.WithColorProfile(termenv.Ascii),
+		}
+	} else {
+		options = []glamour.TermRendererOption{
+			glamour.WithStandardStyle(cmd.Style),
+			glamour.WithColorProfile(termenv.TrueColor),
+		}
+	}
 	r, err := glamour.NewTermRenderer(
-		glamour.WithStandardStyle(cmd.Style),
-		glamour.WithColorProfile(termenv.TrueColor),
+		options...,
 	)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to create renderer: %s\n", err)
@@ -90,6 +108,7 @@ func (cmd *Help) Execute(ctx *appcontext.AppContext, repo *repository.Repository
 		fmt.Fprintf(os.Stderr, "failed to render: %s\n", err)
 		return 1, err
 	}
+
 	fmt.Print(string(out))
 
 	return 0, err
