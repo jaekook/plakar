@@ -47,7 +47,6 @@ func (cmd *Sync) Parse(ctx *appcontext.AppContext, args []string) error {
 		flags.PrintDefaults()
 	}
 	cmd.SrcLocateOptions.InstallFlags(flags)
-	cmd.SrcLocateOptions.SortOrder = locate.LocateSortOrderDescending
 
 	flags.Parse(args)
 

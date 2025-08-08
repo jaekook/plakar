@@ -29,7 +29,6 @@ func (s *Scheduler) backupTask(taskset Task, task BackupConfig) {
 	rmSubcommand := &rm.Rm{}
 	rmSubcommand.Flags = subcommands.AgentSupport
 	rmSubcommand.LocateOptions = locate.NewDefaultLocateOptions()
-	rmSubcommand.LocateOptions.SortOrder = locate.LocateSortOrderDescending
 	rmSubcommand.LocateOptions.Job = task.Name
 
 	for {
@@ -66,7 +65,6 @@ func (s *Scheduler) checkTask(taskset Task, task CheckConfig) {
 	checkSubcommand.LocateOptions = locate.NewDefaultLocateOptions()
 	checkSubcommand.LocateOptions.Job = taskset.Name
 	checkSubcommand.LocateOptions.Latest = task.Latest
-	checkSubcommand.LocateOptions.SortOrder = locate.LocateSortOrderDescending
 
 	checkSubcommand.Silent = true
 	if task.Path != "" {
@@ -176,7 +174,6 @@ func (s *Scheduler) maintenanceTask(task MaintenanceConfig) {
 	rmSubcommand.Flags = subcommands.AgentSupport
 	rmSubcommand.LocateOptions = locate.NewDefaultLocateOptions()
 	rmSubcommand.LocateOptions.Job = "maintenance"
-	rmSubcommand.LocateOptions.SortOrder = locate.LocateSortOrderDescending
 
 	for {
 		tick := time.After(task.Interval)

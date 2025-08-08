@@ -190,8 +190,13 @@ func LocateSnapshotIDs(repo *repository.Repository, opts *LocateOptions) ([]obje
 	}
 	wg.Wait()
 
-	if opts.SortOrder != LocateSortOrderNone {
-		if opts.SortOrder == LocateSortOrderAscending {
+	sortOrder := opts.SortOrder
+	if opts.Latest && sortOrder == LocateSortOrderNone {
+		sortOrder = LocateSortOrderDescending
+	}
+
+	if sortOrder != LocateSortOrderNone {
+		if sortOrder == LocateSortOrderAscending {
 			sort.SliceStable(workSet, func(i, j int) bool {
 				return workSet[i].timestamp.Before(workSet[j].timestamp)
 			})

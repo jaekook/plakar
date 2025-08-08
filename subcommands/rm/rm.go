@@ -51,7 +51,6 @@ func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
 		return fmt.Errorf("no filter specified, not going to remove everything")
 	}
 
-	cmd.LocateOptions.SortOrder = locate.LocateSortOrderDescending
 	cmd.RepositorySecret = ctx.GetSecret()
 	cmd.Snapshots = flags.Args()
 
