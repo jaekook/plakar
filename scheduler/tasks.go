@@ -65,7 +65,6 @@ func (s *Scheduler) checkTask(taskset Task, task CheckConfig) {
 	checkSubcommand.LocateOptions = locate.NewDefaultLocateOptions()
 	checkSubcommand.LocateOptions.Job = taskset.Name
 	checkSubcommand.LocateOptions.Latest = task.Latest
-
 	checkSubcommand.Silent = true
 	if task.Path != "" {
 		checkSubcommand.Snapshots = []string{":" + task.Path}
@@ -97,7 +96,6 @@ func (s *Scheduler) restoreTask(taskset Task, task RestoreConfig) {
 	restoreSubcommand.OptJob = taskset.Name
 	restoreSubcommand.Target = task.Target
 	restoreSubcommand.Silent = true
-
 	if task.Path != "" {
 		restoreSubcommand.Snapshots = []string{":" + task.Path}
 	}
