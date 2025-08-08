@@ -53,7 +53,7 @@ func (cmd *Locate) Parse(ctx *appcontext.AppContext, args []string) error {
 	}
 
 	cmd.LocateOptions.MaxConcurrency = ctx.MaxConcurrency
-	cmd.LocateOptions.SortOrder = plocate.LocateSortOrderAscending
+	cmd.LocateOptions.SortOrder = plocate.LocateSortOrderDescending
 	cmd.RepositorySecret = ctx.GetSecret()
 	cmd.Patterns = flags.Args()
 
