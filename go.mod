@@ -4,11 +4,11 @@ go 1.23.4
 
 require (
 	github.com/PlakarKorp/go-human2duration v0.1.6
-	github.com/PlakarKorp/integration-fs v1.0.5
-	github.com/PlakarKorp/integration-grpc v1.0.1
-	github.com/PlakarKorp/integration-ptar v1.0.0-beta.1
-	github.com/PlakarKorp/integration-stdio v0.1.0-beta.2
-	github.com/PlakarKorp/kloset v1.0.1
+	github.com/PlakarKorp/integration-fs v1.0.6
+	github.com/PlakarKorp/integration-grpc v1.0.3
+	github.com/PlakarKorp/integration-ptar v1.0.0
+	github.com/PlakarKorp/integration-stdio v1.0.0
+	github.com/PlakarKorp/kloset v1.0.2
 	github.com/alecthomas/chroma v0.10.0
 	github.com/anacrolix/fuse v0.3.1
 	github.com/charmbracelet/bubbletea v1.3.6
@@ -29,10 +29,10 @@ require (
 	github.com/wagslane/go-password-validator v0.3.0
 	go.omarpolo.com/ttlmap v0.0.0-20231012080932-0154c95c7516
 	go.yaml.in/yaml/v3 v3.0.4
-	golang.org/x/mod v0.26.0
+	golang.org/x/mod v0.27.0
 	golang.org/x/sync v0.16.0
-	golang.org/x/sys v0.34.0
-	golang.org/x/term v0.33.0
+	golang.org/x/sys v0.35.0
+	golang.org/x/term v0.34.0
 	golang.org/x/tools v0.35.0
 	google.golang.org/grpc v1.74.2
 	gopkg.in/ini.v1 v1.67.0
@@ -109,12 +109,12 @@ require (
 	github.com/yuin/goldmark-emoji v1.0.5 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.40.0 // indirect
+	golang.org/x/crypto v0.41.0 // indirect
 	golang.org/x/exp v0.0.0-20250718183923-645b1fa84792 // indirect
-	golang.org/x/net v0.42.0 // indirect
-	golang.org/x/text v0.27.0 // indirect
+	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/text v0.28.0 // indirect
 	google.golang.org/genproto v0.0.0-20250728155136-f173205681a0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20250728155136-f173205681a0 // indirect
-	google.golang.org/protobuf v1.36.6 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20250804133106-a7a43d27e69b // indirect
+	google.golang.org/protobuf v1.36.7 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
