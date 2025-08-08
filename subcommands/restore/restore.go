@@ -103,7 +103,7 @@ func (cmd *Restore) Execute(ctx *appcontext.AppContext, repo *repository.Reposit
 	if len(cmd.Snapshots) == 0 {
 		locateOptions := locate.NewDefaultLocateOptions()
 		locateOptions.MaxConcurrency = ctx.MaxConcurrency
-		locateOptions.SortOrder = locate.LocateSortOrderAscending
+		locateOptions.SortOrder = locate.LocateSortOrderDescending
 		locateOptions.Latest = true
 
 		locateOptions.Name = cmd.OptName
@@ -126,8 +126,6 @@ func (cmd *Restore) Execute(ctx *appcontext.AppContext, repo *repository.Reposit
 
 			locateOptions := locate.NewDefaultLocateOptions()
 			locateOptions.MaxConcurrency = ctx.MaxConcurrency
-			locateOptions.SortOrder = locate.LocateSortOrderAscending
-			locateOptions.Latest = true
 
 			locateOptions.Name = cmd.OptName
 			locateOptions.Category = cmd.OptCategory
