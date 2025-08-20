@@ -66,7 +66,11 @@ func (e *tagFlags) Set(value string) error {
 }
 
 func (e *tagFlags) asList() []string {
-	return strings.Split(string(*e), ",")
+	tags := string(*e)
+	if tags == "" {
+		return []string{}
+	}
+	return strings.Split(tags, ",")
 }
 
 func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
