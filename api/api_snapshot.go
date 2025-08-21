@@ -203,10 +203,7 @@ func (ui *uiserver) snapshotReader(w http.ResponseWriter, r *http.Request) error
 				}
 			}
 
-			// Check for end of file (EOF)
-			if err == io.EOF {
-				break
-			} else if err != nil {
+			if err != nil {
 				break
 			}
 		}
