@@ -8,7 +8,7 @@ require (
 	github.com/PlakarKorp/integration-grpc v1.0.3
 	github.com/PlakarKorp/integration-ptar v1.0.0
 	github.com/PlakarKorp/integration-stdio v1.0.0
-	github.com/PlakarKorp/kloset v1.0.2
+	github.com/PlakarKorp/kloset v1.0.3-0.20250821123147-4a6983d22fd3
 	github.com/alecthomas/chroma v0.10.0
 	github.com/anacrolix/fuse v0.3.1
 	github.com/charmbracelet/bubbletea v1.3.6
@@ -40,7 +40,7 @@ require (
 
 require (
 	github.com/DataDog/zstd v1.5.7 // indirect
-	github.com/PlakarKorp/go-cdc-chunkers v1.0.1 // indirect
+	github.com/PlakarKorp/go-cdc-chunkers v1.0.2 // indirect
 	github.com/alecthomas/chroma/v2 v2.15.0 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect

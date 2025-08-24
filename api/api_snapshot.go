@@ -188,7 +188,7 @@ func (ui *uiserver) snapshotReader(w http.ResponseWriter, r *http.Request) error
 		buffer := make([]byte, 4096) // Fixed-size buffer for chunked reading
 		for {
 			n, err := reader.Read(buffer) // Read up to the size of the buffer
-			if n > 0 {
+			if n >= 0 {
 				chunk := string(buffer[:n])
 
 				// Tokenize the chunk and apply syntax highlighting
@@ -203,10 +203,7 @@ func (ui *uiserver) snapshotReader(w http.ResponseWriter, r *http.Request) error
 				}
 			}
 
-			// Check for end of file (EOF)
-			if err == io.EOF {
-				break
-			} else if err != nil {
+			if err != nil {
 				break
 			}
 		}

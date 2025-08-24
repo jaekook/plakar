@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os/user"
+	"strings"
 	"time"
 
 	"github.com/PlakarKorp/kloset/objects"
@@ -51,6 +52,8 @@ func (cmd *Ls) Parse(ctx *appcontext.AppContext, args []string) error {
 
 	flags.BoolVar(&cmd.DisplayUUID, "uuid", false, "display uuid instead of short ID")
 	flags.BoolVar(&cmd.Recursive, "recursive", false, "recursive listing")
+	flags.BoolVar(&cmd.ShowTags, "tags", false, "show tags")
+
 	cmd.LocateOptions.InstallFlags(flags)
 
 	flags.Parse(args)
@@ -72,6 +75,8 @@ type Ls struct {
 	Recursive     bool
 	DisplayUUID   bool
 	Path          string
+
+	ShowTags bool
 }
 
 func (cmd *Ls) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
@@ -103,21 +108,31 @@ func (cmd *Ls) list_snapshots(ctx *appcontext.AppContext, repo *repository.Repos
 			return fmt.Errorf("ls: could not fetch snapshot: %w", err)
 		}
 
+		tags := ""
+		if cmd.ShowTags && len(snap.Header.Tags) > 0 {
+			tagList := strings.Join(snap.Header.Tags, ",")
+			if tagList != "" {
+				tags = " tags=" + strings.Join(snap.Header.Tags, ",")
+			}
+		}
+
 		if !cmd.DisplayUUID {
-			fmt.Fprintf(ctx.Stdout, "%s %10s%10s%10s %s\n",
+			fmt.Fprintf(ctx.Stdout, "%s %10s%10s%10s %s%s\n",
 				snap.Header.Timestamp.UTC().Format(time.RFC3339),
 				hex.EncodeToString(snap.Header.GetIndexShortID()),
 				humanize.IBytes(snap.Header.GetSource(0).Summary.Directory.Size+snap.Header.GetSource(0).Summary.Below.Size),
 				snap.Header.Duration.Round(time.Second),
-				utils.SanitizeText(snap.Header.GetSource(0).Importer.Directory))
+				utils.SanitizeText(snap.Header.GetSource(0).Importer.Directory),
+				tags)
 		} else {
 			indexID := snap.Header.GetIndexID()
-			fmt.Fprintf(ctx.Stdout, "%s %3s%10s%10s %s\n",
+			fmt.Fprintf(ctx.Stdout, "%s %3s%10s%10s %s%s\n",
 				snap.Header.Timestamp.UTC().Format(time.RFC3339),
 				hex.EncodeToString(indexID[:]),
 				humanize.IBytes(snap.Header.GetSource(0).Summary.Directory.Size+snap.Header.GetSource(0).Summary.Below.Size),
 				snap.Header.Duration.Round(time.Second),
-				utils.SanitizeText(snap.Header.GetSource(0).Importer.Directory))
+				utils.SanitizeText(snap.Header.GetSource(0).Importer.Directory),
+				tags)
 		}
 
 		snap.Close()

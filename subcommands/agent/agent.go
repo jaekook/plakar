@@ -30,7 +30,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/PlakarKorp/kloset/events"
 	"github.com/PlakarKorp/kloset/logging"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/storage"
@@ -341,25 +340,6 @@ func handleClient(ctx *appcontext.AppContext, conn net.Conn) {
 		defer repo.Close()
 	}
 
-	eventsDone := make(chan struct{})
-	eventsChan := clientContext.Events().Listen()
-	go func() {
-		for evt := range eventsChan {
-			serialized, err := events.Serialize(evt)
-			if err != nil {
-				clientContext.GetLogger().Warn("Failed to serialize event: %v", err)
-				fmt.Fprintf(clientContext.Stderr, "Failed to serialize event: %s\n", err)
-				return
-			}
-			// Send the event to the client
-			write(agent.Packet{
-				Type: "event",
-				Data: serialized,
-			})
-		}
-		eventsDone <- struct{}{}
-	}()
-
 	status, err := task.RunCommand(clientContext, subcommand, repo, "@agent")
 
 	errStr := ""
@@ -373,7 +353,6 @@ func handleClient(ctx *appcontext.AppContext, conn net.Conn) {
 	})
 
 	clientContext.Close()
-	<-eventsDone
 }
 
 type CustomWriter struct {

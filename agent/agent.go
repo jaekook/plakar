@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/PlakarKorp/kloset/events"
 	"github.com/PlakarKorp/plakar/appcontext"
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/PlakarKorp/plakar/utils"
@@ -199,12 +198,6 @@ func (c *Client) SendCommand(ctx *appcontext.AppContext, name []string, cmd subc
 			fmt.Printf("%s", string(response.Data))
 		case "stderr":
 			fmt.Fprintf(os.Stderr, "%s", string(response.Data))
-		case "event":
-			evt, err := events.Deserialize(response.Data)
-			if err != nil {
-				return 1, fmt.Errorf("failed to deserialize event: %w", err)
-			}
-			ctx.Events().Send(evt)
 		case "exit":
 			var err error
 			if response.Err != "" {
