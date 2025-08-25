@@ -32,6 +32,17 @@ import (
 	"github.com/PlakarKorp/plakar/subcommands"
 )
 
+type Rm struct {
+	subcommands.SubcommandBase
+
+	LocateOptions *locate.LocateOptions
+	PolicyOptions *policy.PolicyOptions
+
+	Snapshots []string
+
+	Plan bool
+}
+
 func init() {
 	subcommands.Register(func() subcommands.Subcommand { return &Rm{} }, subcommands.AgentSupport, "rm")
 }
@@ -61,17 +72,6 @@ func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
 	cmd.Snapshots = flags.Args()
 
 	return nil
-}
-
-type Rm struct {
-	subcommands.SubcommandBase
-
-	LocateOptions *locate.LocateOptions
-	PolicyOptions *policy.PolicyOptions
-
-	Snapshots []string
-
-	Plan bool
 }
 
 func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
@@ -176,7 +176,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 			if cmd.PolicyOptions.Empty() {
 				entry.action = "delete"
 				if cmd.LocateOptions.Empty() {
-					entry.reason = policy.Reason{Action: "delete", Note: "requested explicitely"}
+					entry.reason = policy.Reason{Action: "delete", Note: "requested explicitly"}
 				} else {
 					entry.reason = policy.Reason{Action: "delete", Note: "matches location filter"}
 				}
@@ -210,7 +210,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 			}
 			return ti.After(tj)
 		})
-		ctx.GetLogger().Info("rm -plan: would remove %d snapshot(s)", len(entries))
+		ctx.GetLogger().Info("rm -plan: would remove %d snapshot(s)", len(toDelete))
 		ctx.GetLogger().Info("rm -plan: policy evaluation results:")
 		for _, e := range entries {
 			r := e.reason
