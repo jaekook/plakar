@@ -103,7 +103,10 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 
 	tsByID := make(map[string]time.Time, len(snapshots))
 
-	if !cmd.PolicyOptions.Empty() {
+	if cmd.PolicyOptions.Empty() {
+		// No policy provided → default behavior: delete everything selected.
+		toDelete = append(toDelete, snapshots...)
+	} else {
 		// Build policy items with timestamps
 		items := make([]policy.Item, 0, len(snapshots))
 		for _, id := range snapshots {
@@ -144,107 +147,79 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 				toDelete = append(toDelete, id)
 			}
 		}
-	} else {
-		// No policy provided → default behavior: delete everything selected.
-		toDelete = append(toDelete, snapshots...)
 	}
 
 	if cmd.Plan {
-		if !cmd.PolicyOptions.Empty() {
-			type planEntry struct {
-				id     objects.MAC
-				key    string
-				ts     time.Time
-				reason policy.Reason
-				action string // "keep" or "delete"
-			}
+		type planEntry struct {
+			id     objects.MAC
+			key    string
+			ts     time.Time
+			reason policy.Reason
+			action string // "keep" or "delete"
+		}
 
-			// Build entries
-			entries := make([]planEntry, 0, len(snapshots))
-			for _, id := range snapshots {
-				key := fmt.Sprintf("%x", id[:])
-				r, ok := reasons[key]
-				// Default to "skip" if we couldn't evaluate (e.g., missing timestamp)
-				action := "delete"
-				if _, del := planned[key]; !del {
-					action = "keep"
-				}
-				if !ok {
-					r = policy.Reason{Action: "delete", Note: "not evaluated by policy"}
-					action = "skip"
-				}
-				entries = append(entries, planEntry{
-					id:     id,
-					key:    key,
-					ts:     tsByID[key], // zero if missing
-					reason: r,
-					action: action,
-				})
-			}
-
-			// Sort newest-first; unknown timestamps (IsZero) go last
-			sort.SliceStable(entries, func(i, j int) bool {
-				ti, tj := entries[i].ts, entries[j].ts
-				if ti.IsZero() && tj.IsZero() {
-					return entries[i].key < entries[j].key // stable tiebreak
-				}
-				if ti.IsZero() {
-					return false
-				}
-				if tj.IsZero() {
-					return true
-				}
-				return ti.After(tj)
-			})
-
-			ctx.GetLogger().Info("rm -plan: policy evaluation results:")
-			for _, e := range entries {
-				r := e.reason
-				switch {
-				case r.Rule == "":
-					ctx.GetLogger().Info("  %x  action=%s  rule=<none>  note=%s", e.id[:4], e.action, r.Note)
-				default:
-					ctx.GetLogger().Info("  %x  action=%s  rule=%s bucket=%s rank=%d cap=%d note=%s",
-						e.id[:4], e.action, r.Rule, r.Bucket, r.Rank, r.Cap, r.Note)
-				}
-			}
-
-			// Keep the summary count as-is
-			ctx.GetLogger().Info("rm -plan: would remove %d snapshot(s)", len(toDelete))
-		} else {
-			// No policy → just sort by newest-first too (if you can fetch timestamps quickly)
-			// If you prefer, keep as-is. Here's a sorted variant using the same lookup:
-			type planEntry struct {
-				id objects.MAC
-				ts time.Time
-			}
-			entries := make([]planEntry, 0, len(snapshots))
-			for _, id := range snapshots {
+		// Build entries
+		entries := make([]planEntry, 0, len(snapshots))
+		for _, id := range snapshots {
+			key := fmt.Sprintf("%x", id[:])
+			ts, ok := tsByID[key]
+			if !ok {
 				snap, err := snapshot.Load(repo, id)
 				if err != nil {
 					ctx.GetLogger().Warn("rm -plan: skipping %x for timestamp lookup: %v", id[:4], err)
 					continue
 				}
-				ts := snap.Header.Timestamp
+				ts = snap.Header.Timestamp
 				snap.Close()
-				entries = append(entries, planEntry{id: id, ts: ts})
 			}
-			sort.SliceStable(entries, func(i, j int) bool {
-				ti, tj := entries[i].ts, entries[j].ts
-				if ti.IsZero() && tj.IsZero() {
-					return fmt.Sprintf("%x", entries[i].id[:]) < fmt.Sprintf("%x", entries[j].id[:])
+			entry := planEntry{id: id, key: key, ts: ts}
+			if cmd.PolicyOptions.Empty() {
+				entry.action = "delete"
+				if cmd.LocateOptions.Empty() {
+					entry.reason = policy.Reason{Action: "delete", Note: "requested explicitely"}
+				} else {
+					entry.reason = policy.Reason{Action: "delete", Note: "matches location filter"}
 				}
-				if ti.IsZero() {
-					return false
+			} else {
+				r, ok := reasons[key]
+				// Default to "skip" if we couldn't evaluate (e.g., missing timestamp)
+				entry.reason = r
+				entry.action = "delete"
+				if _, del := planned[key]; !del {
+					entry.action = "keep"
 				}
-				if tj.IsZero() {
-					return true
+				if !ok {
+					entry.reason = policy.Reason{Action: "delete", Note: "not evaluated by policy"}
+					entry.action = "skip"
 				}
-				return ti.After(tj)
-			})
-			ctx.GetLogger().Info("rm -plan: would remove %d snapshot(s):", len(entries))
-			for _, e := range entries {
-				ctx.GetLogger().Info("  %x", e.id[:4])
+			}
+			entries = append(entries, entry)
+		}
+
+		// Sort newest-first; unknown timestamps (IsZero) go last
+		sort.SliceStable(entries, func(i, j int) bool {
+			ti, tj := entries[i].ts, entries[j].ts
+			if ti.IsZero() && tj.IsZero() {
+				return entries[i].key < entries[j].key // stable tiebreak
+			}
+			if ti.IsZero() {
+				return false
+			}
+			if tj.IsZero() {
+				return true
+			}
+			return ti.After(tj)
+		})
+		ctx.GetLogger().Info("rm -plan: would remove %d snapshot(s)", len(entries))
+		ctx.GetLogger().Info("rm -plan: policy evaluation results:")
+		for _, e := range entries {
+			r := e.reason
+			t := e.ts.UTC().Format(time.RFC3339)
+			if r.Rule == "" {
+				fmt.Fprintf(ctx.Stdout, "%s   %x action=%s  note=%s\n", t, e.id[:4], e.action, r.Note)
+			} else {
+				fmt.Fprintf(ctx.Stdout, "%s   %x action=%s  rule=%s bucket=%s rank=%d cap=%d note=%s\n",
+					t, e.id[:4], e.action, r.Rule, r.Bucket, r.Rank, r.Cap, r.Note)
 			}
 		}
 		return 0, nil
@@ -256,33 +231,31 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 		return 0, nil
 	}
 
-	if len(toDelete) > 1 {
-		sort.SliceStable(toDelete, func(i, j int) bool {
-			ki := fmt.Sprintf("%x", toDelete[i][:])
-			kj := fmt.Sprintf("%x", toDelete[j][:])
-			// best-effort timestamp fetch; if it fails, push unknowns last
-			ti := time.Time{}
-			tj := time.Time{}
-			if snap, err := snapshot.Load(repo, toDelete[i]); err == nil {
-				ti = snap.Header.Timestamp
-				snap.Close()
-			}
-			if snap, err := snapshot.Load(repo, toDelete[j]); err == nil {
-				tj = snap.Header.Timestamp
-				snap.Close()
-			}
-			if ti.IsZero() && tj.IsZero() {
-				return ki < kj
-			}
-			if ti.IsZero() {
-				return false
-			}
-			if tj.IsZero() {
-				return true
-			}
-			return ti.After(tj)
-		})
-	}
+	sort.SliceStable(toDelete, func(i, j int) bool {
+		ki := fmt.Sprintf("%x", toDelete[i][:])
+		kj := fmt.Sprintf("%x", toDelete[j][:])
+		// best-effort timestamp fetch; if it fails, push unknowns last
+		ti := time.Time{}
+		tj := time.Time{}
+		if snap, err := snapshot.Load(repo, toDelete[i]); err == nil {
+			ti = snap.Header.Timestamp
+			snap.Close()
+		}
+		if snap, err := snapshot.Load(repo, toDelete[j]); err == nil {
+			tj = snap.Header.Timestamp
+			snap.Close()
+		}
+		if ti.IsZero() && tj.IsZero() {
+			return ki < kj
+		}
+		if ti.IsZero() {
+			return false
+		}
+		if tj.IsZero() {
+			return true
+		}
+		return ti.After(tj)
+	})
 
 	errors := 0
 	wg := sync.WaitGroup{}
@@ -303,6 +276,6 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 	if errors != 0 {
 		return 1, fmt.Errorf("failed to remove %d snapshots", errors)
 	}
-	return 0, nil
 
+	return 0, nil
 }
