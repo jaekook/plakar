@@ -17,9 +17,11 @@
 package rm
 
 import (
+	"encoding/hex"
 	"flag"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -30,6 +32,8 @@ import (
 	"github.com/PlakarKorp/plakar/appcontext"
 	"github.com/PlakarKorp/plakar/locate"
 	"github.com/PlakarKorp/plakar/subcommands"
+	"github.com/PlakarKorp/plakar/utils"
+	"github.com/dustin/go-humanize"
 )
 
 type Rm struct {
@@ -151,9 +155,11 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 
 	if cmd.Plan {
 		type planEntry struct {
+			prefix string
 			id     objects.MAC
 			key    string
 			ts     time.Time
+
 			reason policy.Reason
 			action string // "keep" or "delete"
 		}
@@ -162,17 +168,27 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 		entries := make([]planEntry, 0, len(snapshots))
 		for _, id := range snapshots {
 			key := fmt.Sprintf("%x", id[:])
-			ts, ok := tsByID[key]
-			if !ok {
-				snap, err := snapshot.Load(repo, id)
-				if err != nil {
-					ctx.GetLogger().Warn("rm -plan: skipping %x for timestamp lookup: %v", id[:4], err)
-					continue
-				}
-				ts = snap.Header.Timestamp
-				snap.Close()
+			snap, err := snapshot.Load(repo, id)
+			if err != nil {
+				ctx.GetLogger().Warn("rm -plan: skipping %x for timestamp lookup: %v", id[:4], err)
+				continue
 			}
-			entry := planEntry{id: id, key: key, ts: ts}
+
+			tags := ""
+			tagList := strings.Join(snap.Header.Tags, ",")
+			if tagList != "" {
+				tags = " tags=" + strings.Join(snap.Header.Tags, ",")
+			}
+			prefix := fmt.Sprintf("%s %10s%10s%10s %s%s",
+				snap.Header.Timestamp.UTC().Format(time.RFC3339),
+				hex.EncodeToString(snap.Header.GetIndexShortID()),
+				humanize.IBytes(snap.Header.GetSource(0).Summary.Directory.Size+snap.Header.GetSource(0).Summary.Below.Size),
+				snap.Header.Duration.Round(time.Second),
+				utils.SanitizeText(snap.Header.GetSource(0).Importer.Directory),
+				tags)
+			snap.Close()
+			entry := planEntry{prefix: prefix, id: id, key: key, ts: snap.Header.Timestamp}
+
 			if cmd.PolicyOptions.Empty() {
 				entry.action = "delete"
 				if cmd.LocateOptions.Empty() {
@@ -210,16 +226,22 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 			}
 			return ti.After(tj)
 		})
-		ctx.GetLogger().Info("rm -plan: would remove %d snapshot(s)", len(toDelete))
-		ctx.GetLogger().Info("rm -plan: policy evaluation results:")
+		fmt.Fprintf(ctx.Stdout, "rm -plan: would remove %d snapshot(s)\n", len(toDelete))
+		fmt.Fprint(ctx.Stdout, "rm -plan: policy evaluation results:\n")
+		l := 0
 		for _, e := range entries {
+			l = max(l, len(e.prefix))
+		}
+		for _, e := range entries {
+			for len(e.prefix) < l {
+				e.prefix += " "
+			}
 			r := e.reason
-			t := e.ts.UTC().Format(time.RFC3339)
 			if r.Rule == "" {
-				fmt.Fprintf(ctx.Stdout, "%s   %x action=%s  note=%s\n", t, e.id[:4], e.action, r.Note)
+				fmt.Fprintf(ctx.Stdout, "%s action=%s  note=%s\n", e.prefix, e.action, r.Note)
 			} else {
-				fmt.Fprintf(ctx.Stdout, "%s   %x action=%s  rule=%s bucket=%s rank=%d cap=%d note=%s\n",
-					t, e.id[:4], e.action, r.Rule, r.Bucket, r.Rank, r.Cap, r.Note)
+				fmt.Fprintf(ctx.Stdout, "%s action=%s  rule=%s bucket=%s rank=%d cap=%d note=%s\n",
+					e.prefix, e.action, r.Rule, r.Bucket, r.Rank, r.Cap, r.Note)
 			}
 		}
 		return 0, nil
