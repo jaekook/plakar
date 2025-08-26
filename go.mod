@@ -5,7 +5,7 @@ go 1.23.4
 require (
 	github.com/PlakarKorp/go-human2duration v0.1.6
 	github.com/PlakarKorp/integration-fs v1.0.6
-	github.com/PlakarKorp/integration-grpc v1.0.3
+	github.com/PlakarKorp/integration-grpc v1.0.7
 	github.com/PlakarKorp/integration-ptar v1.0.0
 	github.com/PlakarKorp/integration-stdio v1.0.0
 	github.com/PlakarKorp/kloset v1.0.3-0.20250826081707-ce759ad18d46
