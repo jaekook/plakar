@@ -1,6 +1,8 @@
 package appcontext
 
 import (
+	"path/filepath"
+
 	"github.com/PlakarKorp/kloset/kcontext"
 	"github.com/PlakarKorp/kloset/snapshot/importer"
 	"github.com/PlakarKorp/plakar/cookies"
@@ -74,6 +76,10 @@ func (c *AppContext) SetPlugins(pluginsManager *plugins.Manager) {
 
 func (c *AppContext) GetPlugins() *plugins.Manager {
 	return c.plugins
+}
+
+func (c *AppContext) ConfigFile(filename string) string {
+	return filepath.Join(c.ConfigDir, filename)
 }
 
 func (c *AppContext) ReloadConfig() error {

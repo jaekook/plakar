@@ -52,8 +52,11 @@ func init() {
 }
 
 func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
+	policyName := ""
 	cmd.LocateOptions = locate.NewDefaultLocateOptions()
 	cmd.PolicyOptions = policy.NewDefaultPolicyOptions()
+
+	policyOverride := policy.NewDefaultPolicyOptions()
 
 	flags := flag.NewFlagSet("rm", flag.ExitOnError)
 	flags.Usage = func() {
@@ -62,9 +65,22 @@ func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
 		flags.PrintDefaults()
 	}
 	flags.BoolVar(&cmd.Plan, "plan", false, "show what would be removed (dry-run)")
+	flags.StringVar(&policyName, "policy", "", "policy to use")
 	cmd.LocateOptions.InstallFlags(flags)
-	cmd.PolicyOptions.InstallFlags(flags)
+	policyOverride.InstallFlags(flags)
 	flags.Parse(args)
+
+	if policyName != "" {
+		cfg, err := utils.LoadPolicyConfigFile(ctx.ConfigFile("policies.yml"))
+		if err != nil {
+			return fmt.Errorf("failed to load policies config: %w", err)
+		}
+		if !cfg.Has(policyName) {
+			return fmt.Errorf("policy %q not found", policyName)
+		}
+		cfg.ApplyConfig(policyName, cmd.PolicyOptions)
+	}
+	mergePolicyOptions(cmd.PolicyOptions, policyOverride)
 
 	if flags.NArg() != 0 && !cmd.LocateOptions.Empty() {
 		ctx.GetLogger().Warn("snapshot specified, filters will be ignored")
@@ -76,6 +92,24 @@ func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
 	cmd.Snapshots = flags.Args()
 
 	return nil
+}
+
+// override values in "from" if it is set in "to"
+func mergePolicyOptions(to *policy.PolicyOptions, from *policy.PolicyOptions) {
+	merge := func(a, b *policy.PeriodPolicy) {
+		if b.Keep != 0 {
+			a.Keep = b.Keep
+		}
+		if b.Cap != 0 {
+			a.Cap = b.Cap
+		}
+	}
+	merge(&to.Minute, &from.Minute)
+	merge(&to.Hour, &from.Hour)
+	merge(&to.Day, &from.Day)
+	merge(&to.Week, &from.Week)
+	merge(&to.Month, &from.Month)
+	merge(&to.Year, &from.Year)
 }
 
 func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
