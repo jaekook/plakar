@@ -103,12 +103,13 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 
 	var toDelete []objects.MAC
 	var reasons map[string]policy.Reason
+	var kept map[string]struct{}
 	var planned map[string]struct{}
 
 	tsByID := make(map[string]time.Time, len(snapshots))
 
 	if cmd.PolicyOptions.Empty() {
-		// No policy provided → default behavior: delete everything selected.
+		// No policy provided -> default behavior: delete everything selected.
 		toDelete = append(toDelete, snapshots...)
 	} else {
 		// Build policy items with timestamps
@@ -133,10 +134,9 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 		}
 
 		now := time.Now().UTC()
-		kept, rs := cmd.PolicyOptions.Select(items, now)
-		reasons = rs
+		kept, reasons = cmd.PolicyOptions.Select(items, now)
 
-		// any item not in kept → delete
+		// any item not in kept -> delete
 		planned = make(map[string]struct{}, len(items))
 		for _, it := range items {
 			if _, ok := kept[it.ItemID]; !ok {
@@ -252,32 +252,6 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 		ctx.GetLogger().Info("rm: nothing to remove")
 		return 0, nil
 	}
-
-	sort.SliceStable(toDelete, func(i, j int) bool {
-		ki := fmt.Sprintf("%x", toDelete[i][:])
-		kj := fmt.Sprintf("%x", toDelete[j][:])
-		// best-effort timestamp fetch; if it fails, push unknowns last
-		ti := time.Time{}
-		tj := time.Time{}
-		if snap, err := snapshot.Load(repo, toDelete[i]); err == nil {
-			ti = snap.Header.Timestamp
-			snap.Close()
-		}
-		if snap, err := snapshot.Load(repo, toDelete[j]); err == nil {
-			tj = snap.Header.Timestamp
-			snap.Close()
-		}
-		if ti.IsZero() && tj.IsZero() {
-			return ki < kj
-		}
-		if ti.IsZero() {
-			return false
-		}
-		if tj.IsZero() {
-			return true
-		}
-		return ti.After(tj)
-	})
 
 	errors := 0
 	wg := sync.WaitGroup{}
