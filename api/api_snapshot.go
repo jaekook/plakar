@@ -107,7 +107,11 @@ func (ui *uiserver) snapshotReader(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
-	file := entry.Open(fs)
+	file, err := entry.Open(fs)
+	if err != nil {
+		return err
+	}
+
 	defer file.Close()
 
 	if !entry.Stat().Mode().IsRegular() {
