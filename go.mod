@@ -8,7 +8,7 @@ require (
 	github.com/PlakarKorp/integration-grpc v1.0.3
 	github.com/PlakarKorp/integration-ptar v1.0.0
 	github.com/PlakarKorp/integration-stdio v1.0.0
-	github.com/PlakarKorp/kloset v1.0.3-0.20250821123147-4a6983d22fd3
+	github.com/PlakarKorp/kloset v1.0.3-0.20250826081707-ce759ad18d46
 	github.com/alecthomas/chroma v0.10.0
 	github.com/anacrolix/fuse v0.3.1
 	github.com/charmbracelet/bubbletea v1.3.6
@@ -56,7 +56,7 @@ require (
 	github.com/cockroachdb/errors v1.12.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
-	github.com/cockroachdb/pebble/v2 v2.0.6 // indirect
+	github.com/cockroachdb/pebble/v2 v2.0.7 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/swiss v0.0.0-20250624142022-d6e517c1d961 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect
