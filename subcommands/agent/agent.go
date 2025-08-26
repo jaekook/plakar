@@ -25,6 +25,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -43,8 +44,10 @@ import (
 )
 
 func init() {
-	subcommands.Register(func() subcommands.Subcommand { return &Agent{} },
-		subcommands.BeforeRepositoryOpen, "agent")
+	if runtime.GOOS != "windows" {
+		subcommands.Register(func() subcommands.Subcommand { return &Agent{} },
+			subcommands.BeforeRepositoryOpen, "agent")
+	}
 }
 
 func (cmd *Agent) Parse(ctx *appcontext.AppContext, args []string) error {

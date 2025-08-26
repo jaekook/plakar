@@ -159,7 +159,7 @@ func entryPoint() int {
 	ctx.CWD = cwd
 
 	_, envAgentLess := os.LookupEnv("PLAKAR_AGENTLESS")
-	if envAgentLess {
+	if envAgentLess || runtime.GOOS == "windows" {
 		opt_agentless = true
 	}
 
