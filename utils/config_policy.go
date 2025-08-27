@@ -121,7 +121,7 @@ func (c *policiesConfig) Dump(w io.Writer, format string, names []string) error 
 
 	for _, name := range names {
 		if !c.Has(name) {
-			return fmt.Errorf("entry %q not found")
+			return fmt.Errorf("entry %q not found", name)
 		}
 		var err error
 		switch format {
