@@ -45,7 +45,7 @@ type Rm struct {
 
 	Snapshots []string
 
-	Plan bool
+	Apply bool
 }
 
 func init() {
@@ -65,7 +65,7 @@ func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
 		fmt.Fprintf(flags.Output(), "\nOPTIONS:\n")
 		flags.PrintDefaults()
 	}
-	flags.BoolVar(&cmd.Plan, "plan", false, "show what would be removed (dry-run)")
+	flags.BoolVar(&cmd.Apply, "apply", false, "do the actual removal")
 	flags.StringVar(&policyName, "policy", "", "policy to use")
 	cmd.LocateOptions.InstallFlags(flags)
 	policyOverride.InstallFlags(flags)
@@ -189,7 +189,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 		}
 	}
 
-	if cmd.Plan {
+	if !cmd.Apply {
 		type planEntry struct {
 			prefix string
 			id     objects.MAC
@@ -206,7 +206,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 			key := fmt.Sprintf("%x", id[:])
 			snap, err := snapshot.Load(repo, id)
 			if err != nil {
-				ctx.GetLogger().Warn("rm -plan: skipping %x for timestamp lookup: %v", id[:4], err)
+				ctx.GetLogger().Warn("rm: skipping %x for timestamp lookup: %v", id[:4], err)
 				continue
 			}
 
@@ -262,8 +262,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 			}
 			return ti.After(tj)
 		})
-		fmt.Fprintf(ctx.Stdout, "rm -plan: would remove %d snapshot(s)\n", len(toDelete))
-		fmt.Fprint(ctx.Stdout, "rm -plan: policy evaluation results:\n")
+		fmt.Fprint(ctx.Stdout, "rm: policy evaluation results:\n")
 		l := 0
 		for _, e := range entries {
 			l = max(l, len(e.prefix))
@@ -280,6 +279,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 					e.prefix, e.action, r.Rule, r.Bucket, r.Rank, r.Cap, r.Note)
 			}
 		}
+		fmt.Fprintf(ctx.Stdout, "rm: would remove %d snapshot(s), run with -apply to proceed\n", len(toDelete))
 		return 0, nil
 	}
 
