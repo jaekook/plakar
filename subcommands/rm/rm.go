@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -71,7 +72,8 @@ func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.Parse(args)
 
 	if policyName != "" {
-		cfg, err := utils.LoadPolicyConfigFile(ctx.ConfigFile("policies.yml"))
+		configFile := filepath.Join(ctx.ConfigDir, "policies.yml")
+		cfg, err := utils.LoadPolicyConfigFile(configFile)
 		if err != nil {
 			return fmt.Errorf("failed to load policies config: %w", err)
 		}

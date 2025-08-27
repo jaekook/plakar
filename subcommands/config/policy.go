@@ -3,6 +3,7 @@ package config
 import (
 	"flag"
 	"fmt"
+	"path/filepath"
 	"strings"
 
 	"github.com/PlakarKorp/kloset/repository"
@@ -50,7 +51,7 @@ func (cmd *ConfigPolicyCmd) Execute(ctx *appcontext.AppContext, repo *repository
 }
 
 func dispatchPolicy(ctx *appcontext.AppContext, cmd, subcmd string, args []string) error {
-	configFile := ctx.ConfigFile("policies.yml")
+	configFile := filepath.Join(ctx.ConfigDir, "policies.yml")
 	config, err := utils.LoadPolicyConfigFile(configFile)
 	if err != nil {
 		return fmt.Errorf("failed to load config file: %w", err)
