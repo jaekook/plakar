@@ -20,6 +20,7 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -44,7 +45,7 @@ type Rm struct {
 
 	Snapshots []string
 
-	Plan bool
+	Apply bool
 }
 
 func init() {
@@ -52,8 +53,11 @@ func init() {
 }
 
 func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
+	policyName := ""
 	cmd.LocateOptions = locate.NewDefaultLocateOptions()
 	cmd.PolicyOptions = policy.NewDefaultPolicyOptions()
+
+	policyOverride := policy.NewDefaultPolicyOptions()
 
 	flags := flag.NewFlagSet("rm", flag.ExitOnError)
 	flags.Usage = func() {
@@ -61,10 +65,24 @@ func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
 		fmt.Fprintf(flags.Output(), "\nOPTIONS:\n")
 		flags.PrintDefaults()
 	}
-	flags.BoolVar(&cmd.Plan, "plan", false, "show what would be removed (dry-run)")
+	flags.BoolVar(&cmd.Apply, "apply", false, "do the actual removal")
+	flags.StringVar(&policyName, "policy", "", "policy to use")
 	cmd.LocateOptions.InstallFlags(flags)
-	cmd.PolicyOptions.InstallFlags(flags)
+	policyOverride.InstallFlags(flags)
 	flags.Parse(args)
+
+	if policyName != "" {
+		configFile := filepath.Join(ctx.ConfigDir, "policies.yml")
+		cfg, err := utils.LoadPolicyConfigFile(configFile)
+		if err != nil {
+			return fmt.Errorf("failed to load policies config: %w", err)
+		}
+		if !cfg.Has(policyName) {
+			return fmt.Errorf("policy %q not found", policyName)
+		}
+		cfg.ApplyConfig(policyName, cmd.PolicyOptions)
+	}
+	mergePolicyOptions(cmd.PolicyOptions, policyOverride)
 
 	if flags.NArg() != 0 && !cmd.LocateOptions.Empty() {
 		ctx.GetLogger().Warn("snapshot specified, filters will be ignored")
@@ -76,6 +94,24 @@ func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
 	cmd.Snapshots = flags.Args()
 
 	return nil
+}
+
+// override values in "from" if it is set in "to"
+func mergePolicyOptions(to *policy.PolicyOptions, from *policy.PolicyOptions) {
+	merge := func(a, b *policy.PeriodPolicy) {
+		if b.Keep != 0 {
+			a.Keep = b.Keep
+		}
+		if b.Cap != 0 {
+			a.Cap = b.Cap
+		}
+	}
+	merge(&to.Minute, &from.Minute)
+	merge(&to.Hour, &from.Hour)
+	merge(&to.Day, &from.Day)
+	merge(&to.Week, &from.Week)
+	merge(&to.Month, &from.Month)
+	merge(&to.Year, &from.Year)
 }
 
 func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
@@ -153,7 +189,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 		}
 	}
 
-	if cmd.Plan {
+	if !cmd.Apply {
 		type planEntry struct {
 			prefix string
 			id     objects.MAC
@@ -170,7 +206,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 			key := fmt.Sprintf("%x", id[:])
 			snap, err := snapshot.Load(repo, id)
 			if err != nil {
-				ctx.GetLogger().Warn("rm -plan: skipping %x for timestamp lookup: %v", id[:4], err)
+				ctx.GetLogger().Warn("rm: skipping %x for timestamp lookup: %v", id[:4], err)
 				continue
 			}
 
@@ -226,8 +262,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 			}
 			return ti.After(tj)
 		})
-		fmt.Fprintf(ctx.Stdout, "rm -plan: would remove %d snapshot(s)\n", len(toDelete))
-		fmt.Fprint(ctx.Stdout, "rm -plan: policy evaluation results:\n")
+		fmt.Fprint(ctx.Stdout, "rm: policy evaluation results:\n")
 		l := 0
 		for _, e := range entries {
 			l = max(l, len(e.prefix))
@@ -244,6 +279,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 					e.prefix, e.action, r.Rule, r.Bucket, r.Rank, r.Cap, r.Note)
 			}
 		}
+		fmt.Fprintf(ctx.Stdout, "rm: would remove %d snapshot(s), run with -apply to proceed\n", len(toDelete))
 		return 0, nil
 	}
 
