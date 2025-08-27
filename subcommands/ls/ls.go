@@ -25,12 +25,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PlakarKorp/kloset/locate"
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/snapshot"
 	"github.com/PlakarKorp/kloset/snapshot/vfs"
 	"github.com/PlakarKorp/plakar/appcontext"
-	"github.com/PlakarKorp/plakar/locate"
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/PlakarKorp/plakar/utils"
 	"github.com/dustin/go-humanize"
@@ -54,7 +54,7 @@ func (cmd *Ls) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.BoolVar(&cmd.Recursive, "recursive", false, "recursive listing")
 	flags.BoolVar(&cmd.ShowTags, "tags", false, "show tags")
 
-	cmd.LocateOptions.InstallFlags(flags)
+	cmd.LocateOptions.InstallLocateFlags(flags)
 
 	flags.Parse(args)
 
@@ -94,9 +94,6 @@ func (cmd *Ls) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 }
 
 func (cmd *Ls) list_snapshots(ctx *appcontext.AppContext, repo *repository.Repository) error {
-	cmd.LocateOptions.MaxConcurrency = ctx.MaxConcurrency
-	cmd.LocateOptions.SortOrder = locate.LocateSortOrderDescending
-
 	snapshotIDs, err := locate.LocateSnapshotIDs(repo, cmd.LocateOptions)
 	if err != nil {
 		return fmt.Errorf("ls: could not fetch snapshots list: %w", err)

@@ -3,8 +3,8 @@ package scheduler
 import (
 	"time"
 
+	"github.com/PlakarKorp/kloset/locate"
 	"github.com/PlakarKorp/plakar/agent"
-	"github.com/PlakarKorp/plakar/locate"
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/PlakarKorp/plakar/subcommands/backup"
 	"github.com/PlakarKorp/plakar/subcommands/check"
@@ -28,8 +28,7 @@ func (s *Scheduler) backupTask(taskset Task, task BackupConfig) {
 
 	rmSubcommand := &rm.Rm{}
 	rmSubcommand.Flags = subcommands.AgentSupport
-	rmSubcommand.LocateOptions = locate.NewDefaultLocateOptions()
-	rmSubcommand.LocateOptions.Job = task.Name
+	rmSubcommand.LocateOptions = locate.NewDefaultLocateOptions(locate.WithJob(task.Name))
 
 	for {
 		tick := time.After(task.Interval)
@@ -49,7 +48,7 @@ func (s *Scheduler) backupTask(taskset Task, task BackupConfig) {
 			}
 
 			if task.Retention != 0 {
-				rmSubcommand.LocateOptions.Before = time.Now().Add(-task.Retention)
+				rmSubcommand.LocateOptions.Filters.Before = time.Now().Add(-task.Retention)
 				if retval, err := agent.ExecuteRPC(s.ctx, []string{"rm"}, rmSubcommand, storeConfig); err != nil || retval != 0 {
 					s.ctx.GetLogger().Error("Error removing obsolete backups: %s", err)
 					continue
@@ -62,9 +61,10 @@ func (s *Scheduler) backupTask(taskset Task, task BackupConfig) {
 func (s *Scheduler) checkTask(taskset Task, task CheckConfig) {
 	checkSubcommand := &check.Check{}
 	checkSubcommand.Flags = subcommands.AgentSupport
-	checkSubcommand.LocateOptions = locate.NewDefaultLocateOptions()
-	checkSubcommand.LocateOptions.Job = taskset.Name
-	checkSubcommand.LocateOptions.Latest = task.Latest
+	checkSubcommand.LocateOptions = locate.NewDefaultLocateOptions(
+		locate.WithJob(taskset.Name),
+		locate.WithLatest(task.Latest),
+	)
 	checkSubcommand.Silent = true
 	if task.Path != "" {
 		checkSubcommand.Snapshots = []string{":" + task.Path}
@@ -170,8 +170,7 @@ func (s *Scheduler) maintenanceTask(task MaintenanceConfig) {
 	maintenanceSubcommand.Flags = subcommands.AgentSupport
 	rmSubcommand := &rm.Rm{}
 	rmSubcommand.Flags = subcommands.AgentSupport
-	rmSubcommand.LocateOptions = locate.NewDefaultLocateOptions()
-	rmSubcommand.LocateOptions.Job = "maintenance"
+	rmSubcommand.LocateOptions = locate.NewDefaultLocateOptions(locate.WithJob("maintenance"))
 
 	for {
 		tick := time.After(task.Interval)
@@ -194,7 +193,7 @@ func (s *Scheduler) maintenanceTask(task MaintenanceConfig) {
 			}
 
 			if task.Retention != 0 {
-				rmSubcommand.LocateOptions.Before = time.Now().Add(-task.Retention)
+				rmSubcommand.LocateOptions.Filters.Before = time.Now().Add(-task.Retention)
 				retval, err := agent.ExecuteRPC(s.ctx, []string{"rm"}, rmSubcommand, storeConfig)
 				if err != nil || retval != 0 {
 					s.ctx.GetLogger().Error("Error removing obsolete backups: %s", err)

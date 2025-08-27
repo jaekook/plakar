@@ -23,11 +23,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/PlakarKorp/kloset/locate"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/snapshot"
 	"github.com/PlakarKorp/kloset/snapshot/exporter"
 	"github.com/PlakarKorp/plakar/appcontext"
-	"github.com/PlakarKorp/plakar/locate"
 	"github.com/PlakarKorp/plakar/subcommands"
 )
 
@@ -102,15 +102,14 @@ func (cmd *Restore) Execute(ctx *appcontext.AppContext, repo *repository.Reposit
 	var snapshots []string
 	if len(cmd.Snapshots) == 0 {
 		locateOptions := locate.NewDefaultLocateOptions()
-		locateOptions.MaxConcurrency = ctx.MaxConcurrency
-		locateOptions.Latest = true
+		locateOptions.Filters.Latest = true
 
-		locateOptions.Name = cmd.OptName
-		locateOptions.Category = cmd.OptCategory
-		locateOptions.Environment = cmd.OptEnvironment
-		locateOptions.Perimeter = cmd.OptPerimeter
-		locateOptions.Job = cmd.OptJob
-		locateOptions.Tag = cmd.OptTag
+		locateOptions.Filters.Name = cmd.OptName
+		locateOptions.Filters.Category = cmd.OptCategory
+		locateOptions.Filters.Environment = cmd.OptEnvironment
+		locateOptions.Filters.Perimeter = cmd.OptPerimeter
+		locateOptions.Filters.Job = cmd.OptJob
+		locateOptions.Filters.Tags = []string{cmd.OptTag}
 
 		snapshotIDs, err := locate.LocateSnapshotIDs(repo, locateOptions)
 		if err != nil {
@@ -124,15 +123,14 @@ func (cmd *Restore) Execute(ctx *appcontext.AppContext, repo *repository.Reposit
 			prefix, path := locate.ParseSnapshotPath(snapshotPath)
 
 			locateOptions := locate.NewDefaultLocateOptions()
-			locateOptions.MaxConcurrency = ctx.MaxConcurrency
-			locateOptions.Latest = true
-			locateOptions.Name = cmd.OptName
-			locateOptions.Category = cmd.OptCategory
-			locateOptions.Environment = cmd.OptEnvironment
-			locateOptions.Perimeter = cmd.OptPerimeter
-			locateOptions.Job = cmd.OptJob
-			locateOptions.Tag = cmd.OptTag
-			locateOptions.Prefix = prefix
+			locateOptions.Filters.Latest = true
+			locateOptions.Filters.Name = cmd.OptName
+			locateOptions.Filters.Category = cmd.OptCategory
+			locateOptions.Filters.Environment = cmd.OptEnvironment
+			locateOptions.Filters.Perimeter = cmd.OptPerimeter
+			locateOptions.Filters.Job = cmd.OptJob
+			locateOptions.Filters.Tags = []string{cmd.OptTag}
+			locateOptions.Filters.Prefix = prefix
 
 			snapshotIDs, err := locate.LocateSnapshotIDs(repo, locateOptions)
 			if err != nil {

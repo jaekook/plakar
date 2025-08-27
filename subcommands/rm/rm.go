@@ -20,18 +20,16 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/PlakarKorp/kloset/locate"
 	"github.com/PlakarKorp/kloset/objects"
-	"github.com/PlakarKorp/kloset/policy"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/snapshot"
 	"github.com/PlakarKorp/plakar/appcontext"
-	"github.com/PlakarKorp/plakar/locate"
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/PlakarKorp/plakar/utils"
 	"github.com/dustin/go-humanize"
@@ -41,9 +39,6 @@ type Rm struct {
 	subcommands.SubcommandBase
 
 	LocateOptions *locate.LocateOptions
-	PolicyOptions *policy.PolicyOptions
-
-	Snapshots []string
 
 	Apply bool
 }
@@ -53,11 +48,7 @@ func init() {
 }
 
 func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
-	policyName := ""
 	cmd.LocateOptions = locate.NewDefaultLocateOptions()
-	cmd.PolicyOptions = policy.NewDefaultPolicyOptions()
-
-	policyOverride := policy.NewDefaultPolicyOptions()
 
 	flags := flag.NewFlagSet("rm", flag.ExitOnError)
 	flags.Usage = func() {
@@ -66,143 +57,43 @@ func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
 		flags.PrintDefaults()
 	}
 	flags.BoolVar(&cmd.Apply, "apply", false, "do the actual removal")
-	flags.StringVar(&policyName, "policy", "", "policy to use")
-	cmd.LocateOptions.InstallFlags(flags)
-	policyOverride.InstallFlags(flags)
+	cmd.LocateOptions.InstallDeletionFlags(flags)
 	flags.Parse(args)
 
-	if policyName != "" {
-		configFile := filepath.Join(ctx.ConfigDir, "policies.yml")
-		cfg, err := utils.LoadPolicyConfigFile(configFile)
-		if err != nil {
-			return fmt.Errorf("failed to load policies config: %w", err)
-		}
-		if !cfg.Has(policyName) {
-			return fmt.Errorf("policy %q not found", policyName)
-		}
-		cfg.ApplyConfig(policyName, cmd.PolicyOptions)
-	}
-	mergePolicyOptions(cmd.PolicyOptions, policyOverride)
-
-	if flags.NArg() != 0 && !cmd.LocateOptions.Empty() {
-		ctx.GetLogger().Warn("snapshot specified, filters will be ignored")
-	} else if flags.NArg() == 0 && cmd.LocateOptions.Empty() && cmd.PolicyOptions.Empty() {
+	if flags.NArg() == 0 && cmd.LocateOptions.Empty() {
 		return fmt.Errorf("no filter specified, not going to remove everything")
 	}
 
+	cmd.LocateOptions.Filters.IDs = flags.Args()
+
 	cmd.RepositorySecret = ctx.GetSecret()
-	cmd.Snapshots = flags.Args()
 
 	return nil
 }
 
-// override values in "from" if it is set in "to"
-func mergePolicyOptions(to *policy.PolicyOptions, from *policy.PolicyOptions) {
-	merge := func(a, b *policy.PeriodPolicy) {
-		if b.Keep != 0 {
-			a.Keep = b.Keep
-		}
-		if b.Cap != 0 {
-			a.Cap = b.Cap
-		}
-	}
-	merge(&to.Minute, &from.Minute)
-	merge(&to.Hour, &from.Hour)
-	merge(&to.Day, &from.Day)
-	merge(&to.Week, &from.Week)
-	merge(&to.Month, &from.Month)
-	merge(&to.Year, &from.Year)
-}
-
 func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
-	var snapshots []objects.MAC
-	if len(cmd.Snapshots) == 0 {
-		snapshotIDs, err := locate.LocateSnapshotIDs(repo, cmd.LocateOptions)
-		if err != nil {
-			return 1, err
-		}
-		snapshots = append(snapshots, snapshotIDs...)
-	} else {
-		for _, prefix := range cmd.Snapshots {
-			snapshotID, err := locate.LocateSnapshotByPrefix(repo, prefix)
-			if err != nil {
-				continue
-			}
-			snapshots = append(snapshots, snapshotID)
-		}
+
+	matches, _, _, err := locate.Match(repo, cmd.LocateOptions)
+	if err != nil {
+		return 1, err
 	}
 
-	if len(snapshots) == 0 {
+	if len(matches) == 0 {
 		ctx.GetLogger().Info("rm: no snapshots matched the selection")
 		return 0, nil
 	}
 
-	var toDelete []objects.MAC
-	var reasons map[string]policy.Reason
-	var kept map[string]struct{}
-	var planned map[string]struct{}
-
-	tsByID := make(map[string]time.Time, len(snapshots))
-
-	if cmd.PolicyOptions.Empty() {
-		// No policy provided -> default behavior: delete everything selected.
-		toDelete = append(toDelete, snapshots...)
-	} else {
-		// Build policy items with timestamps
-		items := make([]policy.Item, 0, len(snapshots))
-		for _, id := range snapshots {
-			snap, err := snapshot.Load(repo, id)
-			if err != nil {
-				ctx.GetLogger().Warn("rm: skipping %x for policy evaluation: %v", id[:4], err)
-				continue
-			}
-			ts := snap.Header.Timestamp
-			snap.Close()
-
-			key := fmt.Sprintf("%x", id[:])
-
-			items = append(items, policy.Item{
-				ItemID:    key, // stable string key for reasons map
-				Timestamp: ts,
-			})
-
-			tsByID[key] = ts
-		}
-
-		now := time.Now().UTC()
-		kept, reasons = cmd.PolicyOptions.Select(items, now)
-
-		// any item not in kept -> delete
-		planned = make(map[string]struct{}, len(items))
-		for _, it := range items {
-			if _, ok := kept[it.ItemID]; !ok {
-				planned[it.ItemID] = struct{}{}
-			}
-		}
-
-		// Map back to objects.MAC in original order for stable UX
-		for _, id := range snapshots {
-			key := fmt.Sprintf("%x", id[:])
-			if _, ok := planned[key]; ok {
-				toDelete = append(toDelete, id)
-			}
-		}
-	}
-
+	// plan
 	if !cmd.Apply {
 		type planEntry struct {
 			prefix string
 			id     objects.MAC
 			key    string
 			ts     time.Time
-
-			reason policy.Reason
-			action string // "keep" or "delete"
 		}
 
-		// Build entries
-		entries := make([]planEntry, 0, len(snapshots))
-		for _, id := range snapshots {
+		entries := make([]planEntry, 0, len(matches))
+		for _, id := range matches {
 			key := fmt.Sprintf("%x", id[:])
 			snap, err := snapshot.Load(repo, id)
 			if err != nil {
@@ -223,29 +114,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 				utils.SanitizeText(snap.Header.GetSource(0).Importer.Directory),
 				tags)
 			snap.Close()
-			entry := planEntry{prefix: prefix, id: id, key: key, ts: snap.Header.Timestamp}
-
-			if cmd.PolicyOptions.Empty() {
-				entry.action = "delete"
-				if cmd.LocateOptions.Empty() {
-					entry.reason = policy.Reason{Action: "delete", Note: "requested explicitly"}
-				} else {
-					entry.reason = policy.Reason{Action: "delete", Note: "matches location filter"}
-				}
-			} else {
-				r, ok := reasons[key]
-				// Default to "skip" if we couldn't evaluate (e.g., missing timestamp)
-				entry.reason = r
-				entry.action = "delete"
-				if _, del := planned[key]; !del {
-					entry.action = "keep"
-				}
-				if !ok {
-					entry.reason = policy.Reason{Action: "delete", Note: "not evaluated by policy"}
-					entry.action = "skip"
-				}
-			}
-			entries = append(entries, entry)
+			entries = append(entries, planEntry{prefix: prefix, id: id, key: key, ts: snap.Header.Timestamp})
 		}
 
 		// Sort newest-first; unknown timestamps (IsZero) go last
@@ -262,36 +131,21 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 			}
 			return ti.After(tj)
 		})
-		fmt.Fprint(ctx.Stdout, "rm: policy evaluation results:\n")
+		fmt.Fprintf(ctx.Stdout, "rm: would remove these %d snapshot(s), run with -apply to proceed\n", len(matches))
 		l := 0
 		for _, e := range entries {
 			l = max(l, len(e.prefix))
 		}
 		for _, e := range entries {
-			for len(e.prefix) < l {
-				e.prefix += " "
-			}
-			r := e.reason
-			if r.Rule == "" {
-				fmt.Fprintf(ctx.Stdout, "%s action=%s  note=%s\n", e.prefix, e.action, r.Note)
-			} else {
-				fmt.Fprintf(ctx.Stdout, "%s action=%s  rule=%s bucket=%s rank=%d cap=%d note=%s\n",
-					e.prefix, e.action, r.Rule, r.Bucket, r.Rank, r.Cap, r.Note)
-			}
+			fmt.Fprintf(ctx.Stdout, "%s\n", e.prefix)
 		}
-		fmt.Fprintf(ctx.Stdout, "rm: would remove %d snapshot(s), run with -apply to proceed\n", len(toDelete))
 		return 0, nil
 	}
 
-	// EXECUTION (not a plan): delete only the ones in toDelete
-	if len(toDelete) == 0 {
-		ctx.GetLogger().Info("rm: nothing to remove")
-		return 0, nil
-	}
-
+	// execution
 	errors := 0
 	wg := sync.WaitGroup{}
-	for _, snap := range toDelete {
+	for _, matchID := range matches {
 		wg.Add(1)
 		go func(snapshotID objects.MAC) {
 			defer wg.Done()
@@ -301,7 +155,7 @@ func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) 
 				return
 			}
 			ctx.GetLogger().Info("rm: removal of %x completed successfully", snapshotID[:4])
-		}(snap)
+		}(matchID)
 	}
 	wg.Wait()
 
