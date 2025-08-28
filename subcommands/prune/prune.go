@@ -97,12 +97,21 @@ func mergePolicyOptions(to *locate.LocateOptions, from *locate.LocateOptions) {
 			a.Cap = b.Cap
 		}
 	}
+
 	merge(&to.Minute, &from.Minute)
 	merge(&to.Hour, &from.Hour)
 	merge(&to.Day, &from.Day)
 	merge(&to.Week, &from.Week)
 	merge(&to.Month, &from.Month)
 	merge(&to.Year, &from.Year)
+	merge(&to.Monday, &from.Monday)
+	merge(&to.Tuesday, &from.Tuesday)
+	merge(&to.Wednesday, &from.Wednesday)
+	merge(&to.Thursday, &from.Thursday)
+	merge(&to.Friday, &from.Friday)
+	merge(&to.Saturday, &from.Saturday)
+	merge(&to.Sunday, &from.Sunday)
+
 }
 
 type planEntry struct {
