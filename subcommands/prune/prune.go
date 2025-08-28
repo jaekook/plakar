@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/PlakarKorp/kloset/locate"
@@ -185,7 +186,7 @@ func (cmd *Prune) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 			}
 			r := e.reason
 			if r.Rule == "" {
-				fmt.Fprintf(ctx.Stdout, "%-8s %s\n", e.action, e.prefix)
+				fmt.Fprintf(ctx.Stdout, "%-8s %s  reason=%s\n", e.action, e.prefix, e.reason.Note)
 			} else {
 				fmt.Fprintf(ctx.Stdout, "%-8s %s  match=%s:%s rank=%d cap=%d\n",
 					e.action, e.prefix, r.Rule, r.Bucket, r.Rank, r.Cap)
@@ -198,133 +199,25 @@ func (cmd *Prune) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 		return 0, nil
 	}
 
-	/*
-		toDelete := append([]objects.MAC{}, snapshots...)
-		planned := make(map[objects.MAC]struct{})
-
-		if !cmd.Apply {
-			for _, id := range toDelete {
-				planned[id] = struct{}{}
+	errors := 0
+	wg := sync.WaitGroup{}
+	for _, snap := range toDelete {
+		wg.Add(1)
+		go func(snapshotID objects.MAC) {
+			defer wg.Done()
+			if err := repo.DeleteSnapshot(snapshotID); err != nil {
+				ctx.GetLogger().Error("%s", err)
+				errors++
+				return
 			}
+			ctx.GetLogger().Info("rm: removal of %x completed successfully", snapshotID[:4])
+		}(snap)
+	}
+	wg.Wait()
 
-			type planEntry struct {
-				prefix string
-				id     objects.MAC
-				key    string
-				ts     time.Time
+	if errors != 0 {
+		return 1, fmt.Errorf("failed to remove %d snapshots", errors)
+	}
 
-				reason locate.Reason
-				action string // "keep" or "delete"
-			}
-
-			// Build entries
-			entries := make([]planEntry, 0, len(snapshots))
-			for _, id := range snapshots {
-				key := fmt.Sprintf("%x", id[:])
-				snap, err := snapshot.Load(repo, id)
-				if err != nil {
-					ctx.GetLogger().Warn("rm: skipping %x for timestamp lookup: %v", id[:4], err)
-					continue
-				}
-
-				tags := ""
-				tagList := strings.Join(snap.Header.Tags, ",")
-				if tagList != "" {
-					tags = " tags=" + strings.Join(snap.Header.Tags, ",")
-				}
-				prefix := fmt.Sprintf("%s %10s%10s%10s %s%s",
-					snap.Header.Timestamp.UTC().Format(time.RFC3339),
-					hex.EncodeToString(snap.Header.GetIndexShortID()),
-					humanize.IBytes(snap.Header.GetSource(0).Summary.Directory.Size+snap.Header.GetSource(0).Summary.Below.Size),
-					snap.Header.Duration.Round(time.Second),
-					utils.SanitizeText(snap.Header.GetSource(0).Importer.Directory),
-					tags)
-				snap.Close()
-				entry := planEntry{prefix: prefix, id: id, key: key, ts: snap.Header.Timestamp}
-
-				if cmd.LocateOptions.Empty() {
-					entry.action = "delete"
-					if cmd.LocateOptions.Empty() {
-						entry.reason = locate.Reason{Action: "delete", Note: "requested explicitly"}
-					} else {
-						entry.reason = locate.Reason{Action: "delete", Note: "matches location filter"}
-					}
-				} else {
-					r, ok := reasons[id]
-					// Default to "skip" if we couldn't evaluate (e.g., missing timestamp)
-					entry.reason = r
-					entry.action = "delete"
-					if _, del := planned[id]; !del {
-						entry.action = "keep"
-					}
-					if !ok {
-						entry.reason = locate.Reason{Action: "delete", Note: "not evaluated by policy"}
-						entry.action = "skip"
-					}
-				}
-				entries = append(entries, entry)
-			}
-
-			// Sort newest-first; unknown timestamps (IsZero) go last
-			sort.SliceStable(entries, func(i, j int) bool {
-				ti, tj := entries[i].ts, entries[j].ts
-				if ti.IsZero() && tj.IsZero() {
-					return entries[i].key < entries[j].key // stable tiebreak
-				}
-				if ti.IsZero() {
-					return false
-				}
-				if tj.IsZero() {
-					return true
-				}
-				return ti.After(tj)
-			})
-			fmt.Fprint(ctx.Stdout, "rm: policy evaluation results:\n")
-			l := 0
-			for _, e := range entries {
-				l = max(l, len(e.prefix))
-			}
-			for _, e := range entries {
-				for len(e.prefix) < l {
-					e.prefix += " "
-				}
-				r := e.reason
-				if r.Rule == "" {
-					fmt.Fprintf(ctx.Stdout, "%s action=%s  note=%s\n", e.prefix, e.action, r.Note)
-				} else {
-					fmt.Fprintf(ctx.Stdout, "%s action=%s  rule=%s bucket=%s rank=%d cap=%d note=%s\n",
-						e.prefix, e.action, r.Rule, r.Bucket, r.Rank, r.Cap, r.Note)
-				}
-			}
-			fmt.Fprintf(ctx.Stdout, "rm: would remove %d snapshot(s), run with -apply to proceed\n", len(toDelete))
-			return 0, nil
-		}
-
-		// EXECUTION (not a plan): delete only the ones in toDelete
-		if len(toDelete) == 0 {
-			ctx.GetLogger().Info("rm: nothing to remove")
-			return 0, nil
-		}
-
-		errors := 0
-		wg := sync.WaitGroup{}
-		for _, snap := range toDelete {
-			wg.Add(1)
-			go func(snapshotID objects.MAC) {
-				defer wg.Done()
-				if err := repo.DeleteSnapshot(snapshotID); err != nil {
-					ctx.GetLogger().Error("%s", err)
-					errors++
-					return
-				}
-				ctx.GetLogger().Info("rm: removal of %x completed successfully", snapshotID[:4])
-			}(snap)
-		}
-		wg.Wait()
-
-		if errors != 0 {
-			return 1, fmt.Errorf("failed to remove %d snapshots", errors)
-		}
-	*/
 	return 0, nil
 }
