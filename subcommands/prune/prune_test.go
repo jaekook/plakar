@@ -19,59 +19,87 @@ func init() {
 	os.Setenv("TZ", "UTC")
 }
 
-func generateSnapshot(t *testing.T, bufOut *bytes.Buffer, bufErr *bytes.Buffer) (*repository.Repository, *snapshot.Snapshot, *appcontext.AppContext) {
+func generateRepoAndTwoSnaps(t *testing.T, bufOut *bytes.Buffer, bufErr *bytes.Buffer) (*repository.Repository, *snapshot.Snapshot, *snapshot.Snapshot, *appcontext.AppContext) {
 	repo, ctx := ptesting.GenerateRepository(t, bufOut, bufErr, nil)
-	snap := ptesting.GenerateSnapshot(t, repo, []ptesting.MockFile{
+
+	// First snapshot
+	snap1 := ptesting.GenerateSnapshot(t, repo, []ptesting.MockFile{
 		ptesting.NewMockDir("subdir"),
-		ptesting.NewMockDir("another_subdir"),
-		ptesting.NewMockFile("subdir/dummy.txt", 0644, "hello dummy"),
-		ptesting.NewMockFile("subdir/foo.txt", 0644, "hello foo"),
-		ptesting.NewMockFile("subdir/to_exclude", 0644, "*/subdir/to_exclude\n"),
-		ptesting.NewMockFile("another_subdir/bar.txt", 0644, "hello bar"),
+		ptesting.NewMockFile("subdir/a.txt", 0644, "hello A"),
 	})
-	return repo, snap, ctx
+
+	// Second snapshot (newest)
+	snap2 := ptesting.GenerateSnapshot(t, repo, []ptesting.MockFile{
+		ptesting.NewMockDir("subdir"),
+		ptesting.NewMockFile("subdir/b.txt", 0644, "hello B"),
+	})
+
+	return repo, snap1, snap2, ctx
 }
 
-func TestExecuteCmdRmDefault(t *testing.T) {
+func TestPrune_DryRun_PerMinuteCap(t *testing.T) {
 	bufOut := bytes.NewBuffer(nil)
 	bufErr := bytes.NewBuffer(nil)
 
-	repo, snap, ctx := generateSnapshot(t, bufOut, bufErr)
-	defer snap.Close()
+	repo, snap1, snap2, ctx := generateRepoAndTwoSnaps(t, bufOut, bufErr)
+	defer snap1.Close()
+	defer snap2.Close()
 
-	args := []string{"-latest"}
+	// Cap 1 per minute across all minute buckets. With two snaps in the same minute,
+	// prune will keep the newest and mark the older for delete — but dry-run prints a plan only.
+	args := []string{"--per-minute=1"}
 
-	subcommand := &Prune{}
-	err := subcommand.Parse(ctx, args)
+	cmd := &Prune{}
+	err := cmd.Parse(ctx, args)
 	require.NoError(t, err)
-	require.NotNil(t, subcommand)
+	require.NotNil(t, cmd)
 
-	status, err := subcommand.Execute(ctx, repo)
+	status, err := cmd.Execute(ctx, repo)
 	require.NoError(t, err)
 	require.Equal(t, 0, status)
 
-	output := bufOut.String()
-	require.Contains(t, output, fmt.Sprintf("info: rm: removal of %s completed successfully", hex.EncodeToString(snap.Header.GetIndexShortID())))
+	out := bufOut.String()
+
+	// In dry-run, we get a summary like:
+	//   prune: would keep X and delete Y snapshot(s), run with -apply to proceed
+	require.Contains(t, out, "prune: would keep 1 and delete 1 snapshot(s)")
+	// Should list minute matches/caps
+	require.Contains(t, out, "match=minute:")
+	require.Contains(t, out, "cap=1")
+	// Should NOT have the actual removal line without -apply
+	require.NotContains(t, out, "rm: removal of")
 }
 
-func TestExecuteCmdRmWithSnapshot(t *testing.T) {
+func TestPrune_Apply_PerMinuteCap(t *testing.T) {
 	bufOut := bytes.NewBuffer(nil)
 	bufErr := bytes.NewBuffer(nil)
 
-	repo, snap, ctx := generateSnapshot(t, bufOut, bufErr)
-	defer snap.Close()
+	repo, snap1, snap2, ctx := generateRepoAndTwoSnaps(t, bufOut, bufErr)
+	defer snap1.Close()
+	defer snap2.Close()
 
-	args := []string{hex.EncodeToString(snap.Header.GetIndexShortID())}
+	// With -apply the older snapshot should actually be removed.
+	// Retention keeps the newest in the minute; snap1 is older → deleted.
+	args := []string{"-apply", "--per-minute=1"}
 
-	subcommand := &Prune{}
-	err := subcommand.Parse(ctx, args)
+	cmd := &Prune{}
+	err := cmd.Parse(ctx, args)
 	require.NoError(t, err)
-	require.NotNil(t, subcommand)
+	require.NotNil(t, cmd)
 
-	status, err := subcommand.Execute(ctx, repo)
+	status, err := cmd.Execute(ctx, repo)
 	require.NoError(t, err)
 	require.Equal(t, 0, status)
 
-	output := bufOut.String()
-	require.Contains(t, output, fmt.Sprintf("info: rm: removal of %s completed successfully", hex.EncodeToString(snap.Header.GetIndexShortID())))
+	out := bufOut.String()
+
+	// prune logs via the app context logger:
+	//   info: rm: removal of <first 4 bytes hex> completed successfully
+	// The "short id" from GetIndexShortID() should match those 4 bytes.
+	short1 := hex.EncodeToString(snap1.Header.GetIndexShortID())
+	require.Contains(t, out, fmt.Sprintf("info: rm: removal of %s completed successfully", short1))
+
+	// Sanity: ensure it didn't claim to remove the newest one (kept)
+	short2 := hex.EncodeToString(snap2.Header.GetIndexShortID())
+	require.NotContains(t, out, fmt.Sprintf("info: rm: removal of %s completed successfully", short2))
 }
