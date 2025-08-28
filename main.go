@@ -514,10 +514,13 @@ func getPassphraseFromEnv(ctx *appcontext.AppContext, params map[string]string) 
 	}
 
 	if pass, ok := params["passphrase"]; ok {
+		delete(params, "passphrase")
 		return pass, nil
 	}
 
 	if cmd, ok := params["passphrase_cmd"]; ok {
+		delete(params, "passphrase_cmd")
+
 		var c *exec.Cmd
 		switch runtime.GOOS {
 		case "windows":
