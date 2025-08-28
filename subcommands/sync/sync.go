@@ -66,7 +66,7 @@ func (cmd *Sync) Parse(ctx *appcontext.AppContext, args []string) error {
 		if !cmd.SrcLocateOptions.Empty() {
 			ctx.GetLogger().Warn("snapshot specified, filters will be ignored")
 		}
-		cmd.SrcLocateOptions.Filters.Prefix = args[0]
+		cmd.SrcLocateOptions.Filters.IDs = []string{args[0]}
 		direction = args[1]
 		peerRepositoryPath = args[2]
 

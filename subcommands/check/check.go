@@ -97,7 +97,7 @@ func (cmd *Check) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 				}
 			}
 
-			cmd.LocateOptions.Filters.Prefix = prefix
+			cmd.LocateOptions.Filters.IDs = []string{prefix}
 			snapshotIDs, err := locate.LocateSnapshotIDs(repo, cmd.LocateOptions)
 			if err != nil {
 				fmt.Fprintln(ctx.Stderr, err)

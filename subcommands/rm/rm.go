@@ -72,8 +72,7 @@ func (cmd *Rm) Parse(ctx *appcontext.AppContext, args []string) error {
 }
 
 func (cmd *Rm) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
-
-	matches, _, _, err := locate.Match(repo, cmd.LocateOptions)
+	matches, err := locate.LocateSnapshotIDs(repo, cmd.LocateOptions)
 	if err != nil {
 		return 1, err
 	}

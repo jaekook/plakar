@@ -115,9 +115,7 @@ type planEntry struct {
 }
 
 func (cmd *Prune) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
-	fmt.Println("pruning...")
-
-	_, _, reasons, err := locate.Match(repo, cmd.LocateOptions)
+	_, reasons, err := locate.Match(repo, cmd.LocateOptions)
 	if err != nil {
 		return 1, err
 	}
@@ -141,11 +139,10 @@ func (cmd *Prune) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 		if tagList != "" {
 			tags = " tags=" + strings.Join(snap.Header.Tags, ",")
 		}
-		prefix := fmt.Sprintf("%s %10s%10s%10s %s%s",
+		prefix := fmt.Sprintf("%s %10s%10s %s%s",
 			snap.Header.Timestamp.UTC().Format(time.RFC3339),
 			hex.EncodeToString(snap.Header.GetIndexShortID()),
 			humanize.IBytes(snap.Header.GetSource(0).Summary.Directory.Size+snap.Header.GetSource(0).Summary.Below.Size),
-			snap.Header.Duration.Round(time.Second),
 			utils.SanitizeText(snap.Header.GetSource(0).Importer.Directory),
 			tags)
 		snap.Close()
@@ -177,7 +174,7 @@ func (cmd *Prune) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 			}
 			return ti.After(tj)
 		})
-		fmt.Fprint(ctx.Stdout, "prune: policy evaluation results:\n")
+		fmt.Fprintf(ctx.Stdout, "prune: would keep %d and delete %d snapshot(s), run with -apply to proceed\n", len(reasons)-len(toDelete), len(toDelete))
 		l := 0
 		for _, e := range entries {
 			l = max(l, len(e.prefix))
@@ -188,13 +185,12 @@ func (cmd *Prune) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 			}
 			r := e.reason
 			if r.Rule == "" {
-				fmt.Fprintf(ctx.Stdout, "%s action=%s  note=%s\n", e.prefix, e.action, r.Note)
+				fmt.Fprintf(ctx.Stdout, "%-8s %s\n", e.action, e.prefix)
 			} else {
-				fmt.Fprintf(ctx.Stdout, "%s action=%s  rule=%s bucket=%s rank=%d cap=%d note=%s\n",
-					e.prefix, e.action, r.Rule, r.Bucket, r.Rank, r.Cap, r.Note)
+				fmt.Fprintf(ctx.Stdout, "%-8s %s  match=%s:%s rank=%d cap=%d\n",
+					e.action, e.prefix, r.Rule, r.Bucket, r.Rank, r.Cap)
 			}
 		}
-		fmt.Fprintf(ctx.Stdout, "prune: would remove %d snapshot(s), run with -apply to proceed\n", len(toDelete))
 		return 0, nil
 	}
 

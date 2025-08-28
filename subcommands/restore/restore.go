@@ -130,7 +130,7 @@ func (cmd *Restore) Execute(ctx *appcontext.AppContext, repo *repository.Reposit
 			locateOptions.Filters.Perimeter = cmd.OptPerimeter
 			locateOptions.Filters.Job = cmd.OptJob
 			locateOptions.Filters.Tags = []string{cmd.OptTag}
-			locateOptions.Filters.Prefix = prefix
+			locateOptions.Filters.IDs = []string{prefix}
 
 			snapshotIDs, err := locate.LocateSnapshotIDs(repo, locateOptions)
 			if err != nil {
