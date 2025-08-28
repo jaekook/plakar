@@ -107,7 +107,11 @@ func (cmd *Cat) Execute(ctx *appcontext.AppContext, repo *repository.Repository)
 			continue
 		}
 
-		file := entry.Open(fs)
+		file, err := entry.Open(fs)
+		if err != nil {
+			return 1, err
+		}
+
 		var rd io.ReadCloser = file
 
 		if cmd.Decompress && entry.ResolvedObject.ContentType == "application/gzip" {

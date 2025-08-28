@@ -3,6 +3,8 @@ package plugins
 import (
 	"fmt"
 	"os"
+	"runtime"
+	"strings"
 
 	"go.yaml.in/yaml/v3"
 )
@@ -43,6 +45,15 @@ func ParseManifestFile(path string, manifest *Manifest) error {
 	// We really want version to start with a 'v'
 	if manifest.Version != "" && manifest.Version[0] != 'v' {
 		manifest.Version = "v" + manifest.Version
+	}
+
+	// Windows really want executables to end with .exe
+	if runtime.GOOS == "windows" {
+		for i := range manifest.Connectors {
+			if !strings.HasSuffix(manifest.Connectors[i].Executable, ".exe") {
+				manifest.Connectors[i].Executable += ".exe"
+			}
+		}
 	}
 
 	return nil
