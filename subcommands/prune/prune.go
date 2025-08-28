@@ -61,8 +61,8 @@ func (cmd *Prune) Parse(ctx *appcontext.AppContext, args []string) error {
 	}
 	flags.BoolVar(&cmd.Apply, "apply", false, "do the actual removal")
 	flags.StringVar(&policyName, "policy", "", "policy to use")
-	cmd.LocateOptions.InstallLocateFlags(flags)
-	//policyOverride.InstallFlags(flags)
+	//cmd.LocateOptions.InstallLocateFlags(flags)
+	policyOverride.InstallLocateFlags(flags)
 	flags.Parse(args)
 
 	if policyName != "" {
