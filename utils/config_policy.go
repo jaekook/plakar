@@ -40,17 +40,6 @@ func (c *policiesConfig) setInt(value string, p *int) error {
 	return nil
 }
 
-func (c *policiesConfig) setBool(value string, p *bool) error {
-	if value == "true" || value == "yes" {
-		*p = true
-	} else if value == "false" || value == "no" {
-		*p = false
-	} else {
-		return fmt.Errorf("invalid value")
-	}
-	return nil
-}
-
 func (c *policiesConfig) setTime(value string, p *time.Time) error {
 	t, err := locate.ParseTimeFlag(value)
 	if err != nil {
@@ -171,7 +160,12 @@ func (c *policiesConfig) Set(name string, key string, value string) error {
 	case *[]string:
 		return c.setStringList(value, p)
 	case *bool:
-		return c.setBool(value, p)
+		b, err := strconv.ParseBool(value)
+		if err != nil {
+			return fmt.Errorf("invalid value: %w", err)
+		}
+		*p = b
+		return nil
 	default:
 		return fmt.Errorf("invalid field type")
 	}
