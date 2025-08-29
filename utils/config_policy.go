@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strconv"
 
-	"github.com/PlakarKorp/kloset/policy"
+	"github.com/PlakarKorp/kloset/locate"
 	"go.yaml.in/yaml/v3"
 	"gopkg.in/ini.v1"
 )
@@ -142,8 +142,8 @@ func (c *policiesConfig) Dump(w io.Writer, format string, names []string) error 
 	return nil
 }
 
-func (c *policiesConfig) ApplyConfig(name string, po *policy.PolicyOptions) {
-	apply := func(setter func(int) policy.Option, key string) {
+func (c *policiesConfig) ApplyConfig(name string, po *locate.LocateOptions) {
+	apply := func(setter func(int) locate.Option, key string) {
 		entry, ok := c.Policies[name]
 		if !ok {
 			return
@@ -158,18 +158,18 @@ func (c *policiesConfig) ApplyConfig(name string, po *policy.PolicyOptions) {
 		}
 		setter(i)(po)
 	}
-	apply(policy.WithKeepMinutes, "keep-minutes")
-	apply(policy.WithKeepHours, "keep-hours")
-	apply(policy.WithKeepDays, "keep-days")
-	apply(policy.WithKeepWeeks, "keep-weeks")
-	apply(policy.WithKeepMonths, "keep-months")
-	apply(policy.WithKeepYears, "keep-years")
-	apply(policy.WithPerMinuteCap, "keep-per-minute")
-	apply(policy.WithPerHourCap, "keep-per-hour")
-	apply(policy.WithPerDayCap, "keep-per-day")
-	apply(policy.WithPerWeekCap, "keep-per-week")
-	apply(policy.WithPerMonthCap, "keep-per-month")
-	apply(policy.WithPerYearCap, "keep-per-year")
+	apply(locate.WithKeepMinutes, "keep-minutes")
+	apply(locate.WithKeepHours, "keep-hours")
+	apply(locate.WithKeepDays, "keep-days")
+	apply(locate.WithKeepWeeks, "keep-weeks")
+	apply(locate.WithKeepMonths, "keep-months")
+	apply(locate.WithKeepYears, "keep-years")
+	apply(locate.WithPerMinuteCap, "keep-per-minute")
+	apply(locate.WithPerHourCap, "keep-per-hour")
+	apply(locate.WithPerDayCap, "keep-per-day")
+	apply(locate.WithPerWeekCap, "keep-per-week")
+	apply(locate.WithPerMonthCap, "keep-per-month")
+	apply(locate.WithPerYearCap, "keep-per-year")
 }
 
 func LoadPolicyConfigFile(filename string) (*policiesConfig, error) {
