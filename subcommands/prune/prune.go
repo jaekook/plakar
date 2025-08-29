@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Gilles Chehade <gilles@poolp.org>
+ * Copyright (c) 2025 Gilles Chehade <gilles@poolp.org>
  *
  * Permission to use, copy, modify, and distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -61,7 +61,6 @@ func (cmd *Prune) Parse(ctx *appcontext.AppContext, args []string) error {
 	}
 	flags.BoolVar(&cmd.Apply, "apply", false, "do the actual removal")
 	flags.StringVar(&policyName, "policy", "", "policy to use")
-	//cmd.LocateOptions.InstallLocateFlags(flags)
 	policyOverride.InstallLocateFlags(flags)
 	flags.Parse(args)
 
@@ -140,7 +139,7 @@ func (cmd *Prune) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 
 		snap, err := snapshot.Load(repo, id)
 		if err != nil {
-			ctx.GetLogger().Warn("rm: skipping %x for timestamp lookup: %v", id[:4], err)
+			ctx.GetLogger().Warn("prune: skipping %x for timestamp lookup: %v", id[:4], err)
 			continue
 		}
 
@@ -219,7 +218,7 @@ func (cmd *Prune) Execute(ctx *appcontext.AppContext, repo *repository.Repositor
 				errors++
 				return
 			}
-			ctx.GetLogger().Info("rm: removal of %x completed successfully", snapshotID[:4])
+			ctx.GetLogger().Info("prune: removal of %x completed successfully", snapshotID[:4])
 		}(snap)
 	}
 	wg.Wait()

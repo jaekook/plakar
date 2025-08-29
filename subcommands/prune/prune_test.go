@@ -67,7 +67,7 @@ func TestPrune_DryRun_PerMinuteCap(t *testing.T) {
 	require.Contains(t, out, "match=minute:")
 	require.Contains(t, out, "cap=1")
 	// Should NOT have the actual removal line without -apply
-	require.NotContains(t, out, "rm: removal of")
+	require.NotContains(t, out, "prune: removal of")
 }
 
 func TestPrune_Apply_PerMinuteCap(t *testing.T) {
@@ -97,9 +97,9 @@ func TestPrune_Apply_PerMinuteCap(t *testing.T) {
 	//   info: rm: removal of <first 4 bytes hex> completed successfully
 	// The "short id" from GetIndexShortID() should match those 4 bytes.
 	short1 := hex.EncodeToString(snap1.Header.GetIndexShortID())
-	require.Contains(t, out, fmt.Sprintf("info: rm: removal of %s completed successfully", short1))
+	require.Contains(t, out, fmt.Sprintf("info: prune: removal of %s completed successfully", short1))
 
 	// Sanity: ensure it didn't claim to remove the newest one (kept)
 	short2 := hex.EncodeToString(snap2.Header.GetIndexShortID())
-	require.NotContains(t, out, fmt.Sprintf("info: rm: removal of %s completed successfully", short2))
+	require.NotContains(t, out, fmt.Sprintf("info: prune: removal of %s completed successfully", short2))
 }
