@@ -14,13 +14,13 @@ import (
 	grpc_importer "github.com/PlakarKorp/integration-grpc/importer"
 	grpc_storage "github.com/PlakarKorp/integration-grpc/storage"
 	"github.com/PlakarKorp/kloset/kcontext"
+	"github.com/PlakarKorp/kloset/locate"
 	"github.com/PlakarKorp/kloset/location"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/snapshot"
 	"github.com/PlakarKorp/kloset/snapshot/exporter"
 	"github.com/PlakarKorp/kloset/snapshot/importer"
 	"github.com/PlakarKorp/kloset/storage"
-	"github.com/PlakarKorp/plakar/locate"
 )
 
 type TearDownFunc func() error
