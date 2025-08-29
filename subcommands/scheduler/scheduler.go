@@ -37,6 +37,8 @@ import (
 )
 
 func init() {
+	subcommands.Register(func() subcommands.Subcommand { return &Scheduler{} },
+		subcommands.BeforeRepositoryOpen, "scheduler", "start")
 	subcommands.Register(func() subcommands.Subcommand { return &SchedulerStop{} },
 		subcommands.BeforeRepositoryOpen, "scheduler", "stop")
 	subcommands.Register(func() subcommands.Subcommand { return &Scheduler{} },
