@@ -61,7 +61,6 @@ func TestExecuteCmdRmWithSnapshot(t *testing.T) {
 	repo, snap, ctx := generateSnapshot(t, bufOut, bufErr)
 	defer snap.Close()
 
-	// IMPORTANT: flags must come before positional args with the std flag package
 	args := []string{"-apply", hex.EncodeToString(snap.Header.GetIndexShortID())}
 
 	subcommand := &Rm{}
