@@ -14,54 +14,9 @@ import (
 	"go.yaml.in/yaml/v3"
 )
 
-type LocatePolicyConfig struct {
-	Before time.Time `yaml:"before,omitempty"`
-	Since  time.Time `yaml:"since,omitempty"`
-
-	Name        string `yaml:"name,omitempty"`
-	Category    string `yaml:"category,omitempty"`
-	Environment string `yaml:"environment,omitempty"`
-	Perimeter   string `yaml:"perimeter,omitempty"`
-	Job         string `yaml:"job,omitempty"`
-
-	Latest bool `yaml:"latest,omitempty"`
-
-	Tags  []string `yaml:"tags,omitempty"`
-	IDs   []string `yaml:"ids,omitempty"`
-	Roots []string `yaml:"roots,omitempty"`
-
-	Minutes    int `yaml:"minutes,omitempty"`
-	Hours      int `yaml:"hours,omitempty"`
-	Days       int `yaml:"days,omitempty"`
-	Weeks      int `yaml:"weeks,omitempty"`
-	Months     int `yaml:"months,omitempty"`
-	Years      int `yaml:"years,omitempty"`
-	Mondays    int `yaml:"mondays,omitempty"`
-	Tuesdays   int `yaml:"tuesdays,omitempty"`
-	Wednesdays int `yaml:"wednesdays,omitempty"`
-	Thursdays  int `yaml:"thursdays,omitempty"`
-	Fridays    int `yaml:"fridays,omitempty"`
-	Saturdays  int `yaml:"saturdays,omitempty"`
-	Sundays    int `yaml:"sundays,omitempty"`
-
-	PerMinute    int `yaml:"per-minute,omitempty"`
-	PerHour      int `yaml:"per-hour,omitempty"`
-	PerDay       int `yaml:"per-day,omitempty"`
-	PerWeek      int `yaml:"per-week,omitempty"`
-	PerMonth     int `yaml:"per-month,omitempty"`
-	PerYear      int `yaml:"per-year,omitempty"`
-	PerMonday    int `yaml:"per-monday,omitempty"`
-	PerTuesday   int `yaml:"per-tuesday,omitempty"`
-	PerWednesday int `yaml:"per-wednesday,omitempty"`
-	PerThursday  int `yaml:"per-thursday,omitempty"`
-	PerFriday    int `yaml:"per-friday,omitempty"`
-	PerSaturday  int `yaml:"per-saturday,omitempty"`
-	PerSunday    int `yaml:"per-sunday,omitempty"`
-}
-
 type policiesConfig struct {
-	Version  string                         `yaml:"version"`
-	Policies map[string]*LocatePolicyConfig `yaml:"policies"`
+	Version  string                           `yaml:"version"`
+	Policies map[string]*locate.LocateOptions `yaml:"policies"`
 }
 
 func (c *policiesConfig) Has(name string) bool {
@@ -70,7 +25,7 @@ func (c *policiesConfig) Has(name string) bool {
 }
 
 func (c *policiesConfig) Add(name string) {
-	c.Policies[name] = &LocatePolicyConfig{}
+	c.Policies[name] = &locate.LocateOptions{}
 }
 
 func (c *policiesConfig) setInt(value string, p *int) error {
@@ -118,80 +73,81 @@ func (c *policiesConfig) locateField(name string, key string) (any, error) {
 
 	switch key {
 	case "before":
-		return &p.Before, nil
+		return &p.Filters.Before, nil
 	case "since":
-		return &p.Since, nil
+		return &p.Filters.Since, nil
 	case "name":
-		return &p.Name, nil
+		return &p.Filters.Name, nil
 	case "category":
-		return &p.Category, nil
+		return &p.Filters.Category, nil
 	case "environment":
-		return &p.Environment, nil
+		return &p.Filters.Environment, nil
 	case "perimeter":
-		return &p.Perimeter, nil
+		return &p.Filters.Perimeter, nil
 	case "job":
-		return &p.Job, nil
+		return &p.Filters.Job, nil
 	case "tags":
-		return &p.Tags, nil
+		return &p.Filters.Tags, nil
 	case "ids":
-		return &p.IDs, nil
+		return &p.Filters.IDs, nil
 	case "roots":
-		return &p.Roots, nil
+		return &p.Filters.Roots, nil
 	case "latest":
-		return &p.Latest, nil
+		return &p.Filters.Latest, nil
+
 	case "minutes":
-		return &p.Minutes, nil
+		return &p.Periods.Minute.Keep, nil
 	case "hours":
-		return &p.Hours, nil
+		return &p.Periods.Hour.Keep, nil
 	case "days":
-		return &p.Days, nil
+		return &p.Periods.Day.Keep, nil
 	case "weeks":
-		return &p.Weeks, nil
+		return &p.Periods.Week.Keep, nil
 	case "months":
-		return &p.Months, nil
+		return &p.Periods.Month.Keep, nil
 	case "years":
-		return &p.Years, nil
+		return &p.Periods.Year.Keep, nil
 	case "mondays":
-		return &p.Mondays, nil
+		return &p.Periods.Monday.Keep, nil
 	case "tuesdays":
-		return &p.Tuesdays, nil
+		return &p.Periods.Tuesday.Keep, nil
 	case "wednesdays":
-		return &p.Wednesdays, nil
+		return &p.Periods.Wednesday.Keep, nil
 	case "thursdays":
-		return &p.Thursdays, nil
+		return &p.Periods.Thursday.Keep, nil
 	case "fridays":
-		return &p.Fridays, nil
+		return &p.Periods.Friday.Keep, nil
 	case "saturdays":
-		return &p.Saturdays, nil
+		return &p.Periods.Saturday.Keep, nil
 	case "sundays":
-		return &p.Sundays, nil
+		return &p.Periods.Sunday.Keep, nil
 
 	case "per-minute":
-		return &p.PerMinute, nil
+		return &p.Periods.Minute.Cap, nil
 	case "per-hour":
-		return &p.PerHour, nil
+		return &p.Periods.Hour.Cap, nil
 	case "per-day":
-		return &p.PerDay, nil
+		return &p.Periods.Day.Cap, nil
 	case "per-week":
-		return &p.PerWeek, nil
+		return &p.Periods.Week.Cap, nil
 	case "per-month":
-		return &p.PerMonth, nil
+		return &p.Periods.Month.Cap, nil
 	case "per-year":
-		return &p.PerYear, nil
+		return &p.Periods.Year.Cap, nil
 	case "per-monday":
-		return &p.PerMonday, nil
+		return &p.Periods.Monday.Cap, nil
 	case "per-tuesday":
-		return &p.PerTuesday, nil
+		return &p.Periods.Tuesday.Cap, nil
 	case "per-wednesday":
-		return &p.PerWednesday, nil
+		return &p.Periods.Wednesday.Cap, nil
 	case "per-thursday":
-		return &p.PerThursday, nil
+		return &p.Periods.Thursday.Cap, nil
 	case "per-friday":
-		return &p.PerFriday, nil
+		return &p.Periods.Friday.Cap, nil
 	case "per-saturday":
-		return &p.PerSaturday, nil
+		return &p.Periods.Saturday.Cap, nil
 	case "per-sunday":
-		return &p.PerSunday, nil
+		return &p.Periods.Sunday.Cap, nil
 
 	default:
 		return nil, fmt.Errorf("invalid key")
@@ -282,9 +238,9 @@ func (c *policiesConfig) Dump(w io.Writer, format string, names []string) error 
 		var err error
 		switch format {
 		case "json":
-			err = json.NewEncoder(w).Encode(map[string]*LocatePolicyConfig{name: c.Policies[name]})
+			err = json.NewEncoder(w).Encode(map[string]*locate.LocateOptions{name: c.Policies[name]})
 		case "yaml":
-			err = yaml.NewEncoder(w).Encode(map[string]*LocatePolicyConfig{name: c.Policies[name]})
+			err = yaml.NewEncoder(w).Encode(map[string]*locate.LocateOptions{name: c.Policies[name]})
 		default:
 			return fmt.Errorf("unknown format %q", format)
 		}
@@ -299,7 +255,7 @@ func (c *policiesConfig) Dump(w io.Writer, format string, names []string) error 
 func LoadPolicyConfigFile(filename string) (*policiesConfig, error) {
 	var cfg policiesConfig
 	cfg.Version = "v1.0.0"
-	cfg.Policies = make(map[string]*LocatePolicyConfig)
+	cfg.Policies = make(map[string]*locate.LocateOptions)
 
 	rd, err := os.Open(filename)
 	if err != nil {
@@ -322,47 +278,5 @@ func (c *policiesConfig) ApplyConfig(name string, po *locate.LocateOptions) {
 	if !ok {
 		return
 	}
-
-	po.Filters.Before = p.Before
-	po.Filters.Since = p.Since
-
-	po.Filters.Name = p.Name
-	po.Filters.Category = p.Category
-	po.Filters.Environment = p.Environment
-	po.Filters.Perimeter = p.Perimeter
-	po.Filters.Job = p.Job
-
-	po.Filters.Latest = p.Latest
-
-	po.Filters.Tags = p.Tags
-	po.Filters.IDs = p.IDs
-	po.Filters.Roots = p.Roots
-
-	po.Minute.Keep = p.Minutes
-	po.Hour.Keep = p.Hours
-	po.Day.Keep = p.Days
-	po.Week.Keep = p.Weeks
-	po.Month.Keep = p.Months
-	po.Year.Keep = p.Years
-	po.Monday.Keep = p.Mondays
-	po.Tuesday.Keep = p.Tuesdays
-	po.Wednesday.Keep = p.Wednesdays
-	po.Thursday.Keep = p.Thursdays
-	po.Friday.Keep = p.Fridays
-	po.Saturday.Keep = p.Saturdays
-	po.Sunday.Keep = p.Sundays
-
-	po.Minute.Cap = p.PerMinute
-	po.Hour.Cap = p.PerHour
-	po.Day.Cap = p.PerDay
-	po.Week.Cap = p.PerWeek
-	po.Month.Cap = p.PerMonth
-	po.Year.Cap = p.PerYear
-	po.Monday.Cap = p.PerMonday
-	po.Tuesday.Cap = p.PerTuesday
-	po.Wednesday.Cap = p.PerWednesday
-	po.Thursday.Cap = p.PerThursday
-	po.Friday.Cap = p.PerFriday
-	po.Saturday.Cap = p.PerSaturday
-	po.Sunday.Cap = p.PerSunday
+	*po = *p
 }
