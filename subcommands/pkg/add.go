@@ -91,7 +91,7 @@ func (cmd *PkgAdd) Execute(ctx *appcontext.AppContext, _ *repository.Repository)
 func installPlugin(ctx *appcontext.AppContext, pluginFile string) error {
 	var pkg plugins.Package
 
-	err := plugins.ParsePackageName(path.Base(pluginFile), &pkg)
+	err := plugins.ParsePackageName(filepath.Base(pluginFile), &pkg)
 	if err != nil {
 		return err
 	}

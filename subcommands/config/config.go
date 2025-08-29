@@ -43,6 +43,8 @@ func init() {
 		subcommands.BeforeRepositoryOpen, "source")
 	subcommands.Register(func() subcommands.Subcommand { return &ConfigDestinationCmd{} },
 		subcommands.BeforeRepositoryOpen, "destination")
+	subcommands.Register(func() subcommands.Subcommand { return &ConfigPolicyCmd{} },
+		subcommands.BeforeRepositoryOpen, "policy")
 }
 
 func normalizeName(name string) string {

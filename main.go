@@ -53,6 +53,7 @@ import (
 	_ "github.com/PlakarKorp/plakar/subcommands/maintenance"
 	_ "github.com/PlakarKorp/plakar/subcommands/mount"
 	_ "github.com/PlakarKorp/plakar/subcommands/pkg"
+	_ "github.com/PlakarKorp/plakar/subcommands/prune"
 	_ "github.com/PlakarKorp/plakar/subcommands/ptar"
 	_ "github.com/PlakarKorp/plakar/subcommands/restore"
 	_ "github.com/PlakarKorp/plakar/subcommands/rm"
@@ -159,7 +160,7 @@ func entryPoint() int {
 	ctx.CWD = cwd
 
 	_, envAgentLess := os.LookupEnv("PLAKAR_AGENTLESS")
-	if envAgentLess {
+	if envAgentLess || runtime.GOOS == "windows" {
 		opt_agentless = true
 	}
 
@@ -514,10 +515,13 @@ func getPassphraseFromEnv(ctx *appcontext.AppContext, params map[string]string) 
 	}
 
 	if pass, ok := params["passphrase"]; ok {
+		delete(params, "passphrase")
 		return pass, nil
 	}
 
 	if cmd, ok := params["passphrase_cmd"]; ok {
+		delete(params, "passphrase_cmd")
+
 		var c *exec.Cmd
 		switch runtime.GOOS {
 		case "windows":

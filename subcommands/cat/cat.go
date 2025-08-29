@@ -23,9 +23,9 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/PlakarKorp/kloset/locate"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/plakar/appcontext"
-	"github.com/PlakarKorp/plakar/locate"
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/alecthomas/chroma/formatters"
 	"github.com/alecthomas/chroma/lexers"
@@ -107,7 +107,11 @@ func (cmd *Cat) Execute(ctx *appcontext.AppContext, repo *repository.Repository)
 			continue
 		}
 
-		file := entry.Open(fs)
+		file, err := entry.Open(fs)
+		if err != nil {
+			return 1, err
+		}
+
 		var rd io.ReadCloser = file
 
 		if cmd.Decompress && entry.ResolvedObject.ContentType == "application/gzip" {

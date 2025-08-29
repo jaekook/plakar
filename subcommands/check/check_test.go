@@ -64,6 +64,7 @@ func TestExecuteCmdCheckDefault(t *testing.T) {
 	output := bufOut.String()
 	lines := strings.Split(strings.Trim(output, "\n"), "\n")
 	require.Equal(t, 8, len(lines))
+
 	// last line should have the summary
 	lastline := lines[len(lines)-1]
 	require.Contains(t, lastline, fmt.Sprintf("info: check: verification of %s:%s completed successfully", hex.EncodeToString(snap.Header.GetIndexShortID()[:]), snap.Header.GetSource(0).Importer.Directory))

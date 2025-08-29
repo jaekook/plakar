@@ -5,10 +5,10 @@ go 1.23.4
 require (
 	github.com/PlakarKorp/go-human2duration v0.1.6
 	github.com/PlakarKorp/integration-fs v1.0.6
-	github.com/PlakarKorp/integration-grpc v1.0.3
+	github.com/PlakarKorp/integration-grpc v1.0.7
 	github.com/PlakarKorp/integration-ptar v1.0.0
 	github.com/PlakarKorp/integration-stdio v1.0.0
-	github.com/PlakarKorp/kloset v1.0.3-0.20250821123147-4a6983d22fd3
+	github.com/PlakarKorp/kloset v1.0.3-0.20250829085446-4fb0d884e8e7
 	github.com/alecthomas/chroma v0.10.0
 	github.com/anacrolix/fuse v0.3.1
 	github.com/charmbracelet/bubbletea v1.3.6
@@ -24,7 +24,7 @@ require (
 	github.com/muesli/termenv v0.16.0
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
 	github.com/spf13/viper v1.20.1
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	github.com/vmihailenco/msgpack/v5 v5.4.1
 	github.com/wagslane/go-password-validator v0.3.0
 	go.omarpolo.com/ttlmap v0.0.0-20231012080932-0154c95c7516
@@ -34,7 +34,7 @@ require (
 	golang.org/x/sys v0.35.0
 	golang.org/x/term v0.34.0
 	golang.org/x/tools v0.36.0
-	google.golang.org/grpc v1.74.2
+	google.golang.org/grpc v1.75.0
 	gopkg.in/ini.v1 v1.67.0
 )
 
@@ -56,7 +56,7 @@ require (
 	github.com/cockroachdb/errors v1.12.0 // indirect
 	github.com/cockroachdb/fifo v0.0.0-20240816210425-c5d0cb0b6fc0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
-	github.com/cockroachdb/pebble/v2 v2.0.6 // indirect
+	github.com/cockroachdb/pebble/v2 v2.0.7 // indirect
 	github.com/cockroachdb/redact v1.1.6 // indirect
 	github.com/cockroachdb/swiss v0.0.0-20250624142022-d6e517c1d961 // indirect
 	github.com/cockroachdb/tokenbucket v0.0.0-20250429170803-42689b6311bb // indirect

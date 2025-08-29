@@ -107,7 +107,11 @@ func (ui *uiserver) snapshotReader(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
-	file := entry.Open(fs)
+	file, err := entry.Open(fs)
+	if err != nil {
+		return err
+	}
+
 	defer file.Close()
 
 	if !entry.Stat().Mode().IsRegular() {
@@ -179,7 +183,7 @@ func (ui *uiserver) snapshotReader(w http.ResponseWriter, r *http.Request) error
 		formatter := formatters.Get("html")
 		style := styles.Get("dracula")
 
-		w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if _, err := w.Write([]byte("<!DOCTYPE html>")); err != nil {
 			return err
 		}
