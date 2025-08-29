@@ -21,6 +21,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/plakar/appcontext"
@@ -48,13 +49,7 @@ func (cmd *Help) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.StringVar(&cmd.Style, "style", "dracula", "style to use")
 	flags.Parse(args)
 
-	command := ""
-	if flags.NArg() > 0 {
-		command = flags.Arg(0)
-	}
-
-	cmd.Command = command
-
+	cmd.Command = strings.Join(flags.Args(), "-")
 	return nil
 }
 
