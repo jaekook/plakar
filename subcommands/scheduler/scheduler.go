@@ -76,6 +76,11 @@ func (cmd *Scheduler) Parse(ctx *appcontext.AppContext, args []string) error {
 			return fmt.Errorf("failed to download configuration file from %q: %w", opt_tasks, err)
 		}
 		defer resp.Body.Close()
+
+		if resp.StatusCode != 200 {
+			return fmt.Errorf("failed to download configuration file from %q: status code %d", opt_tasks, resp.StatusCode)
+		}
+
 		rd = resp.Body
 	} else {
 		absolutePath, err := filepath.Abs(opt_tasks)
