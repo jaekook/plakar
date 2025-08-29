@@ -59,10 +59,9 @@ func (cmd *Pkg) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.BoolVar(&cmd.LongName, "long", false, "show full package name")
 	flags.BoolVar(&cmd.ListAll, "available", false, "list available prebuilt packages")
 	flags.Usage = func() {
-		fmt.Fprintf(flags.Output(), "Usage: %s",
+		fmt.Fprintf(flags.Output(), "Usage: %s [-available] [-long]\n", flags.Name())
+		fmt.Fprintf(flags.Output(), "       %s add | build | create | rm\n",
 			flags.Name())
-		fmt.Fprintf(flags.Output(), "\nOPTIONS:\n")
-		flags.PrintDefaults()
 	}
 
 	flags.Parse(args)

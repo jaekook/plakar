@@ -44,10 +44,8 @@ type PkgAdd struct {
 func (cmd *PkgAdd) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags := flag.NewFlagSet("pkg add", flag.ExitOnError)
 	flags.Usage = func() {
-		fmt.Fprintf(flags.Output(), "Usage: %s plugin.ptar ...",
+		fmt.Fprintf(flags.Output(), "Usage: %s plugin.ptar ...\n",
 			flags.Name())
-		fmt.Fprintf(flags.Output(), "\nOPTIONS:\n")
-		flags.PrintDefaults()
 	}
 
 	flags.Parse(args)
