@@ -7,8 +7,7 @@
 .Sh SYNOPSIS
 .Nm plakar scheduler
 .Op Fl foreground
-.Fl tasks Ar configfile
-.Op Cm start
+.Op Cm start Fl tasks Ar configfile
 .Op Cm stop
 .Sh DESCRIPTION
 The
@@ -21,8 +20,9 @@ The options are as follows:
 Run the scheduler in the foreground instead of as a background service.
 .It Fl tasks Ar configfile
 Specify the configuration file that contains the task definitions and schedules.
-.It Cm stop
-Starts the scheduler service and its jobs.
+.It Cm start Fl tasks Ar configfile
+Starts the scheduler service and its tasks from
+.Ar configfile .
 .It Cm stop
 Stop the currently running scheduler service.
 .El
