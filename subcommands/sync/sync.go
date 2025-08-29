@@ -22,12 +22,12 @@ import (
 	"os"
 
 	"github.com/PlakarKorp/kloset/encryption"
+	"github.com/PlakarKorp/kloset/locate"
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/snapshot"
 	"github.com/PlakarKorp/kloset/storage"
 	"github.com/PlakarKorp/plakar/appcontext"
-	"github.com/PlakarKorp/plakar/locate"
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/PlakarKorp/plakar/utils"
 )
@@ -46,7 +46,7 @@ func (cmd *Sync) Parse(ctx *appcontext.AppContext, args []string) error {
 		fmt.Fprintf(flags.Output(), "       %s [SNAPSHOT] with REPOSITORY\n", flags.Name())
 		flags.PrintDefaults()
 	}
-	cmd.SrcLocateOptions.InstallFlags(flags)
+	cmd.SrcLocateOptions.InstallLocateFlags(flags)
 
 	flags.Parse(args)
 
@@ -66,7 +66,7 @@ func (cmd *Sync) Parse(ctx *appcontext.AppContext, args []string) error {
 		if !cmd.SrcLocateOptions.Empty() {
 			ctx.GetLogger().Warn("snapshot specified, filters will be ignored")
 		}
-		cmd.SrcLocateOptions.Prefix = args[0]
+		cmd.SrcLocateOptions.Filters.IDs = []string{args[0]}
 		direction = args[1]
 		peerRepositoryPath = args[2]
 
