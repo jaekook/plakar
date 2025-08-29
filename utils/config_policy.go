@@ -6,55 +6,17 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"slices"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/PlakarKorp/kloset/locate"
 	"go.yaml.in/yaml/v3"
-	"gopkg.in/ini.v1"
 )
 
-type ConfigHandler interface {
-	ValidateKeyVal(key, val string) error
-	ValidateEntry(map[string]string) error
-}
-
 type policiesConfig struct {
-	Version  string                       `yaml:"version"`
-	Policies map[string]map[string]string `yaml:"policies"`
-}
-
-func (c *policiesConfig) ValidateKeyVal(key, value string) error {
-	if !slices.Contains([]string{
-		"keep-minutes",
-		"keep-hours",
-		"keep-days",
-		"keep-weeks",
-		"keep-months",
-		"keep-years",
-		"keep-per-minute",
-		"keep-per-hour",
-		"keep-per-day",
-		"keep-per-week",
-		"keep-per-month",
-		"keep-per-year",
-	}, key) {
-		return fmt.Errorf("invalid key")
-	}
-
-	i, err := strconv.Atoi(value)
-	if err != nil {
-		return fmt.Errorf("invalid value: %w", err)
-	}
-	if i < 0 {
-		return fmt.Errorf("negative value")
-	}
-
-	return nil
-}
-
-func (c *policiesConfig) ValidateEntry(entry map[string]string) error {
-	return nil
+	Version  string                           `yaml:"version"`
+	Policies map[string]*locate.LocateOptions `yaml:"policies"`
 }
 
 func (c *policiesConfig) Has(name string) bool {
@@ -63,19 +25,174 @@ func (c *policiesConfig) Has(name string) bool {
 }
 
 func (c *policiesConfig) Add(name string) {
-	c.Policies[name] = make(map[string]string)
+	c.Policies[name] = &locate.LocateOptions{}
 }
 
-func (c *policiesConfig) Set(name string, key string, value string) error {
-	if err := c.ValidateKeyVal(key, value); err != nil {
-		return err
+func (c *policiesConfig) setInt(value string, p *int) error {
+	i, err := strconv.Atoi(value)
+	if err != nil {
+		return fmt.Errorf("invalid value: %w", err)
 	}
-	c.Policies[name][key] = value
+	if i < 0 {
+		return fmt.Errorf("negative value")
+	}
+	*p = i
 	return nil
 }
 
-func (c *policiesConfig) Unset(name string, key string) {
-	delete(c.Policies[name], key)
+func (c *policiesConfig) setTime(value string, p *time.Time) error {
+	t, err := locate.ParseTimeFlag(value)
+	if err != nil {
+		return fmt.Errorf("invalid value: %w", err)
+	}
+	*p = t
+	return nil
+}
+
+func (c *policiesConfig) setStringList(value string, p *[]string) error {
+	*p = strings.Split(value, ",")
+	return nil
+}
+
+func (c *policiesConfig) locateField(name string, key string) (any, error) {
+	p, ok := c.Policies[name]
+	if !ok {
+		return nil, fmt.Errorf("entry not found")
+	}
+
+	switch key {
+	case "before":
+		return &p.Filters.Before, nil
+	case "since":
+		return &p.Filters.Since, nil
+	case "name":
+		return &p.Filters.Name, nil
+	case "category":
+		return &p.Filters.Category, nil
+	case "environment":
+		return &p.Filters.Environment, nil
+	case "perimeter":
+		return &p.Filters.Perimeter, nil
+	case "job":
+		return &p.Filters.Job, nil
+	case "tags":
+		return &p.Filters.Tags, nil
+	case "ids":
+		return &p.Filters.IDs, nil
+	case "roots":
+		return &p.Filters.Roots, nil
+	case "latest":
+		return &p.Filters.Latest, nil
+
+	case "minutes":
+		return &p.Periods.Minute.Keep, nil
+	case "hours":
+		return &p.Periods.Hour.Keep, nil
+	case "days":
+		return &p.Periods.Day.Keep, nil
+	case "weeks":
+		return &p.Periods.Week.Keep, nil
+	case "months":
+		return &p.Periods.Month.Keep, nil
+	case "years":
+		return &p.Periods.Year.Keep, nil
+	case "mondays":
+		return &p.Periods.Monday.Keep, nil
+	case "tuesdays":
+		return &p.Periods.Tuesday.Keep, nil
+	case "wednesdays":
+		return &p.Periods.Wednesday.Keep, nil
+	case "thursdays":
+		return &p.Periods.Thursday.Keep, nil
+	case "fridays":
+		return &p.Periods.Friday.Keep, nil
+	case "saturdays":
+		return &p.Periods.Saturday.Keep, nil
+	case "sundays":
+		return &p.Periods.Sunday.Keep, nil
+
+	case "per-minute":
+		return &p.Periods.Minute.Cap, nil
+	case "per-hour":
+		return &p.Periods.Hour.Cap, nil
+	case "per-day":
+		return &p.Periods.Day.Cap, nil
+	case "per-week":
+		return &p.Periods.Week.Cap, nil
+	case "per-month":
+		return &p.Periods.Month.Cap, nil
+	case "per-year":
+		return &p.Periods.Year.Cap, nil
+	case "per-monday":
+		return &p.Periods.Monday.Cap, nil
+	case "per-tuesday":
+		return &p.Periods.Tuesday.Cap, nil
+	case "per-wednesday":
+		return &p.Periods.Wednesday.Cap, nil
+	case "per-thursday":
+		return &p.Periods.Thursday.Cap, nil
+	case "per-friday":
+		return &p.Periods.Friday.Cap, nil
+	case "per-saturday":
+		return &p.Periods.Saturday.Cap, nil
+	case "per-sunday":
+		return &p.Periods.Sunday.Cap, nil
+
+	default:
+		return nil, fmt.Errorf("invalid key")
+	}
+}
+
+func (c *policiesConfig) Set(name string, key string, value string) error {
+	field, err := c.locateField(name, key)
+	if err != nil {
+		return err
+	}
+
+	switch p := field.(type) {
+	case *int:
+		return c.setInt(value, p)
+	case *time.Time:
+		return c.setTime(value, p)
+	case *string:
+		*p = value
+		return nil
+	case *[]string:
+		return c.setStringList(value, p)
+	case *bool:
+		b, err := strconv.ParseBool(value)
+		if err != nil {
+			return fmt.Errorf("invalid value: %w", err)
+		}
+		*p = b
+		return nil
+	default:
+		return fmt.Errorf("invalid field type")
+	}
+}
+
+func (c *policiesConfig) Unset(name string, key string) error {
+	field, err := c.locateField(name, key)
+	if err != nil {
+		return err
+	}
+
+	switch p := field.(type) {
+	case *int:
+		*p = 0
+	case *time.Time:
+		*p = time.Time{}
+	case *string:
+		*p = ""
+	case *[]string:
+		*p = nil
+	case *bool:
+		*p = false
+	default:
+		return fmt.Errorf("invalid field type")
+	}
+
+	return nil
 }
 
 func (c *policiesConfig) Remove(name string) {
@@ -100,17 +217,6 @@ func (c *policiesConfig) Load(rd io.Reader) error {
 	return yaml.NewDecoder(rd).Decode(c)
 }
 
-func marshalINISections(sectionName string, kv map[string]string, w io.Writer) error {
-	cfg := ini.Empty()
-
-	section := cfg.Section(sectionName)
-	for key, value := range kv {
-		section.Key(key).SetValue(value)
-	}
-	_, err := cfg.WriteTo(w)
-	return err
-}
-
 func (c *policiesConfig) Dump(w io.Writer, format string, names []string) error {
 
 	if len(names) == 0 {
@@ -126,11 +232,9 @@ func (c *policiesConfig) Dump(w io.Writer, format string, names []string) error 
 		var err error
 		switch format {
 		case "json":
-			err = json.NewEncoder(w).Encode(map[string]map[string]string{name: c.Policies[name]})
-		case "ini":
-			err = marshalINISections(name, c.Policies[name], w)
+			err = json.NewEncoder(w).Encode(map[string]*locate.LocateOptions{name: c.Policies[name]})
 		case "yaml":
-			err = yaml.NewEncoder(w).Encode(map[string]map[string]string{name: c.Policies[name]})
+			err = yaml.NewEncoder(w).Encode(map[string]*locate.LocateOptions{name: c.Policies[name]})
 		default:
 			return fmt.Errorf("unknown format %q", format)
 		}
@@ -142,39 +246,10 @@ func (c *policiesConfig) Dump(w io.Writer, format string, names []string) error 
 	return nil
 }
 
-func (c *policiesConfig) ApplyConfig(name string, po *locate.LocateOptions) {
-	apply := func(setter func(int) locate.Option, key string) {
-		entry, ok := c.Policies[name]
-		if !ok {
-			return
-		}
-		value, ok := entry[key]
-		if !ok {
-			return
-		}
-		i, err := strconv.Atoi(value)
-		if err != nil {
-			return
-		}
-		setter(i)(po)
-	}
-	apply(locate.WithKeepMinutes, "keep-minutes")
-	apply(locate.WithKeepHours, "keep-hours")
-	apply(locate.WithKeepDays, "keep-days")
-	apply(locate.WithKeepWeeks, "keep-weeks")
-	apply(locate.WithKeepMonths, "keep-months")
-	apply(locate.WithKeepYears, "keep-years")
-	apply(locate.WithPerMinuteCap, "keep-per-minute")
-	apply(locate.WithPerHourCap, "keep-per-hour")
-	apply(locate.WithPerDayCap, "keep-per-day")
-	apply(locate.WithPerWeekCap, "keep-per-week")
-	apply(locate.WithPerMonthCap, "keep-per-month")
-	apply(locate.WithPerYearCap, "keep-per-year")
-}
-
 func LoadPolicyConfigFile(filename string) (*policiesConfig, error) {
 	var cfg policiesConfig
-	cfg.Policies = make(map[string]map[string]string)
+	cfg.Version = "v1.0.0"
+	cfg.Policies = make(map[string]*locate.LocateOptions)
 
 	rd, err := os.Open(filename)
 	if err != nil {
@@ -190,4 +265,12 @@ func LoadPolicyConfigFile(filename string) (*policiesConfig, error) {
 	}
 
 	return &cfg, nil
+}
+
+func (c *policiesConfig) ApplyConfig(name string, po *locate.LocateOptions) {
+	p, ok := c.Policies[name]
+	if !ok {
+		return
+	}
+	*po = *p
 }

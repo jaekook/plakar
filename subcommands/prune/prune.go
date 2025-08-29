@@ -97,19 +97,19 @@ func mergePolicyOptions(to *locate.LocateOptions, from *locate.LocateOptions) {
 		}
 	}
 
-	merge(&to.Minute, &from.Minute)
-	merge(&to.Hour, &from.Hour)
-	merge(&to.Day, &from.Day)
-	merge(&to.Week, &from.Week)
-	merge(&to.Month, &from.Month)
-	merge(&to.Year, &from.Year)
-	merge(&to.Monday, &from.Monday)
-	merge(&to.Tuesday, &from.Tuesday)
-	merge(&to.Wednesday, &from.Wednesday)
-	merge(&to.Thursday, &from.Thursday)
-	merge(&to.Friday, &from.Friday)
-	merge(&to.Saturday, &from.Saturday)
-	merge(&to.Sunday, &from.Sunday)
+	merge(&to.Periods.Minute, &from.Periods.Minute)
+	merge(&to.Periods.Hour, &from.Periods.Hour)
+	merge(&to.Periods.Day, &from.Periods.Day)
+	merge(&to.Periods.Week, &from.Periods.Week)
+	merge(&to.Periods.Month, &from.Periods.Month)
+	merge(&to.Periods.Year, &from.Periods.Year)
+	merge(&to.Periods.Monday, &from.Periods.Monday)
+	merge(&to.Periods.Tuesday, &from.Periods.Tuesday)
+	merge(&to.Periods.Wednesday, &from.Periods.Wednesday)
+	merge(&to.Periods.Thursday, &from.Periods.Thursday)
+	merge(&to.Periods.Friday, &from.Periods.Friday)
+	merge(&to.Periods.Saturday, &from.Periods.Saturday)
+	merge(&to.Periods.Sunday, &from.Periods.Sunday)
 
 }
 
