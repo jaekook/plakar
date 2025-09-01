@@ -294,7 +294,7 @@ func dryrun(ctx *appcontext.AppContext, imp importer.Importer, excludePatterns [
 		return fmt.Errorf("failed to scan: %w", err)
 	}
 
-	excludes := exclude.NewRuleSet("")
+	excludes := exclude.NewRuleSet()
 	if err := excludes.AddRulesFromArray(excludePatterns); err != nil {
 		return fmt.Errorf("failed to setup exclude rules: %w", err)
 	}
