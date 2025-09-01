@@ -23,6 +23,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/PlakarKorp/kloset/exclude"
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/snapshot"
@@ -31,7 +32,6 @@ import (
 	"github.com/PlakarKorp/plakar/subcommands"
 	"github.com/PlakarKorp/plakar/utils"
 	"github.com/dustin/go-humanize"
-	"github.com/gobwas/glob"
 )
 
 func init() {
@@ -92,8 +92,8 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 
 	flags.Uint64Var(&cmd.Concurrency, "concurrency", uint64(ctx.MaxConcurrency), "maximum number of parallel tasks")
 	flags.Var(&opt_tags, "tag", "comma-separated list of tags to apply to the snapshot")
-	flags.StringVar(&opt_exclude_file, "exclude-file", "", "path to a file containing newline-separated regex patterns, treated as -exclude")
-	flags.Var(&opt_exclude, "exclude", "glob pattern to exclude files, can be specified multiple times to add several exclusion patterns")
+	flags.StringVar(&opt_exclude_file, "exclude-file", "", "path to a file containing newline-separated gitignore patterns, treated as -exclude")
+	flags.Var(&opt_exclude, "exclude", "gitignore pattern to exclude files, can be specified multiple times to add several exclusion patterns")
 	flags.BoolVar(&cmd.Quiet, "quiet", false, "suppress output")
 	flags.BoolVar(&cmd.Silent, "silent", false, "suppress ALL output")
 	flags.BoolVar(&cmd.OptCheck, "check", false, "check the snapshot after creating it")
@@ -107,9 +107,6 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 	}
 
 	for _, item := range opt_exclude {
-		if _, err := glob.Compile(item); err != nil {
-			return fmt.Errorf("failed to compile exclude pattern: %s", item)
-		}
 		excludes = append(excludes, item)
 	}
 
@@ -123,10 +120,6 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 		scanner := bufio.NewScanner(fp)
 		for scanner.Scan() {
 			line := scanner.Text()
-			_, err := glob.Compile(line)
-			if err != nil {
-				return fmt.Errorf("failed to compile exclude pattern: %s", line)
-			}
 			excludes = append(excludes, line)
 		}
 		if err := scanner.Err(); err != nil {
@@ -301,13 +294,9 @@ func dryrun(ctx *appcontext.AppContext, imp importer.Importer, excludePatterns [
 		return fmt.Errorf("failed to scan: %w", err)
 	}
 
-	excludes := []glob.Glob{}
-	for _, item := range excludePatterns {
-		g, err := glob.Compile(item)
-		if err != nil {
-			return fmt.Errorf("failed to compile exclude pattern: %s", item)
-		}
-		excludes = append(excludes, g)
+	excludes := exclude.NewRuleSet("")
+	if err := excludes.AddRulesFromArray(excludePatterns); err != nil {
+		return fmt.Errorf("failed to setup exclude rules: %w", err)
 	}
 
 	errors := false
@@ -320,14 +309,7 @@ func dryrun(ctx *appcontext.AppContext, imp importer.Importer, excludePatterns [
 			pathname = record.Error.Pathname
 		}
 
-		skip := false
-		for _, exclude := range excludes {
-			if exclude.Match(pathname) {
-				skip = true
-				break
-			}
-		}
-		if skip {
+		if excludes.IsExcluded(pathname, record.Record.FileInfo.IsDir()) {
 			if record.Record != nil {
 				record.Record.Close()
 			}
