@@ -93,11 +93,11 @@ func (imp *pkgerImporter) dofile(p string, ch chan<- *importer.ScanResult, mustE
 		case "windows":
 			isexe = strings.HasSuffix(fi.Name(), ".exe")
 		default:
-			isexe = (fi.Mode()&0111) == 0
+			isexe = (fi.Mode() & 0111) != 0
 		}
 
 		if !isexe {
-			ch <- importer.NewScanError(name, fmt.Errorf("Not executableX: %s", absolute))
+			ch <- importer.NewScanError(name, fmt.Errorf("Not executable: %s", absolute))
 			return
 		}
 	}
