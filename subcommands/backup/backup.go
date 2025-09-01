@@ -38,13 +38,13 @@ func init() {
 	subcommands.Register(func() subcommands.Subcommand { return &Backup{} }, subcommands.AgentSupport, "backup")
 }
 
-type excludeFlags []string
+type ignoreFlags []string
 
-func (e *excludeFlags) String() string {
+func (e *ignoreFlags) String() string {
 	return strings.Join(*e, ",")
 }
 
-func (e *excludeFlags) Set(value string) error {
+func (e *ignoreFlags) Set(value string) error {
 	*e = append(*e, value)
 	return nil
 }
@@ -74,8 +74,8 @@ func (e *tagFlags) asList() []string {
 }
 
 func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
-	var opt_exclude_file string
-	var opt_exclude excludeFlags
+	var opt_ignore_file string
+	var opt_ignore ignoreFlags
 	var opt_tags tagFlags
 
 	excludes := []string{}
@@ -92,8 +92,8 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 
 	flags.Uint64Var(&cmd.Concurrency, "concurrency", uint64(ctx.MaxConcurrency), "maximum number of parallel tasks")
 	flags.Var(&opt_tags, "tag", "comma-separated list of tags to apply to the snapshot")
-	flags.StringVar(&opt_exclude_file, "exclude-file", "", "path to a file containing newline-separated gitignore patterns, treated as -exclude")
-	flags.Var(&opt_exclude, "exclude", "gitignore pattern to exclude files, can be specified multiple times to add several exclusion patterns")
+	flags.StringVar(&opt_ignore_file, "ignore-file", "", "path to a file containing newline-separated gitignore patterns, treated as -ignore")
+	flags.Var(&opt_ignore, "ignore", "gitignore pattern to exclude files, can be specified multiple times to add several exclusion patterns")
 	flags.BoolVar(&cmd.Quiet, "quiet", false, "suppress output")
 	flags.BoolVar(&cmd.Silent, "silent", false, "suppress ALL output")
 	flags.BoolVar(&cmd.OptCheck, "check", false, "check the snapshot after creating it")
@@ -106,12 +106,12 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 		return fmt.Errorf("Too many arguments")
 	}
 
-	for _, item := range opt_exclude {
+	for _, item := range opt_ignore {
 		excludes = append(excludes, item)
 	}
 
-	if opt_exclude_file != "" {
-		fp, err := os.Open(opt_exclude_file)
+	if opt_ignore_file != "" {
+		fp, err := os.Open(opt_ignore_file)
 		if err != nil {
 			return fmt.Errorf("unable to open excludes file: %w", err)
 		}
@@ -302,14 +302,17 @@ func dryrun(ctx *appcontext.AppContext, imp importer.Importer, excludePatterns [
 	errors := false
 	for record := range scanner {
 		var pathname string
+		var isDir bool
 		switch {
 		case record.Record != nil:
 			pathname = record.Record.Pathname
+			isDir = record.Record.FileInfo.IsDir()
 		case record.Error != nil:
 			pathname = record.Error.Pathname
+			isDir = false
 		}
 
-		if excludes.IsExcluded(pathname, record.Record.FileInfo.IsDir()) {
+		if excludes.IsExcluded(pathname, isDir) {
 			if record.Record != nil {
 				record.Record.Close()
 			}
