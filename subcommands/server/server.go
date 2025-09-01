@@ -62,6 +62,7 @@ type Server struct {
 }
 
 func (cmd *Server) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
+	ctx.GetLogger().Info("listening on http://%s", cmd.ListenAddr)
 	httpd.Server(ctx, repo, cmd.ListenAddr, cmd.NoDelete)
 	return 0, nil
 }
