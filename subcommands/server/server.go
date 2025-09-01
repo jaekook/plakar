@@ -39,7 +39,7 @@ func (cmd *Server) Parse(ctx *appcontext.AppContext, args []string) error {
 		flags.PrintDefaults()
 	}
 
-	flags.StringVar(&cmd.ListenAddr, "listen", "127.0.0.1:9876", "address to listen on")
+	flags.StringVar(&cmd.ListenAddr, "listen", "localhost:9876", "address to listen on")
 	flags.BoolVar(&opt_allowdelete, "allow-delete", false, "enable delete operations")
 	flags.Parse(args)
 
