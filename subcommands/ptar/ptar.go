@@ -295,7 +295,7 @@ func (cmd *Ptar) Execute(ctx *appcontext.AppContext, repo *repository.Repository
 
 	defer scanCache.Close()
 
-	repoWriter := repo.NewRepositoryWriter(scanCache, identifier, repository.PtarType)
+	repoWriter := repo.NewRepositoryWriter(scanCache, identifier, repository.PtarType, "")
 	for i, syncTarget := range cmd.SyncTargets {
 		storeConfig, err := ctx.Config.GetRepository(syncTarget)
 		if err != nil {

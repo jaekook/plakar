@@ -8,8 +8,8 @@ PLAKAR-SCHEDULER(1) - General Commands Manual
 
 **plakar&nbsp;scheduler**
 \[**-foreground**]
-**-tasks**&nbsp;*configfile*
-\[*stop*]
+\[**start**&nbsp;**-tasks**&nbsp;*configfile*]
+\[**stop**]
 
 # DESCRIPTION
 
@@ -27,7 +27,12 @@ The options are as follows:
 
 > Specify the configuration file that contains the task definitions and schedules.
 
-*stop*
+**start** **-tasks** *configfile*
+
+> Starts the scheduler service and its tasks from
+> *configfile*.
+
+**stop**
 
 > Stop the currently running scheduler service.
 

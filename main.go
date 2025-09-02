@@ -417,8 +417,8 @@ func entryPoint() int {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%s: %s\n", flag.CommandLine.Name(), utils.SanitizeText(err.Error()))
 		if errors.Is(err, agent.ErrWrongVersion) {
-			fmt.Fprintln(os.Stderr, "To restart the agent with the current CLI version, run:")
-			fmt.Fprintln(os.Stderr, "\t$ plakar agent restart")
+			fmt.Fprintln(os.Stderr, "To stop the current agent, run:")
+			fmt.Fprintln(os.Stderr, "\t$ plakar agent stop")
 		}
 	}
 
