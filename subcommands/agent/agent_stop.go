@@ -19,8 +19,6 @@ package agent
 import (
 	"flag"
 	"fmt"
-	"os"
-	"syscall"
 
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/plakar/appcontext"
@@ -46,6 +44,8 @@ func (cmd *AgentStop) Parse(ctx *appcontext.AppContext, args []string) error {
 }
 
 func (cmd *AgentStop) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
-	syscall.Kill(os.Getpid(), syscall.SIGINT)
+	if err := kill_self(); err != nil {
+		return 1, err
+	}
 	return 0, nil
 }

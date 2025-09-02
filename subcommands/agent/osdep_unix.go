@@ -46,3 +46,8 @@ func daemonize(argv []string) error {
 		return nil
 	}
 }
+
+func kill_self() error {
+	syscall.Kill(os.Getpid(), syscall.SIGINT)
+	return nil
+}
