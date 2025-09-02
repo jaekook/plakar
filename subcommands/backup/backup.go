@@ -94,6 +94,7 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.Var(&opt_tags, "tag", "comma-separated list of tags to apply to the snapshot")
 	flags.StringVar(&opt_ignore_file, "ignore-file", "", "path to a file containing newline-separated gitignore patterns, treated as -ignore")
 	flags.Var(&opt_ignore, "ignore", "gitignore pattern to exclude files, can be specified multiple times to add several exclusion patterns")
+	flags.StringVar(&cmd.OnDiskPackfilePath, "disk-based", "off", "on or off or a path where to put temporary packfiles")
 	flags.BoolVar(&cmd.Quiet, "quiet", false, "suppress output")
 	flags.BoolVar(&cmd.Silent, "silent", false, "suppress ALL output")
 	flags.BoolVar(&cmd.OptCheck, "check", false, "check the snapshot after creating it")
@@ -104,6 +105,12 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 
 	if flags.NArg() > 1 {
 		return fmt.Errorf("Too many arguments")
+	}
+
+	if cmd.OnDiskPackfilePath == "off" {
+		cmd.OnDiskPackfilePath = ""
+	} else if cmd.OnDiskPackfilePath == "on" {
+		cmd.OnDiskPackfilePath = os.TempDir()
 	}
 
 	for _, item := range opt_ignore {
@@ -143,16 +150,17 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 type Backup struct {
 	subcommands.SubcommandBase
 
-	Job         string
-	Concurrency uint64
-	Tags        []string
-	Excludes    []string
-	Silent      bool
-	Quiet       bool
-	Path        string
-	OptCheck    bool
-	Opts        map[string]string
-	DryRun      bool
+	Job                string
+	Concurrency        uint64
+	Tags               []string
+	Excludes           []string
+	Silent             bool
+	Quiet              bool
+	Path               string
+	OptCheck           bool
+	Opts               map[string]string
+	DryRun             bool
+	OnDiskPackfilePath string
 }
 
 func (cmd *Backup) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
@@ -210,7 +218,7 @@ func (cmd *Backup) DoBackup(ctx *appcontext.AppContext, repo *repository.Reposit
 		return 0, nil, objects.MAC{}, nil
 	}
 
-	snap, err := snapshot.Create(repo, repository.DefaultType)
+	snap, err := snapshot.Create(repo, repository.DefaultType, cmd.OnDiskPackfilePath)
 	if err != nil {
 		ctx.GetLogger().Error("%s", err)
 		return 1, err, objects.MAC{}, nil

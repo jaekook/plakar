@@ -301,7 +301,7 @@ func synchronize(ctx *appcontext.AppContext, srcRepository, dstRepository *repos
 	}
 	defer srcSnapshot.Close()
 
-	dstSnapshot, err := snapshot.Create(dstRepository, repository.DefaultType)
+	dstSnapshot, err := snapshot.Create(dstRepository, repository.DefaultType, "")
 	if err != nil {
 		return err
 	}
