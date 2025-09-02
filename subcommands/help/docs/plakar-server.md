@@ -65,7 +65,6 @@ plakar(1)
 When a host name is provided,
 **plakar server**
 uses only one of the IP addresses it resolves to,
-preferably using the legacy internet protocol
-(IPv4).
+preferably IPv4 .
 
 Plakar - July 3, 2025 - PLAKAR-SERVER(1)
