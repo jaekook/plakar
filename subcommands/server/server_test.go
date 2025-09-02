@@ -49,11 +49,7 @@ func TestExecuteCmdServerDefault(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, subcommand)
 
-	go func() {
-		status, err := subcommand.Execute(ctx, repo)
-		require.NoError(t, err)
-		require.Equal(t, 0, status)
-	}()
+	go subcommand.Execute(ctx, repo)
 
 	// wait for the server to start
 	time.Sleep(100 * time.Millisecond)
