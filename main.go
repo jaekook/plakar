@@ -432,11 +432,9 @@ func entryPoint() int {
 	if store != nil {
 		err = store.Close(ctx)
 		if err != nil {
-			logger.Warn("could not close repository: %s", err)
+			logger.Warn("could not close store: %s", err)
 		}
 	}
-
-	ctx.Close()
 
 	if opt_time {
 		fmt.Println("time:", t1)
