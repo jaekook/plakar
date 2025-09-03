@@ -110,6 +110,12 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 		return fmt.Errorf("Too many arguments")
 	}
 
+	if !cmd.ForcedTimestamp.IsZero() {
+		if cmd.ForcedTimestamp.After(time.Now()) {
+			return fmt.Errorf("forced timestamp cannot be in the future")
+		}
+	}
+
 	if cmd.OnDiskPackfilePath == "off" {
 		cmd.OnDiskPackfilePath = ""
 	} else if cmd.OnDiskPackfilePath == "on" {
@@ -180,7 +186,6 @@ func (cmd *Backup) DoBackup(ctx *appcontext.AppContext, repo *repository.Reposit
 		Excludes:       cmd.Excludes,
 	}
 
-	fmt.Println("forced timestamp", cmd.ForcedTimestamp)
 	if !cmd.ForcedTimestamp.IsZero() {
 		opts.ForcedTimestamp = cmd.ForcedTimestamp
 	}
