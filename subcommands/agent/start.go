@@ -37,6 +37,7 @@ import (
 	"github.com/PlakarKorp/plakar/agent"
 	"github.com/PlakarKorp/plakar/appcontext"
 	"github.com/PlakarKorp/plakar/subcommands"
+	psync "github.com/PlakarKorp/plakar/subcommands/sync"
 	"github.com/PlakarKorp/plakar/task"
 	"github.com/PlakarKorp/plakar/utils"
 
@@ -341,6 +342,14 @@ func handleClient(ctx *appcontext.AppContext, conn net.Conn) {
 		defer repo.Close()
 	}
 
+	if synccmd, ok := subcommand.(*psync.Sync); ok {
+		if err := setupPeerSecret(clientContext, synccmd); err != nil {
+			clientContext.GetLogger().Warn("Failed to setup peer secret: %v", err)
+			fmt.Fprintf(clientContext.Stderr, "Failed to setup peer secret: %s\n", err)
+			return
+		}
+	}
+
 	status, err := task.RunCommand(clientContext, subcommand, repo, "@agent")
 
 	errStr := ""
@@ -402,6 +411,63 @@ func setupSecret(ctx *appcontext.AppContext, cmd subcommands.Subcommand, storeCo
 	}
 
 	ctx.SetSecret(key)
+	return nil
+}
+
+func setupPeerSecret(ctx *appcontext.AppContext, cmd *psync.Sync) error {
+	storeConfig, err := ctx.Config.GetRepository(cmd.PeerRepositoryLocation)
+	if err != nil {
+		return fmt.Errorf("peer repository: %w", err)
+	}
+
+	peerStore, peerStoreSerializedConfig, err := storage.Open(ctx.GetInner(), storeConfig)
+	if err != nil {
+		return fmt.Errorf("failed to open peer storage: %w", err)
+	}
+	peerStore.Close(ctx)
+
+	peerStoreConfig, err := storage.NewConfigurationFromWrappedBytes(peerStoreSerializedConfig)
+	if err != nil {
+		return fmt.Errorf("failed to parse peer configuration: %w", err)
+	}
+
+	if peerStoreConfig.Encryption == nil {
+		return nil
+	}
+
+	getKey := func() ([]byte, error) {
+		if key := cmd.PeerRepositorySecret; key != nil {
+			return key, nil
+		}
+
+		passphrase, ok := storeConfig["passphrase"]
+		if !ok {
+			cmd, ok := storeConfig["passphrase_cmd"]
+			if !ok {
+				return nil, fmt.Errorf("no passphrase specified")
+			}
+			passphrase, err = utils.GetPassphraseFromCommand(cmd)
+			if err != nil {
+				return nil, fmt.Errorf("failed to read passphrase from command: %w", err)
+			}
+		}
+
+		key, err := encryption.DeriveKey(peerStoreConfig.Encryption.KDFParams, []byte(passphrase))
+		if err != nil {
+			return nil, fmt.Errorf("failed to derive key: %w", err)
+		}
+		return key, nil
+	}
+
+	key, err := getKey()
+	if err != nil {
+		return err
+	}
+	if !encryption.VerifyCanary(peerStoreConfig.Encryption, key) {
+		return fmt.Errorf("failed to verify key")
+	}
+
+	cmd.PeerRepositorySecret = key
 	return nil
 }
 
