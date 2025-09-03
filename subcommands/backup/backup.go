@@ -22,8 +22,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/PlakarKorp/kloset/exclude"
+	"github.com/PlakarKorp/kloset/locate"
 	"github.com/PlakarKorp/kloset/objects"
 	"github.com/PlakarKorp/kloset/repository"
 	"github.com/PlakarKorp/kloset/snapshot"
@@ -100,6 +102,7 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 	flags.BoolVar(&cmd.OptCheck, "check", false, "check the snapshot after creating it")
 	flags.Var(utils.NewOptsFlag(cmd.Opts), "o", "specify extra importer options")
 	flags.BoolVar(&cmd.DryRun, "scan", false, "do not actually perform a backup, just list the files")
+	flags.Var(locate.NewTimeFlag(&cmd.ForcedTimestamp), "force-timestamp", "force a timestamp")
 	//flags.BoolVar(&opt_stdio, "stdio", false, "output one line per file to stdout instead of the default interactive output")
 	flags.Parse(args)
 
@@ -161,6 +164,7 @@ type Backup struct {
 	Opts               map[string]string
 	DryRun             bool
 	OnDiskPackfilePath string
+	ForcedTimestamp    time.Time
 }
 
 func (cmd *Backup) Execute(ctx *appcontext.AppContext, repo *repository.Repository) (int, error) {
@@ -174,6 +178,11 @@ func (cmd *Backup) DoBackup(ctx *appcontext.AppContext, repo *repository.Reposit
 		Name:           "default",
 		Tags:           cmd.Tags,
 		Excludes:       cmd.Excludes,
+	}
+
+	fmt.Println("forced timestamp", cmd.ForcedTimestamp)
+	if !cmd.ForcedTimestamp.IsZero() {
+		opts.ForcedTimestamp = cmd.ForcedTimestamp
 	}
 
 	scanDir := "fs:" + ctx.CWD
