@@ -36,6 +36,23 @@ func (s *Scheduler) backupTask(taskset Task, task BackupConfig) {
 		case <-s.ctx.Done():
 			return
 		case <-tick:
+
+			var excludes []string
+			for _, line := range task.Ignore {
+				excludes = append(excludes, line)
+			}
+			if task.IgnoreFile != "" {
+				lines, err := backup.LoadIgnoreFile(task.IgnoreFile)
+				if err != nil {
+					s.ctx.GetLogger().Error("Failed to load ignore file: %s", err)
+					continue
+				}
+				for _, line := range lines {
+					excludes = append(excludes, line)
+				}
+			}
+			backupSubcommand.Excludes = excludes
+
 			storeConfig, err := s.ctx.Config.GetRepository(taskset.Repository)
 			if err != nil {
 				s.ctx.GetLogger().Error("Error getting repository config: %s", err)
