@@ -376,9 +376,6 @@ func setupSecret(ctx *appcontext.AppContext, cmd subcommands.Subcommand, storeCo
 	}
 
 	getKey := func() ([]byte, error) {
-		if key := ctx.GetSecret(); key != nil {
-			return key, nil
-		}
 		if key := cmd.GetRepositorySecret(); key != nil {
 			return key, nil
 		}
