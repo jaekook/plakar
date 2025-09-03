@@ -39,9 +39,6 @@ func (s *Scheduler) backupTask(taskset Task, task BackupConfig) {
 		case <-tick:
 
 			var excludes []string
-			for _, line := range task.Ignore {
-				excludes = append(excludes, line)
-			}
 			if task.IgnoreFile != "" {
 				lines, err := backup.LoadIgnoreFile(task.IgnoreFile)
 				if err != nil {
@@ -51,6 +48,9 @@ func (s *Scheduler) backupTask(taskset Task, task BackupConfig) {
 				for _, line := range lines {
 					excludes = append(excludes, line)
 				}
+			}
+			for _, line := range task.Ignore {
+				excludes = append(excludes, line)
 			}
 			backupSubcommand.Excludes = excludes
 

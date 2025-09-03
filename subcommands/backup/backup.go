@@ -113,10 +113,6 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 		cmd.OnDiskPackfilePath = os.TempDir()
 	}
 
-	for _, item := range opt_ignore {
-		excludes = append(excludes, item)
-	}
-
 	if opt_ignore_file != "" {
 		lines, err := LoadIgnoreFile(opt_ignore_file)
 		if err != nil {
@@ -125,6 +121,10 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 		for _, line := range lines {
 			excludes = append(excludes, line)
 		}
+	}
+
+	for _, item := range opt_ignore {
+		excludes = append(excludes, item)
 	}
 
 	cmd.RepositorySecret = ctx.GetSecret()
