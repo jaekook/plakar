@@ -27,6 +27,7 @@ func (s *Scheduler) backupTask(taskset Task, task BackupConfig) {
 	}
 
 	rmSubcommand := &rm.Rm{}
+	rmSubcommand.Apply = true
 	rmSubcommand.Flags = subcommands.AgentSupport
 	rmSubcommand.LocateOptions = locate.NewDefaultLocateOptions(locate.WithJob(task.Name))
 
@@ -169,6 +170,7 @@ func (s *Scheduler) maintenanceTask(task MaintenanceConfig) {
 	maintenanceSubcommand := &maintenance.Maintenance{}
 	maintenanceSubcommand.Flags = subcommands.AgentSupport
 	rmSubcommand := &rm.Rm{}
+	rmSubcommand.Apply = true
 	rmSubcommand.Flags = subcommands.AgentSupport
 	rmSubcommand.LocateOptions = locate.NewDefaultLocateOptions(locate.WithJob("maintenance"))
 
