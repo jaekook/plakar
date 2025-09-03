@@ -289,8 +289,6 @@ func dispatchSubcommand(ctx *appcontext.AppContext, cmd string, subcmd string, a
 		return utils.SaveConfig(ctx.ConfigDir, ctx.Config)
 
 	case "show":
-		fmt.Println("args:", args)
-
 		var opt_json bool
 		var opt_ini bool
 		var opt_yaml bool
