@@ -227,7 +227,7 @@ func GetPassphraseFromCommand(cmd string) (string, error) {
 	return pass, nil
 }
 
-func GetPassphraseConfirm(prefix string, minEntropyBits float64) ([]byte, error) {
+func GetPassphraseConfirm(prefix string, minEntropyBits float64, retry int) ([]byte, error) {
 	var in, out = os.Stdin, os.Stderr
 
 	// use the tty for I/O if possible
@@ -237,27 +237,36 @@ func GetPassphraseConfirm(prefix string, minEntropyBits float64) ([]byte, error)
 		defer tty.Close()
 	}
 
-	passphrase1, err := readpassphrase(in, out, prefix+" passphrase: ")
-	if err != nil {
-		return nil, err
+	for range retry {
+
+		passphrase1, err := readpassphrase(in, out, prefix+" passphrase: ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			continue
+		}
+
+		// keepass considers < 80 bits as weak
+		err = passwordvalidator.Validate(string(passphrase1), minEntropyBits)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			continue
+		}
+
+		passphrase2, err := readpassphrase(in, out, prefix+" passphrase (confirm): ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			continue
+		}
+
+		if string(passphrase1) != string(passphrase2) {
+			fmt.Fprintf(os.Stderr, "passphrases mismatch\n")
+			continue
+		}
+
+		return passphrase1, nil
 	}
 
-	// keepass considers < 80 bits as weak
-	err = passwordvalidator.Validate(string(passphrase1), minEntropyBits)
-	if err != nil {
-		return nil, fmt.Errorf("passphrase is too weak: %s", err)
-	}
-
-	passphrase2, err := readpassphrase(in, out, prefix+" passphrase (confirm): ")
-	if err != nil {
-		return nil, err
-	}
-
-	if string(passphrase1) != string(passphrase2) {
-		return nil, errors.New("passphrases mismatch")
-	}
-
-	return passphrase1, nil
+	return nil, errors.New("too many failed attempts")
 }
 
 func GetCacheDir(appName string) (string, error) {
