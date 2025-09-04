@@ -237,6 +237,9 @@ func GetPassphraseConfirm(prefix string, minEntropyBits float64, retry int) ([]b
 		defer tty.Close()
 	}
 
+	var previous []byte
+	first := true // avoid matching emtpty lines
+
 	for range retry {
 
 		passphrase1, err := readpassphrase(in, out, prefix+" passphrase: ")
@@ -245,12 +248,19 @@ func GetPassphraseConfirm(prefix string, minEntropyBits float64, retry int) ([]b
 			continue
 		}
 
-		// keepass considers < 80 bits as weak
-		err = passwordvalidator.Validate(string(passphrase1), minEntropyBits)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			continue
+		if first || string(passphrase1) != string(previous) {
+			previous = passphrase1
+			first = false
+			// keepass considers < 80 bits as weak
+			err = passwordvalidator.Validate(string(passphrase1), minEntropyBits)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				continue
+			}
 		}
+		// reset our force-weak state past this point.
+		previous = nil
+		first = true
 
 		passphrase2, err := readpassphrase(in, out, prefix+" passphrase (confirm): ")
 		if err != nil {
