@@ -43,6 +43,9 @@ func (_ *Services) Parse(ctx *appcontext.AppContext, args []string) error {
 	}
 	flags.Parse(args)
 
+	if flags.NArg() > 0 {
+		return fmt.Errorf("invalid argument: %s", flags.Arg(0))
+	}
 	return fmt.Errorf("no action specified")
 }
 
