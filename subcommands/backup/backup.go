@@ -122,26 +122,18 @@ func (cmd *Backup) Parse(ctx *appcontext.AppContext, args []string) error {
 		cmd.OnDiskPackfilePath = os.TempDir()
 	}
 
-	for _, item := range opt_ignore {
-		excludes = append(excludes, item)
-	}
-
 	if opt_ignore_file != "" {
-		fp, err := os.Open(opt_ignore_file)
+		lines, err := LoadIgnoreFile(opt_ignore_file)
 		if err != nil {
-			return fmt.Errorf("unable to open excludes file: %w", err)
-		}
-		defer fp.Close()
-
-		scanner := bufio.NewScanner(fp)
-		for scanner.Scan() {
-			line := scanner.Text()
-			excludes = append(excludes, line)
-		}
-		if err := scanner.Err(); err != nil {
-			ctx.GetLogger().Error("%s", err)
 			return err
 		}
+		for _, line := range lines {
+			excludes = append(excludes, line)
+		}
+	}
+
+	for _, item := range opt_ignore {
+		excludes = append(excludes, item)
 	}
 
 	cmd.RepositorySecret = ctx.GetSecret()
@@ -308,6 +300,31 @@ func (cmd *Backup) DoBackup(ctx *appcontext.AppContext, repo *repository.Reposit
 		warning = fmt.Errorf("%d errors during backup", totalErrors)
 	}
 	return 0, nil, snap.Header.Identifier, warning
+}
+
+func LoadIgnoreFile(filename string) ([]string, error) {
+	fp, err := os.Open(filename)
+	if err != nil {
+		return nil, fmt.Errorf("unable to open excludes file: %w", err)
+	}
+	defer fp.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(fp)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		if strings.Trim(line, " \t\r") == "" {
+			continue
+		}
+		lines = append(lines, line)
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return lines, nil
 }
 
 func dryrun(ctx *appcontext.AppContext, imp importer.Importer, excludePatterns []string) error {

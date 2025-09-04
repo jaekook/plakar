@@ -34,12 +34,14 @@ type Task struct {
 }
 
 type BackupConfig struct {
-	Name      string
-	Tags      []string
-	Path      string        `validate:"required"`
-	Interval  time.Duration `validate:"required"`
-	Check     BackupConfigCheck
-	Retention time.Duration
+	Name       string
+	Tags       []string
+	Path       string        `validate:"required"`
+	Interval   time.Duration `validate:"required"`
+	Check      BackupConfigCheck
+	Retention  time.Duration
+	Ignore     []string
+	IgnoreFile string `yaml:"ignoreFile"`
 }
 
 // CheckDecodeHook is a mapstructure decode hook to allow users to specify
