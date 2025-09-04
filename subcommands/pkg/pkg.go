@@ -45,6 +45,9 @@ func init() {
 	subcommands.Register(func() subcommands.Subcommand { return &PkgList{} },
 		subcommands.BeforeRepositoryOpen,
 		"pkg", "list")
+	subcommands.Register(func() subcommands.Subcommand { return &PkgList{} },
+		subcommands.BeforeRepositoryOpen,
+		"pkg", "show")
 
 	subcommands.Register(func() subcommands.Subcommand { return &Pkg{} },
 		subcommands.BeforeRepositoryOpen,
