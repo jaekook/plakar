@@ -244,8 +244,7 @@ func GetPassphraseConfirm(prefix string, minEntropyBits float64, retry int) ([]b
 
 		passphrase1, err := readpassphrase(in, out, prefix+" passphrase: ")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			continue
+			return nil, err
 		}
 
 		if first || string(passphrase1) != string(previous) {
@@ -264,8 +263,7 @@ func GetPassphraseConfirm(prefix string, minEntropyBits float64, retry int) ([]b
 
 		passphrase2, err := readpassphrase(in, out, prefix+" passphrase (confirm): ")
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "%s\n", err)
-			continue
+			return nil, err
 		}
 
 		if string(passphrase1) != string(passphrase2) {
