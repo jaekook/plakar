@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  plakar-api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Server configuration
+      - PORT=8080
+      - HOST=0.0.0.0
+      
+      # AWS configuration
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      
+      # Authentication
+      - AUTH_TOKEN=${AUTH_TOKEN}
+    
+    volumes:
+      # Mount AWS credentials if using credential files
+      - ~/.aws:/home/plakar/.aws:ro
+    
+    restart: unless-stopped
+    
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.plakar-api.rule=Host(`api.plakar.local`)"
+      - "traefik.http.routers.plakar-api.entrypoints=web"
+      - "traefik.http.services.plakar-api.loadbalancer.server.port=8080"
+
+  # Optional: Traefik reverse proxy
+  traefik:
+    image: traefik:v3.0
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8081:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    profiles:
+      - proxy
+
+  # Optional: Prometheus monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    profiles:
+      - monitoring
+
+  # Optional: Grafana dashboard
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    profiles:
+      - monitoring
+
+volumes:
+  grafana-data:

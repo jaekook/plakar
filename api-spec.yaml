@@ -1,0 +1,1659 @@
+openapi: 3.0.3
+info:
+  title: Plakar Backup & Restore API
+  description: |
+    RESTful API for Plakar - a modern, secure, and scalable backup solution.
+    
+    Plakar provides comprehensive backup and restore capabilities with:
+    - End-to-end encryption with audited cryptography
+    - Deduplication and compression for efficient storage
+    - Immutable storage using Kloset data store
+    - Cross-platform support (Linux, macOS, Windows)
+    - Web-based UI for monitoring and browsing backups
+    
+    ## Authentication
+    
+    The API uses Bearer token authentication. Include the token in the Authorization header:
+    ```
+    Authorization: Bearer <your-token>
+    ```
+    
+    ## Error Handling
+    
+    All errors follow a consistent format with HTTP status codes and structured error responses.
+    
+    ## Rate Limiting
+    
+    API requests may be rate-limited to ensure system stability.
+    
+  version: 1.0.2
+  contact:
+    name: Plakar Support
+    url: https://www.plakar.io
+    email: support@plakar.io
+  license:
+    name: ISC License
+    url: https://github.com/PlakarKorp/plakar/blob/main/LICENSE
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local development server
+  - url: https://api.plakar.io
+    description: Plakar Cloud API
+
+security:
+  - bearerAuth: []
+
+paths:
+  /info:
+    get:
+      summary: Get API information
+      description: Returns basic information about the API instance, authentication status, and capabilities
+      tags:
+        - System
+      responses:
+        '200':
+          description: API information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  repository_id:
+                    type: string
+                    format: uuid
+                    description: Unique identifier for the repository
+                  authenticated:
+                    type: boolean
+                    description: Whether the current request is authenticated
+                  version:
+                    type: string
+                    description: Plakar version
+                  browsable:
+                    type: boolean
+                    description: Whether the repository supports browsing operations
+                  demo_mode:
+                    type: boolean
+                    description: Whether the API is running in demo mode (read-only)
+
+  /repository/info:
+    get:
+      summary: Get repository information
+      description: Returns detailed information about the repository including storage statistics
+      tags:
+        - Repository
+      responses:
+        '200':
+          description: Repository information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemWrapper'
+                properties:
+                  item:
+                    $ref: '#/components/schemas/RepositoryInfo'
+
+  /repository/snapshots:
+    get:
+      summary: List snapshots
+      description: Returns a paginated list of snapshots in the repository
+      tags:
+        - Repository
+      parameters:
+        - name: offset
+          in: query
+          description: Number of items to skip
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          description: Maximum number of items to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 50
+        - name: importer
+          in: query
+          description: Filter by importer type
+          schema:
+            type: string
+        - name: since
+          in: query
+          description: Filter snapshots created after this timestamp
+          schema:
+            type: string
+            format: date-time
+        - name: sort
+          in: query
+          description: Sort order (e.g., "Timestamp", "-Timestamp")
+          schema:
+            type: string
+            default: "Timestamp"
+      responses:
+        '200':
+          description: List of snapshots
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsWrapper'
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SnapshotHeader'
+
+  /repository/locate-pathname:
+    get:
+      summary: Locate file across snapshots
+      description: Find a specific file or directory across multiple snapshots (timeline view)
+      tags:
+        - Repository
+      parameters:
+        - name: resource
+          in: query
+          required: true
+          description: Path to the resource to locate
+          schema:
+            type: string
+        - name: importerType
+          in: query
+          description: Filter by importer type
+          schema:
+            type: string
+        - name: importerOrigin
+          in: query
+          description: Filter by importer origin
+          schema:
+            type: string
+        - name: importerDirectory
+          in: query
+          description: Filter by importer directory
+          schema:
+            type: string
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 50
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: "Timestamp"
+      responses:
+        '200':
+          description: Timeline locations for the resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsWrapper'
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TimelineLocation'
+
+  /repository/importer-types:
+    get:
+      summary: Get available importer types
+      description: Returns a list of all importer types used in the repository
+      tags:
+        - Repository
+      responses:
+        '200':
+          description: List of importer types
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsWrapper'
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+
+  /repository/states:
+    get:
+      summary: List repository states
+      description: Returns a list of all repository state objects
+      tags:
+        - Repository
+      responses:
+        '200':
+          description: List of state objects
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsWrapper'
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: string
+                      format: hex
+
+  /repository/state/{state}:
+    get:
+      summary: Get repository state
+      description: Returns the content of a specific repository state object
+      tags:
+        - Repository
+      parameters:
+        - name: state
+          in: path
+          required: true
+          description: State object identifier (hex-encoded)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{64}$'
+      responses:
+        '200':
+          description: State object content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /snapshot/{snapshot}:
+    get:
+      summary: Get snapshot header
+      description: Returns the header information for a specific snapshot
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot
+          in: path
+          required: true
+          description: Snapshot ID (hex-encoded)
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{64}$'
+      responses:
+        '200':
+          description: Snapshot header
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemWrapper'
+                properties:
+                  item:
+                    $ref: '#/components/schemas/SnapshotHeader'
+
+  /snapshot/vfs/{snapshot_path}:
+    get:
+      summary: Browse snapshot filesystem
+      description: Browse the virtual filesystem of a snapshot at a specific path
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot_path
+          in: path
+          required: true
+          description: Snapshot ID and path (format: "snapshotID" or "snapshotID:path")
+          schema:
+            type: string
+      responses:
+        '200':
+          description: VFS entry information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VFSEntry'
+
+  /snapshot/vfs/children/{snapshot_path}:
+    get:
+      summary: List directory children
+      description: List the children of a directory in a snapshot
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot_path
+          in: path
+          required: true
+          description: Snapshot ID and directory path
+          schema:
+            type: string
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: "Name"
+      responses:
+        '200':
+          description: List of directory children
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsPageWrapper'
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VFSEntry'
+
+  /snapshot/vfs/search/{snapshot_path}:
+    get:
+      summary: Search in snapshot
+      description: Search for files and directories in a snapshot
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot_path
+          in: path
+          required: true
+          description: Snapshot ID and search path
+          schema:
+            type: string
+        - name: pattern
+          in: query
+          required: true
+          description: Search pattern (glob or regex)
+          schema:
+            type: string
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemsPageWrapper'
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VFSEntry'
+
+  /snapshot/reader/{snapshot_path}:
+    get:
+      summary: Read file content
+      description: Read the content of a file from a snapshot
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot_path
+          in: path
+          required: true
+          description: Snapshot ID and file path
+          schema:
+            type: string
+        - name: download
+          in: query
+          description: Force download as attachment
+          schema:
+            type: boolean
+            default: false
+        - name: render
+          in: query
+          description: Rendering mode for text files
+          schema:
+            type: string
+            enum: [auto, text, code, text_styled]
+            default: auto
+      responses:
+        '200':
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+            text/plain:
+              schema:
+                type: string
+            text/html:
+              schema:
+                type: string
+
+  /snapshot/reader-sign-url/{snapshot_path}:
+    post:
+      summary: Generate signed URL for file access
+      description: Generate a time-limited signed URL for accessing file content
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot_path
+          in: path
+          required: true
+          description: Snapshot ID and file path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Signed URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  expires_at:
+                    type: string
+                    format: date-time
+
+  /snapshot/vfs/downloader/{snapshot_path}:
+    post:
+      summary: Create download package
+      description: Create a downloadable package (zip/tar) of files from a snapshot
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot_path
+          in: path
+          required: true
+          description: Snapshot ID and path
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                  description: List of file paths to include
+                format:
+                  type: string
+                  enum: [zip, tar, tar.gz]
+                  default: zip
+                rebase:
+                  type: boolean
+                  default: false
+                  description: Remove common path prefix
+      responses:
+        '200':
+          description: Download package created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  download_id:
+                    type: string
+                  download_url:
+                    type: string
+                    format: uri
+
+  /authentication/login/github:
+    post:
+      summary: GitHub OAuth login
+      description: Initiate GitHub OAuth login flow
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                redirect:
+                  type: string
+                  format: uri
+                  description: Redirect URL after successful login
+      responses:
+        '200':
+          description: OAuth redirect URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  URL:
+                    type: string
+                    format: uri
+
+  /authentication/login/email:
+    post:
+      summary: Email-based login
+      description: Initiate email-based login flow
+      tags:
+        - Authentication
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                redirect:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Login flow initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  URL:
+                    type: string
+                    format: uri
+
+  /authentication/logout:
+    post:
+      summary: Logout
+      description: Logout and invalidate the current session
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Successfully logged out
+
+  /integrations/install:
+    post:
+      summary: Install integration
+      description: Install a new integration plugin
+      tags:
+        - Integrations
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  description: Integration type
+                config:
+                  type: object
+                  description: Integration-specific configuration
+      responses:
+        '200':
+          description: Integration installed successfully
+        '400':
+          description: Invalid integration configuration
+
+  /integrations/{id}:
+    delete:
+      summary: Uninstall integration
+      description: Remove an installed integration
+      tags:
+        - Integrations
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Integration ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Integration uninstalled successfully
+        '404':
+          description: Integration not found
+
+  /repository/create:
+    post:
+      summary: Create new repository
+      description: Create a new backup repository with specified configuration
+      tags:
+        - Repository
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                location:
+                  type: string
+                  description: Repository location (e.g., "fs:/path/to/repo", "s3://bucket/path")
+                passphrase:
+                  type: string
+                  description: Repository encryption passphrase
+                hashing:
+                  type: string
+                  enum: [SHA256, SHA512, BLAKE3]
+                  default: SHA256
+                  description: Hashing algorithm for data integrity
+                plaintext:
+                  type: boolean
+                  default: false
+                  description: Disable encryption (not recommended)
+                no_compression:
+                  type: boolean
+                  default: false
+                  description: Disable compression
+              required:
+                - location
+      responses:
+        '201':
+          description: Repository created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  repository_id:
+                    type: string
+                    format: uuid
+                  location:
+                    type: string
+        '400':
+          description: Invalid repository configuration
+        '409':
+          description: Repository already exists
+
+  /snapshots/create:
+    post:
+      summary: Create backup snapshot
+      description: Create a new backup snapshot from specified source
+      tags:
+        - Snapshots
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source:
+                  type: string
+                  description: Source path or location to backup
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  description: Tags to apply to the snapshot
+                excludes:
+                  type: array
+                  items:
+                    type: string
+                  description: Patterns to exclude from backup
+                concurrency:
+                  type: integer
+                  minimum: 1
+                  maximum: 64
+                  default: 4
+                  description: Number of parallel backup tasks
+                dry_run:
+                  type: boolean
+                  default: false
+                  description: Scan files without creating backup
+                check:
+                  type: boolean
+                  default: false
+                  description: Verify snapshot after creation
+                forced_timestamp:
+                  type: string
+                  format: date-time
+                  description: Force specific timestamp for snapshot
+                options:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Additional importer-specific options
+              required:
+                - source
+      responses:
+        '201':
+          description: Snapshot created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  snapshot_id:
+                    type: string
+                    description: Created snapshot ID
+                  timestamp:
+                    type: string
+                    format: date-time
+                  summary:
+                    type: object
+                    properties:
+                      files:
+                        type: integer
+                      directories:
+                        type: integer
+                      size:
+                        type: integer
+                        format: int64
+        '400':
+          description: Invalid backup configuration
+
+  /snapshots/{snapshot}/restore:
+    post:
+      summary: Restore snapshot
+      description: Restore files from a snapshot to specified location
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot
+          in: path
+          required: true
+          description: Snapshot ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                destination:
+                  type: string
+                  description: Destination path for restore
+                paths:
+                  type: array
+                  items:
+                    type: string
+                  description: Specific paths to restore (empty = restore all)
+                concurrency:
+                  type: integer
+                  minimum: 1
+                  maximum: 64
+                  default: 4
+                skip_permissions:
+                  type: boolean
+                  default: false
+                  description: Skip restoring file permissions
+                filters:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    category:
+                      type: string
+                    environment:
+                      type: string
+                    job:
+                      type: string
+                    tag:
+                      type: string
+              required:
+                - destination
+      responses:
+        '200':
+          description: Restore completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  restored_files:
+                    type: integer
+                  restored_size:
+                    type: integer
+                    format: int64
+                  destination:
+                    type: string
+        '400':
+          description: Invalid restore configuration
+
+  /snapshots/{snapshot}/check:
+    post:
+      summary: Check snapshot integrity
+      description: Verify the integrity of a snapshot and its data
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot
+          in: path
+          required: true
+          description: Snapshot ID
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                paths:
+                  type: array
+                  items:
+                    type: string
+                  description: Specific paths to check (empty = check all)
+                fast:
+                  type: boolean
+                  default: false
+                  description: Fast check without digest verification
+                no_verify:
+                  type: boolean
+                  default: false
+                  description: Skip signature verification
+                concurrency:
+                  type: integer
+                  minimum: 1
+                  maximum: 64
+                  default: 4
+      responses:
+        '200':
+          description: Check completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success, failed]
+                  checked_files:
+                    type: integer
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path:
+                          type: string
+                        error:
+                          type: string
+                  signature_verified:
+                    type: boolean
+
+  /snapshots/{snapshot}/diff/{target_snapshot}:
+    get:
+      summary: Compare snapshots
+      description: Compare two snapshots or specific paths within snapshots
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot
+          in: path
+          required: true
+          description: Source snapshot ID
+          schema:
+            type: string
+        - name: target_snapshot
+          in: path
+          required: true
+          description: Target snapshot ID for comparison
+          schema:
+            type: string
+        - name: path
+          in: query
+          description: Specific path to compare
+          schema:
+            type: string
+        - name: recursive
+          in: query
+          description: Recursive comparison for directories
+          schema:
+            type: boolean
+            default: false
+        - name: highlight
+          in: query
+          description: Include syntax highlighting in diff
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Diff results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  changes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        path:
+                          type: string
+                        type:
+                          type: string
+                          enum: [added, removed, modified]
+                        diff:
+                          type: string
+                          description: Unified diff format (for text files)
+
+  /snapshots/{snapshot}/mount:
+    post:
+      summary: Mount snapshot as filesystem
+      description: Mount a snapshot as a read-only filesystem (FUSE)
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot
+          in: path
+          required: true
+          description: Snapshot ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mountpoint:
+                  type: string
+                  description: Directory to mount the snapshot
+              required:
+                - mountpoint
+      responses:
+        '200':
+          description: Snapshot mounted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mountpoint:
+                    type: string
+                  snapshot_id:
+                    type: string
+        '400':
+          description: Invalid mount configuration
+        '409':
+          description: Mountpoint already in use
+
+  /snapshots/{snapshot}/unmount:
+    post:
+      summary: Unmount snapshot filesystem
+      description: Unmount a previously mounted snapshot
+      tags:
+        - Snapshots
+      parameters:
+        - name: snapshot
+          in: path
+          required: true
+          description: Snapshot ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mountpoint:
+                  type: string
+                  description: Mountpoint to unmount
+              required:
+                - mountpoint
+      responses:
+        '200':
+          description: Snapshot unmounted successfully
+
+  /snapshots/remove:
+    delete:
+      summary: Remove snapshots
+      description: Remove one or more snapshots from the repository
+      tags:
+        - Snapshots
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                snapshot_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: List of snapshot IDs to remove
+                filters:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    category:
+                      type: string
+                    environment:
+                      type: string
+                    job:
+                      type: string
+                    tags:
+                      type: array
+                      items:
+                        type: string
+                    before:
+                      type: string
+                      format: date-time
+                    after:
+                      type: string
+                      format: date-time
+                apply:
+                  type: boolean
+                  default: false
+                  description: Actually perform the removal (dry-run if false)
+      responses:
+        '200':
+          description: Removal completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  removed_snapshots:
+                    type: array
+                    items:
+                      type: string
+                  dry_run:
+                    type: boolean
+
+  /repository/maintenance:
+    post:
+      summary: Run repository maintenance
+      description: Perform maintenance operations on the repository
+      tags:
+        - Repository
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                operations:
+                  type: array
+                  items:
+                    type: string
+                    enum: [cleanup, rebuild_cache, verify_integrity]
+                  default: [cleanup]
+      responses:
+        '200':
+          description: Maintenance completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  operations_performed:
+                    type: array
+                    items:
+                      type: string
+                  duration:
+                    type: string
+                  cleaned_objects:
+                    type: integer
+
+  /repository/prune:
+    post:
+      summary: Prune repository
+      description: Remove unreferenced data from the repository
+      tags:
+        - Repository
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                policy:
+                  type: string
+                  description: Pruning policy name
+                filters:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    category:
+                      type: string
+                    environment:
+                      type: string
+                    job:
+                      type: string
+                    tags:
+                      type: array
+                      items:
+                        type: string
+                apply:
+                  type: boolean
+                  default: false
+                  description: Actually perform the pruning (dry-run if false)
+      responses:
+        '200':
+          description: Pruning completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reclaimed_space:
+                    type: integer
+                    format: int64
+                  removed_objects:
+                    type: integer
+                  dry_run:
+                    type: boolean
+
+  /repository/sync:
+    post:
+      summary: Synchronize repositories
+      description: Synchronize snapshots between repositories
+      tags:
+        - Repository
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                target_repository:
+                  type: string
+                  description: Target repository location or alias
+                direction:
+                  type: string
+                  enum: [to, from, with]
+                  description: Sync direction (to=push, from=pull, with=bidirectional)
+                snapshot_ids:
+                  type: array
+                  items:
+                    type: string
+                  description: Specific snapshots to sync (empty = all)
+                filters:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    category:
+                      type: string
+                    environment:
+                      type: string
+                    job:
+                      type: string
+                    tags:
+                      type: array
+                      items:
+                        type: string
+              required:
+                - target_repository
+                - direction
+      responses:
+        '200':
+          description: Synchronization completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  synced_snapshots:
+                    type: integer
+                  transferred_size:
+                    type: integer
+                    format: int64
+                  direction:
+                    type: string
+
+  /files/cat/{snapshot_path}:
+    get:
+      summary: Get file content with processing
+      description: Get file content with optional decompression and syntax highlighting
+      tags:
+        - Files
+      parameters:
+        - name: snapshot_path
+          in: path
+          required: true
+          description: Snapshot ID and file path
+          schema:
+            type: string
+        - name: decompress
+          in: query
+          description: Decompress file content
+          schema:
+            type: boolean
+            default: false
+        - name: highlight
+          in: query
+          description: Apply syntax highlighting
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: File content
+          content:
+            text/plain:
+              schema:
+                type: string
+            text/html:
+              schema:
+                type: string
+                description: Syntax highlighted content
+
+  /files/digest/{snapshot_path}:
+    get:
+      summary: Get file digest
+      description: Calculate and return file digest/checksum
+      tags:
+        - Files
+      parameters:
+        - name: snapshot_path
+          in: path
+          required: true
+          description: Snapshot ID and file path
+          schema:
+            type: string
+        - name: algorithm
+          in: query
+          description: Hashing algorithm
+          schema:
+            type: string
+            enum: [SHA256, SHA512, BLAKE3, MD5]
+            default: SHA256
+      responses:
+        '200':
+          description: File digest
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  path:
+                    type: string
+                  algorithm:
+                    type: string
+                  digest:
+                    type: string
+                  size:
+                    type: integer
+                    format: int64
+
+  /search/locate:
+    get:
+      summary: Locate files across snapshots
+      description: Search for files matching patterns across multiple snapshots
+      tags:
+        - Search
+      parameters:
+        - name: patterns
+          in: query
+          required: true
+          description: Search patterns (glob or regex)
+          schema:
+            type: array
+            items:
+              type: string
+        - name: snapshot
+          in: query
+          description: Specific snapshot to search in
+          schema:
+            type: string
+        - name: filters
+          in: query
+          description: Snapshot filters (JSON encoded)
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matches:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        snapshot_id:
+                          type: string
+                        path:
+                          type: string
+                        entry:
+                          $ref: '#/components/schemas/VFSEntry'
+
+  /scheduler/start:
+    post:
+      summary: Start backup scheduler
+      description: Start the backup scheduler service
+      tags:
+        - Scheduler
+      security: []
+      responses:
+        '200':
+          description: Scheduler started successfully
+
+  /scheduler/stop:
+    post:
+      summary: Stop backup scheduler
+      description: Stop the backup scheduler service
+      tags:
+        - Scheduler
+      security: []
+      responses:
+        '200':
+          description: Scheduler stopped successfully
+
+  /scheduler/status:
+    get:
+      summary: Get scheduler status
+      description: Get the current status of the backup scheduler
+      tags:
+        - Scheduler
+      security: []
+      responses:
+        '200':
+          description: Scheduler status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  running:
+                    type: boolean
+                  next_run:
+                    type: string
+                    format: date-time
+                  active_jobs:
+                    type: integer
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ItemWrapper:
+      type: object
+      properties:
+        item:
+          type: object
+
+    ItemsWrapper:
+      type: object
+      properties:
+        total:
+          type: integer
+          description: Total number of items available
+        items:
+          type: array
+          items:
+            type: object
+
+    ItemsPageWrapper:
+      type: object
+      properties:
+        has_next:
+          type: boolean
+          description: Whether there are more items available
+        items:
+          type: array
+          items:
+            type: object
+
+    RepositoryInfo:
+      type: object
+      properties:
+        location:
+          type: string
+          description: Repository storage location
+        snapshots:
+          type: object
+          properties:
+            total:
+              type: integer
+              description: Total number of snapshots
+            storage_size:
+              type: integer
+              format: int64
+              description: Total storage size in bytes
+            logical_size:
+              type: integer
+              format: int64
+              description: Total logical size in bytes
+            efficiency:
+              type: number
+              format: float
+              description: Storage efficiency percentage
+            snapshots_per_day:
+              type: array
+              items:
+                type: integer
+              description: Number of snapshots per day (last 30 days)
+        configuration:
+          $ref: '#/components/schemas/RepositoryConfiguration'
+        os:
+          type: string
+          description: Operating system
+        arch:
+          type: string
+          description: Architecture
+
+    RepositoryConfiguration:
+      type: object
+      properties:
+        repository_id:
+          type: string
+          format: uuid
+        version:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        encryption:
+          type: object
+          nullable: true
+          description: Encryption configuration (if enabled)
+
+    SnapshotHeader:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Snapshot ID (hex-encoded)
+        timestamp:
+          type: string
+          format: date-time
+          description: Snapshot creation timestamp
+        duration:
+          type: integer
+          format: int64
+          description: Backup duration in nanoseconds
+        summary:
+          type: object
+          properties:
+            files:
+              type: integer
+              description: Number of files
+            directories:
+              type: integer
+              description: Number of directories
+            size:
+              type: integer
+              format: int64
+              description: Total size in bytes
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/SnapshotSource'
+        tags:
+          type: array
+          items:
+            type: string
+          description: Snapshot tags
+
+    SnapshotSource:
+      type: object
+      properties:
+        importer:
+          type: object
+          properties:
+            type:
+              type: string
+              description: Importer type (e.g., "fs", "s3")
+            origin:
+              type: string
+              description: Source origin
+            directory:
+              type: string
+              description: Source directory or path
+
+    TimelineLocation:
+      type: object
+      properties:
+        snapshot:
+          $ref: '#/components/schemas/SnapshotHeader'
+        vfs_entry:
+          $ref: '#/components/schemas/VFSEntry'
+
+    VFSEntry:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Entry name
+        path:
+          type: string
+          description: Full path
+        type:
+          type: string
+          enum: [file, directory, symlink]
+        size:
+          type: integer
+          format: int64
+          description: Size in bytes (for files)
+        mode:
+          type: integer
+          description: File mode/permissions
+        mtime:
+          type: string
+          format: date-time
+          description: Modification time
+        uid:
+          type: integer
+          description: User ID
+        gid:
+          type: integer
+          description: Group ID
+        checksum:
+          type: string
+          description: File checksum (for files)
+        target:
+          type: string
+          description: Symlink target (for symlinks)
+
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Error code
+            message:
+              type: string
+              description: Human-readable error message
+            params:
+              type: object
+              additionalProperties:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+              description: Parameter-specific errors
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+tags:
+  - name: System
+    description: System information and health checks
+  - name: Repository
+    description: Repository management and information
+  - name: Snapshots
+    description: Snapshot operations and browsing
+  - name: Files
+    description: File operations and content access
+  - name: Search
+    description: Search and locate operations
+  - name: Authentication
+    description: Authentication and session management
+  - name: Integrations
+    description: Plugin and integration management
+  - name: Scheduler
+    description: Backup scheduling and automation
